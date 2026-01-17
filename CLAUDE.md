@@ -1,5 +1,16 @@
 # Claude Code Instructions for openadapt-viewer
 
+## Project Status & Priorities
+
+**IMPORTANT**: Before starting work, always check the project-wide status document:
+- **Location**: `/Users/abrichr/oa/src/STATUS.md`
+- **Purpose**: Tracks P0 priorities, active background tasks, blockers, and strategic decisions
+- **Action**: Read this file at the start of every session to understand current priorities
+
+This ensures continuity between Claude Code sessions and context compactions.
+
+---
+
 ## Overview
 
 **Reusable component library** for OpenAdapt visualization. Provides building blocks (components) and high-level builders for creating standalone HTML viewers.
