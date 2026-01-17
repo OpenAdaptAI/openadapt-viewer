@@ -12,6 +12,9 @@ license = "MIT"
 authors = [
     {name = "Richard Abrich", email = "richard@openadapt.ai"}
 ]
+maintainers = [
+    {name = "OpenAdaptAI"}
+]
 keywords = ["viewer", "dashboard", "visualization", "ml", "benchmarks", "html"]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -47,6 +50,9 @@ openadapt-viewer = "openadapt_viewer.cli:main"
 [project.urls]
 Homepage = "https://github.com/OpenAdaptAI/openadapt-viewer"
 Repository = "https://github.com/OpenAdaptAI/openadapt-viewer"
+Documentation = "https://github.com/OpenAdaptAI/openadapt-viewer#readme"
+Issues = "https://github.com/OpenAdaptAI/openadapt-viewer/issues"
+Changelog = "https://github.com/OpenAdaptAI/openadapt-viewer/releases"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openadapt_viewer"]
