@@ -90,7 +90,7 @@ def video_playback(
 
     # Properly escape JSON for HTML attributes to prevent Alpine.js parsing errors
     frames_json = html.escape(json.dumps(processed_frames))
-    speeds_json = html.escape(json.dumps(speeds))
+    html.escape(json.dumps(speeds))
 
     # Speed options for dropdown
     speed_options = "\n".join(

@@ -16,11 +16,6 @@ from openadapt_viewer.components import (
     metrics_grid,
     filter_bar,
     selectable_list,
-    screenshot_display,
-    playback_controls,
-    timeline,
-    action_display,
-    badge,
 )
 from openadapt_viewer.components.metrics import domain_stats_grid
 
@@ -147,7 +142,7 @@ def generate_benchmark_viewer(
     ''')
 
     # Note about interactivity
-    builder.add_section(f'''
+    builder.add_section('''
         <div style="background: var(--oa-info-bg); border: 1px solid var(--oa-info); border-radius: 8px; padding: 16px; color: var(--oa-text-secondary);">
             <strong>Note:</strong> This is a static example. Full interactivity (task selection, step playback)
             requires Alpine.js data bindings. See the benchmark viewer generator for the complete implementation.

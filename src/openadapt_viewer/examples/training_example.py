@@ -46,8 +46,8 @@ def generate_training_dashboard(
         evaluations = _generate_sample_evaluations()
 
     # Calculate stats
-    min_loss = min(l["loss"] for l in losses) if losses else 0
-    avg_loss = sum(l["loss"] for l in losses) / len(losses) if losses else 0
+    min_loss = min(loss["loss"] for loss in losses) if losses else 0
+    avg_loss = sum(loss["loss"] for loss in losses) / len(losses) if losses else 0
     total_steps = len(losses)
 
     # Build page

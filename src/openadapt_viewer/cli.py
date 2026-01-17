@@ -104,7 +104,7 @@ def run_benchmark_command(args):
         print(f"Error: Data directory not found: {args.data}", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Generating benchmark viewer...")
+    print("Generating benchmark viewer...")
     output_path = generate_benchmark_html(
         data_path=args.data,
         output_path=args.output,

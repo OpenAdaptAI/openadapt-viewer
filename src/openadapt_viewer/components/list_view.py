@@ -189,7 +189,7 @@ def task_list(
         task_id = task.get("task_id", "")
         instruction = task.get("instruction", "")
         success = task.get("success", False)
-        domain = task.get("domain", "")
+        task.get("domain", "")
 
         items.append({
             "id": task_id,
