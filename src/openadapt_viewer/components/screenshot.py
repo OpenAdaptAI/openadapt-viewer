@@ -89,20 +89,22 @@ def screenshot_display(
         variant_class = f" oa-overlay-{variant}" if variant else ""
 
         if overlay_type == "click":
+            label_html = f'<span class="oa-overlay-label">{label}</span>' if label else ''
             overlay_html_parts.append(
                 f'<div class="oa-overlay oa-overlay-click{variant_class}" '
                 f'style="left: {x * 100}%; top: {y * 100}%;">'
-                f'{f"<span class=\"oa-overlay-label\">{label}</span>" if label else ""}'
+                f'{label_html}'
                 f"</div>"
             )
         elif overlay_type == "box":
             w = overlay.get("width", 0.1)
             h = overlay.get("height", 0.1)
+            label_html = f'<span class="oa-overlay-label">{label}</span>' if label else ''
             overlay_html_parts.append(
                 f'<div class="oa-overlay oa-overlay-box{variant_class}" '
                 f'style="left: {x * 100}%; top: {y * 100}%; '
                 f'width: {w * 100}%; height: {h * 100}%;">'
-                f'{f"<span class=\"oa-overlay-label\">{label}</span>" if label else ""}'
+                f'{label_html}'
                 f"</div>"
             )
 
