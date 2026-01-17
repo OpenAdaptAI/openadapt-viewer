@@ -56,9 +56,9 @@ class EpisodeTimeline {
       return;
     }
 
+    this.updateCurrentEpisode();  // Update episode index before rendering
     this.render();
     this.attachEventListeners();
-    this.updateCurrentEpisode();
   }
 
   calculateTotalDuration() {
