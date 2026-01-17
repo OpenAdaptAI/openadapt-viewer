@@ -2,7 +2,6 @@
 
 [![Build Status](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/publish.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/publish.yml)
 [![PyPI version](https://img.shields.io/pypi/v/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
-[![Downloads](https://img.shields.io/pypi/dm/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 
@@ -13,6 +12,7 @@ Reusable component library for OpenAdapt visualization. Build standalone HTML vi
 - **Component-based**: Reusable building blocks (screenshot, playback, metrics, filters)
 - **Composable**: Combine components to build custom viewers
 - **Standalone HTML**: Generated files work offline, no server required
+- **Event transcript**: Real-time audio transcription synchronized with playback
 - **Consistent styling**: Shared CSS variables and dark mode support
 - **Alpine.js integration**: Lightweight interactivity out of the box
 

@@ -4,8 +4,13 @@
 
 **Reusable component library** for OpenAdapt visualization. Provides building blocks (components) and high-level builders for creating standalone HTML viewers.
 
+**Migration Status (January 2026)**:
+- Phase 1 foundation work complete in openadapt-ml
+- Adapter module (`viewer_components.py`) established for ML-specific use cases
+- Progressive migration from inline HTML generation to component-based approach
+
 Used by:
-- **openadapt-ml**: Training dashboards
+- **openadapt-ml**: Training dashboards (migrating to components)
 - **openadapt-evals**: Benchmark result viewers
 - **openadapt-capture**: Capture playback viewers
 - **openadapt-retrieval**: Demo search result viewers

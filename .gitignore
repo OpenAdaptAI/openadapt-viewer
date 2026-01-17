@@ -13,3 +13,6 @@ build/
 capture_viewer.html
 enhanced_capture_viewer.html
 *_viewer.html
+
+# Screenshot generation temp files
+temp/
