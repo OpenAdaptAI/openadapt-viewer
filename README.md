@@ -155,6 +155,34 @@ src/openadapt_viewer/
 └── templates/            # Jinja2 templates
 ```
 
+## Screenshots
+
+### Full Viewer Interface
+
+The viewer provides a complete interface for exploring captured GUI interactions with playback controls, timeline navigation, and event details.
+
+![Turn off Night Shift - Full Viewer](docs/images/turn-off-nightshift_full.png)
+*Interactive viewer showing the "Turn off Night Shift" workflow in macOS System Settings*
+
+### Playback Controls
+
+Step through captures with playback controls, timeline scrubbing, and keyboard shortcuts (Space to play/pause, arrow keys to navigate).
+
+![Playback Controls](docs/images/turn-off-nightshift_controls.png)
+*Timeline and playback controls with overlay toggle*
+
+### Event List and Details
+
+Browse all captured events with detailed information about each action, including coordinates, timing, and action type.
+
+![Event List](docs/images/turn-off-nightshift_events.png)
+*Event list sidebar showing captured actions with timing and type information*
+
+### Demo Workflow
+
+![Demo Workflow](docs/images/demo_new_full.png)
+*Example demo workflow viewer*
+
 ## Examples
 
 Run the examples to see how different OpenAdapt packages can use the component library:
@@ -172,6 +200,36 @@ python -m openadapt_viewer.examples.capture_example
 # Retrieval results (openadapt-retrieval)
 python -m openadapt_viewer.examples.retrieval_example
 ```
+
+### Generating Screenshots
+
+To regenerate the README screenshots:
+
+```bash
+# Install playwright (one-time setup)
+uv pip install "openadapt-viewer[screenshots]"
+uv run playwright install chromium
+
+# Install openadapt-capture (required)
+cd ../openadapt-capture
+uv pip install -e .
+cd ../openadapt-viewer
+
+# Generate screenshots
+uv run python scripts/generate_readme_screenshots.py
+
+# Or with custom options
+uv run python scripts/generate_readme_screenshots.py \
+  --capture-dir /path/to/openadapt-capture \
+  --output-dir docs/images \
+  --max-events 50
+```
+
+The script will:
+1. Load captures from `openadapt-capture` (turn-off-nightshift and demo_new)
+2. Generate interactive HTML viewers
+3. Take screenshots using Playwright
+4. Save screenshots to `docs/images/`
 
 ## Development
 

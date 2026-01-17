@@ -40,8 +40,11 @@ dev = [
     "pytest>=8.0.0",
     "ruff>=0.1.0",
 ]
+screenshots = [
+    "playwright>=1.40.0",
+]
 all = [
-    "openadapt-viewer[dev]",
+    "openadapt-viewer[dev,screenshots]",
 ]
 
 [project.scripts]
@@ -59,3 +62,9 @@ packages = ["src/openadapt_viewer"]
 
 [tool.ruff]
 line-length = 100
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "playwright: marks tests requiring playwright and browsers (deselect with '-m \"not playwright\"')",
+]
