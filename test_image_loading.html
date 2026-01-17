@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Loading Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #16213e;
+            border-radius: 8px;
+        }
+        img {
+            max-width: 400px;
+            border: 2px solid #00d9ff;
+            margin: 10px 0;
+            display: block;
+        }
+        .error {
+            color: #ff5f5f;
+        }
+        .success {
+            color: #34d399;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Loading Diagnostic Test</h1>
+
+    <div class="test-section">
+        <h2>Test 1: Direct file:// URL</h2>
+        <p>Testing: <code>file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png</code></p>
+        <img id="test1" src="file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png" alt="Test 1">
+        <p id="test1-status">Loading...</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Relative path (from viewer directory)</h2>
+        <p>Testing: <code>../openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png</code></p>
+        <img id="test2" src="../openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png" alt="Test 2">
+        <p id="test2-status">Loading...</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Dynamically set via JavaScript</h2>
+        <img id="test3" alt="Test 3">
+        <p id="test3-status">Loading...</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="console-output" style="background: #0a0a0f; padding: 10px; border-radius: 4px; font-size: 12px;"></div>
+    </div>
+
+    <script>
+        const consoleOutput = document.getElementById('console-output');
+
+        function log(msg, type = 'info') {
+            const line = document.createElement('div');
+            line.textContent = `[${new Date().toISOString()}] ${msg}`;
+            line.className = type;
+            consoleOutput.appendChild(line);
+            console.log(msg);
+        }
+
+        // Test 1: Direct file:// URL
+        const img1 = document.getElementById('test1');
+        img1.onload = () => {
+            document.getElementById('test1-status').textContent = 'SUCCESS: Image loaded';
+            document.getElementById('test1-status').className = 'success';
+            log('Test 1: SUCCESS - Direct file:// URL works', 'success');
+        };
+        img1.onerror = (e) => {
+            document.getElementById('test1-status').textContent = 'ERROR: Failed to load';
+            document.getElementById('test1-status').className = 'error';
+            log('Test 1: ERROR - Direct file:// URL failed: ' + e.message, 'error');
+        };
+
+        // Test 2: Relative path
+        const img2 = document.getElementById('test2');
+        img2.onload = () => {
+            document.getElementById('test2-status').textContent = 'SUCCESS: Image loaded';
+            document.getElementById('test2-status').className = 'success';
+            log('Test 2: SUCCESS - Relative path works', 'success');
+        };
+        img2.onerror = (e) => {
+            document.getElementById('test2-status').textContent = 'ERROR: Failed to load';
+            document.getElementById('test2-status').className = 'error';
+            log('Test 2: ERROR - Relative path failed: ' + e.message, 'error');
+        };
+
+        // Test 3: JavaScript set src
+        const img3 = document.getElementById('test3');
+        img3.src = 'file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png';
+        img3.onload = () => {
+            document.getElementById('test3-status').textContent = 'SUCCESS: Image loaded';
+            document.getElementById('test3-status').className = 'success';
+            log('Test 3: SUCCESS - JavaScript set src works', 'success');
+        };
+        img3.onerror = (e) => {
+            document.getElementById('test3-status').textContent = 'ERROR: Failed to load';
+            document.getElementById('test3-status').className = 'error';
+            log('Test 3: ERROR - JavaScript set src failed: ' + e.message, 'error');
+        };
+
+        log('Starting image loading tests...');
+        log('Current document URL: ' + window.location.href);
+        log('Browser: ' + navigator.userAgent);
+
+        // Check if we can access the file system
+        fetch('file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png')
+            .then(response => {
+                log('Fetch test: SUCCESS - Can access file:// URLs via fetch', 'success');
+            })
+            .catch(error => {
+                log('Fetch test: ERROR - Cannot access file:// URLs via fetch: ' + error.message, 'error');
+                log('This indicates browser security restrictions on file:// protocol', 'error');
+            });
+    </script>
+</body>
+</html>
