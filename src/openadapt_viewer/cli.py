@@ -2,6 +2,7 @@
 
 Usage:
     openadapt-viewer benchmark --data DIR [--output FILE] [--standalone]
+    openadapt-viewer capture [--capture-id ID] [--goal GOAL] [--output FILE]
     openadapt-viewer demo [--output FILE]
     openadapt-viewer catalog scan [--capture-dir DIR] [--segmentation-dir DIR]
     openadapt-viewer catalog list [--json]
@@ -45,7 +46,7 @@ Examples:
         "--data",
         "-d",
         type=Path,
-        help="Path to benchmark results directory",
+        help="Path to capture/benchmark directory (defaults to nightshift recording)",
     )
     benchmark_parser.add_argument(
         "--output",
@@ -83,6 +84,34 @@ Examples:
         help="Recording ID to auto-load on page load",
     )
     seg_parser.add_argument(
+        "--open",
+        action="store_true",
+        help="Open the generated file in browser",
+    )
+
+    # Capture command
+    capture_parser = subparsers.add_parser(
+        "capture", help="Generate capture viewer with playback controls"
+    )
+    capture_parser.add_argument(
+        "--capture-id",
+        type=str,
+        default="capture",
+        help="Capture recording ID (default: capture)",
+    )
+    capture_parser.add_argument(
+        "--goal",
+        type=str,
+        help="Goal or description of the capture task",
+    )
+    capture_parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=Path("capture_viewer.html"),
+        help="Output HTML file path (default: capture_viewer.html)",
+    )
+    capture_parser.add_argument(
         "--open",
         action="store_true",
         help="Open the generated file in browser",
@@ -232,6 +261,8 @@ Examples:
         run_benchmark_command(args)
     elif args.command == "segmentation":
         run_segmentation_command(args)
+    elif args.command == "capture":
+        run_capture_command(args)
     elif args.command == "demo":
         run_demo_command(args)
     elif args.command == "screenshots":
@@ -241,16 +272,25 @@ Examples:
 
 
 def run_benchmark_command(args):
-    """Handle the benchmark command."""
+    """Handle the benchmark command.
+
+    POLICY: Defaults to real nightshift recording data.
+    Only uses sample data if explicitly disabled in code.
+    """
     if args.data and not args.data.exists():
         print(f"Error: Data directory not found: {args.data}", file=sys.stderr)
         sys.exit(1)
 
-    print("Generating benchmark viewer...")
+    if args.data is None:
+        print("Generating benchmark viewer with REAL nightshift recording data...")
+    else:
+        print(f"Generating benchmark viewer from: {args.data}")
+
     output_path = generate_benchmark_html(
         data_path=args.data,
         output_path=args.output,
         standalone=args.standalone,
+        use_real_data=True,  # ALWAYS use real data by default
     )
     print(f"Generated: {output_path}")
 
@@ -267,6 +307,60 @@ def run_segmentation_command(args):
     output_path = generate_segmentation_viewer(
         output_path=str(args.output),
         auto_load_recording=args.auto_load,
+    )
+
+    print(f"Generated: {output_path}")
+
+    if args.open:
+        webbrowser.open(f"file://{Path(output_path).absolute()}")
+
+
+def run_capture_command(args):
+    """Handle the capture command."""
+    from openadapt_viewer.viewers.capture import generate_capture_html
+
+    print("Generating capture viewer...")
+
+    # Create sample data for demo purposes
+    # In real usage, this would load actual capture data
+    sample_steps = [
+        {
+            "screenshot": None,
+            "action": {"type": "click", "x": 0.85, "y": 0.05, "description": "Click System Settings icon"},
+            "timestamp": 0,
+            "duration": 1.167,
+        },
+        {
+            "screenshot": None,
+            "action": {"type": "click", "x": 0.15, "y": 0.3, "description": "Click Displays"},
+            "timestamp": 1.167,
+            "duration": 1.943,
+        },
+        {
+            "screenshot": None,
+            "action": {"type": "scroll", "direction": "down", "amount": 200},
+            "timestamp": 3.110,
+            "duration": 0.794,
+        },
+        {
+            "screenshot": None,
+            "action": {"type": "click", "x": 0.7, "y": 0.45, "description": "Click Night Shift"},
+            "timestamp": 3.904,
+            "duration": 1.048,
+        },
+        {
+            "screenshot": None,
+            "action": {"type": "click", "x": 0.8, "y": 0.35, "description": "Toggle Night Shift off"},
+            "timestamp": 4.952,
+            "duration": 1.793,
+        },
+    ]
+
+    output_path = generate_capture_html(
+        capture_id=args.capture_id,
+        goal=args.goal or "Capture playback viewer",
+        steps=sample_steps,
+        output_path=args.output,
     )
 
     print(f"Generated: {output_path}")

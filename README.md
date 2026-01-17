@@ -91,6 +91,14 @@ builder.render_to_file("output.html")
 
 ### Ready-to-Use Viewers
 
+5 production viewers available:
+
+1. **Benchmark Viewer** - Visualize benchmark evaluation results
+2. **Capture Viewer** - Playback recorded GUI interactions
+3. **Training Dashboard** - Monitor ML training progress (via openadapt-ml)
+4. **Retrieval Viewer** - Display demo search results (via openadapt-retrieval)
+5. **Segmentation Viewer** - View episode segmentation results
+
 ```python
 from openadapt_viewer.viewers.benchmark import generate_benchmark_html
 
@@ -100,6 +108,8 @@ generate_benchmark_html(
     output_path="viewer.html",
 )
 ```
+
+All viewers use the canonical component-based pattern. See `VIEWER_PATTERNS.md` for details.
 
 ## CLI Usage
 
@@ -113,17 +123,43 @@ openadapt-viewer benchmark --data results/run_001/ --output viewer.html
 
 ## Components
 
-| Component | Description |
-|-----------|-------------|
-| `screenshot_display` | Screenshot with click/highlight overlays |
-| `playback_controls` | Play/pause/speed controls for step playback |
-| `timeline` | Progress bar for step navigation |
-| `action_display` | Format actions (click, type, scroll, etc.) |
-| `metrics_card` | Single statistic card |
-| `metrics_grid` | Grid of metric cards |
-| `filter_bar` | Filter dropdowns with optional search |
-| `selectable_list` | List with selection support |
-| `badge` | Status badges (pass/fail, etc.) |
+All components return HTML strings that can be composed together. Use them with PageBuilder or embed inline.
+
+### Core Components
+
+| Component | Description | Example Use Case |
+|-----------|-------------|-----------------|
+| `screenshot_display` | Screenshot with click/highlight overlays | Capture frames, demo screenshots |
+| `playback_controls` | Play/pause/speed controls for step playback | Video-like playback |
+| `timeline` | Progress bar for step navigation | Scrub through recordings |
+| `action_display` | Format actions (click, type, scroll, etc.) | Display action details |
+| `metrics_card` | Single statistic card | Individual metric display |
+| `metrics_grid` | Grid of metric cards | Summary dashboards |
+| `filter_bar` | Filter dropdowns with optional search | Filter and search data |
+| `filter_dropdown` | Single dropdown filter | Domain/status filters |
+| `selectable_list` | List with selection support | Task lists, file lists |
+| `list_item` | Individual list item | Custom list entries |
+| `badge` | Status badges (pass/fail, etc.) | Status indicators |
+
+### Enhanced Components
+
+| Component | Description | Example Use Case |
+|-----------|-------------|-----------------|
+| `video_playback` | Video playback from screenshot sequences | Smooth capture playback |
+| `video_playback_with_actions` | Video + synchronized action overlay | Capture with action overlay |
+| `action_timeline` | Timeline with action markers | Action sequence view |
+| `action_timeline_vertical` | Vertical action timeline | Compact action view |
+| `comparison_view` | Side-by-side comparison | Before/after, A/B test |
+| `overlay_comparison` | Overlay comparison with slider | Image comparison |
+| `action_type_filter` | Filter by action type | Filter clicks/types/scrolls |
+| `action_type_pills` | Action type pill buttons | Quick action filtering |
+| `action_type_dropdown` | Action type dropdown | Compact action filter |
+| `failure_analysis_panel` | Failure analysis dashboard | Benchmark failure analysis |
+| `failure_summary_card` | Failure summary card | Individual failure details |
+
+**Total: 22 components** available for building viewers.
+
+See `VIEWER_PATTERNS.md` for complete usage examples.
 
 ## Project Structure
 
@@ -331,6 +367,15 @@ Used by other OpenAdapt packages:
 - **openadapt-evals**: Benchmark result visualization
 - **openadapt-capture**: Capture recording playback
 - **openadapt-retrieval**: Demo search result display
+
+## Documentation
+
+- **[VIEWER_PATTERNS.md](VIEWER_PATTERNS.md)** - Canonical pattern for building viewers (MUST READ for new viewers)
+- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Step-by-step guide for converting inline viewers to component-based
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design patterns
+- **[CATALOG_SYSTEM.md](CATALOG_SYSTEM.md)** - Automatic recording discovery and indexing
+- **[SEARCH_FUNCTIONALITY.md](SEARCH_FUNCTIONALITY.md)** - Token-based search implementation
+- **[EPISODE_TIMELINE_QUICKSTART.md](EPISODE_TIMELINE_QUICKSTART.md)** - Adding episode timelines to viewers
 
 ## License
 

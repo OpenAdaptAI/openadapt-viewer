@@ -11,6 +11,16 @@ This ensures continuity between Claude Code sessions and context compactions.
 
 ---
 
+## Architectural Decisions
+
+**episodes.json vs capture.db** (2026-01-17):
+- **Decision**: Keep episodes.json as separate JSON file (NOT in capture.db)
+- **Rationale**: Separation of concerns (raw events vs ML semantics), zero performance benefit, high migration cost
+- **Documents**: [EPISODES_DB_DECISION.md](EPISODES_DB_DECISION.md) (summary), [EPISODES_DB_ANALYSIS.md](EPISODES_DB_ANALYSIS.md) (full analysis)
+- **Reference**: [EPISODES_DB_SCHEMA_REFERENCE.sql](EPISODES_DB_SCHEMA_REFERENCE.sql) (if requirements change)
+
+---
+
 ## Overview
 
 **Reusable component library** for OpenAdapt visualization. Provides building blocks (components) and high-level builders for creating standalone HTML viewers.

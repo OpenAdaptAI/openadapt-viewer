@@ -10,6 +10,7 @@ from typing import Optional
 from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
 from openadapt_viewer.viewers.benchmark.data import load_benchmark_data, create_sample_data
+from openadapt_viewer.viewers.benchmark.real_data_loader import load_real_capture_data
 
 
 def generate_benchmark_html(
@@ -17,26 +18,40 @@ def generate_benchmark_html(
     output_path: Path | str = "benchmark_viewer.html",
     standalone: bool = False,
     run_data: Optional[BenchmarkRun] = None,
+    use_real_data: bool = True,
 ) -> str:
     """Generate a standalone HTML viewer for benchmark results.
 
     Args:
-        data_path: Path to benchmark results directory (optional if run_data provided)
+        data_path: Path to benchmark results directory OR capture directory (optional if run_data provided)
         output_path: Where to write the HTML file
         standalone: If True, embed Plotly.js for offline viewing
         run_data: Pre-loaded BenchmarkRun data (optional, will load from data_path if not provided)
+        use_real_data: If True (default), load real capture data from nightshift recording
 
     Returns:
         Path to the generated HTML file
+
+    POLICY: ALWAYS defaults to real data from nightshift recording.
+    Set use_real_data=False ONLY for unit tests with sample data.
     """
     # Load data
     if run_data is not None:
         run = run_data
     elif data_path is not None:
-        run = load_benchmark_data(data_path)
+        # Try to load as capture directory first, fall back to benchmark data
+        try:
+            run = load_real_capture_data(data_path)
+        except (FileNotFoundError, ValueError, KeyError):
+            # Fall back to benchmark data format
+            run = load_benchmark_data(data_path)
     else:
-        # Create sample data for demo
-        run = create_sample_data()
+        # DEFAULT: Use real data from nightshift recording
+        if use_real_data:
+            run = load_real_capture_data()
+        else:
+            # ONLY for unit tests: create sample data
+            run = create_sample_data()
 
     # Generate HTML using template
     builder = HTMLBuilder()
@@ -54,8 +69,17 @@ def generate_benchmark_html(
 def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: bool) -> str:
     """Generate the complete HTML for the benchmark viewer.
 
-    Uses inline template since this is specific to the benchmark viewer.
+    Uses PageBuilder and components instead of inline template.
     """
+    from openadapt_viewer.builders.page_builder import PageBuilder
+    from openadapt_viewer.components import (
+        metrics_grid,
+        filter_bar,
+        badge,
+    )
+    from openadapt_viewer.components.metrics import domain_stats_grid
+    import json
+
     # Prepare data for template
     domain_stats = run.get_domain_stats()
 
@@ -83,289 +107,143 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
             "error": execution.error if execution else None,
         })
 
-    # Inline template for benchmark viewer
-    template = _get_benchmark_template()
-
-    return builder.render_inline(
-        template,
-        run=run,
-        tasks_data=tasks_data,
-        domain_stats=domain_stats,
-        standalone=standalone,
+    # Build page using PageBuilder
+    page = PageBuilder(
+        title=f"Benchmark Viewer - {run.benchmark_name}",
+        include_alpine=True,
     )
 
+    # Add header
+    page.add_header(
+        title=run.benchmark_name,
+        subtitle=f"Model: {run.model_id}",
+    )
 
-def _get_benchmark_template() -> str:
-    """Return the Jinja2 template for the benchmark viewer."""
-    return '''<!DOCTYPE html>
-<html lang="en" x-data="benchmarkViewer()" x-init="init()" :class="{ 'dark': darkMode }">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Benchmark Viewer - {{ run.benchmark_name }}</title>
+    # Add summary metrics
+    page.add_section(
+        metrics_grid([
+            {"label": "Total Tasks", "value": run.total_tasks},
+            {"label": "Passed", "value": run.passed_tasks, "color": "success"},
+            {"label": "Failed", "value": run.failed_tasks, "color": "error"},
+            {"label": "Success Rate", "value": f"{run.success_rate * 100:.1f}%", "color": "accent"},
+        ], columns=4),
+        title="Summary",
+    )
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: {
-                            50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
-                            400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
-                            800: '#1e40af', 900: '#1e3a8a',
-                        }
-                    }
-                }
+    # Add domain breakdown
+    page.add_section(
+        domain_stats_grid(domain_stats),
+        title="Results by Domain",
+    )
+
+    # Add filters
+    domain_options = [{"value": domain, "label": domain.capitalize()} for domain in domain_stats.keys()]
+    page.add_section(
+        filter_bar(
+            filters=[
+                {"id": "domain", "label": "Domain", "options": domain_options},
+                {"id": "status", "label": "Status", "options": [
+                    {"value": "passed", "label": "Passed"},
+                    {"value": "failed", "label": "Failed"},
+                ]},
+            ],
+            alpine_data_name="viewer",
+        ),
+        title="Filters",
+    )
+
+    # Add task list and detail view section
+    tasks_json = json.dumps(tasks_data)
+    page.add_section(
+        _generate_task_viewer_section(tasks_json),
+        class_name="oa-task-viewer",
+    )
+
+    # Add custom CSS for task viewer layout
+    page.add_css("""
+        .oa-task-viewer {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: var(--oa-space-lg);
+        }
+        @media (max-width: 1024px) {
+            .oa-task-viewer {
+                grid-template-columns: 1fr;
             }
         }
-    </script>
+        .screenshot-container {
+            aspect-ratio: 16/9;
+            background: var(--oa-bg-tertiary);
+            border-radius: var(--oa-border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .screenshot-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
 
-    <!-- Alpine.js -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        /* Provenance badges */
+        .oa-badge-ml {
+            background: var(--oa-accent-dim);
+            color: var(--oa-accent);
+            border: 1px solid var(--oa-accent);
+        }
+        .oa-badge-raw {
+            background: var(--oa-info-bg);
+            color: var(--oa-info);
+            border: 1px solid var(--oa-info);
+        }
 
-    <style>
-        [x-cloak] { display: none !important; }
-        .screenshot-container { aspect-ratio: 16/9; }
-    </style>
-</head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+        /* Metadata display */
+        .oa-metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+        .oa-metadata-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: var(--oa-bg-secondary);
+            border-radius: var(--oa-border-radius);
+        }
+        .oa-metadata-item .oa-label {
+            font-weight: 600;
+            color: var(--oa-text-secondary);
+            font-size: 0.85rem;
+        }
+        .oa-metadata-item .oa-value {
+            color: var(--oa-text-primary);
+            font-family: var(--oa-font-mono);
+            font-size: 0.85rem;
+        }
 
-    <!-- Header -->
-    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <svg class="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <div>
-                    <h1 class="text-xl font-semibold">{{ run.benchmark_name }}</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Model: {{ run.model_id }}</p>
-                </div>
-            </div>
-            <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)"
-                    class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600">
-                <svg x-show="darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-                <svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                </svg>
-            </button>
-        </div>
-    </header>
+        .oa-metadata-details summary:hover {
+            color: var(--oa-accent);
+        }
+    """)
 
-    <main class="container mx-auto px-4 py-6">
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Total Tasks</div>
-                <div class="text-2xl font-bold">{{ run.total_tasks }}</div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Passed</div>
-                <div class="text-2xl font-bold text-green-600 dark:text-green-400">{{ run.passed_tasks }}</div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Failed</div>
-                <div class="text-2xl font-bold text-red-600 dark:text-red-400">{{ run.failed_tasks }}</div>
-            </div>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-                <div class="text-sm text-gray-500 dark:text-gray-400">Success Rate</div>
-                <div class="text-2xl font-bold text-primary-600 dark:text-primary-400">{{ "%.1f" | format(run.success_rate * 100) }}%</div>
-            </div>
-        </div>
-
-        <!-- Domain Breakdown -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-            <h2 class="text-lg font-semibold mb-3">Results by Domain</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {% for domain, stats in domain_stats.items() %}
-                <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div class="text-sm font-medium capitalize">{{ domain }}</div>
-                    <div class="flex items-center space-x-2 mt-1">
-                        <span class="text-green-600 dark:text-green-400">{{ stats.passed }}</span>
-                        <span class="text-gray-400">/</span>
-                        <span class="text-gray-600 dark:text-gray-300">{{ stats.total }}</span>
-                        <span class="text-xs text-gray-500">({{ "%.0f" | format(stats.passed / stats.total * 100 if stats.total > 0 else 0) }}%)</span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
-            <div class="flex flex-wrap gap-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Domain</label>
-                    <select x-model="filterDomain" class="px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
-                        <option value="">All Domains</option>
-                        {% for domain in domain_stats.keys() %}
-                        <option value="{{ domain }}">{{ domain | capitalize }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Status</label>
-                    <select x-model="filterStatus" class="px-3 py-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
-                        <option value="">All</option>
-                        <option value="passed">Passed</option>
-                        <option value="failed">Failed</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Task List and Detail View -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Task List -->
-            <div class="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow">
-                <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 class="font-semibold">Tasks</h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400" x-text="'Showing ' + filteredTasks.length + ' of ' + tasks.length"></p>
-                </div>
-                <div class="max-h-[600px] overflow-y-auto">
-                    <template x-for="task in filteredTasks" :key="task.task_id">
-                        <div @click="selectTask(task)"
-                             :class="{'bg-primary-50 dark:bg-primary-900/20 border-l-4 border-primary-500': selectedTask?.task_id === task.task_id}"
-                             class="p-3 border-b border-gray-100 dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <div class="flex items-start justify-between">
-                                <div class="flex-1 min-w-0">
-                                    <div class="font-medium truncate" x-text="task.task_id"></div>
-                                    <div class="text-sm text-gray-500 dark:text-gray-400 truncate" x-text="task.instruction"></div>
-                                </div>
-                                <span :class="task.success ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                      class="ml-2 px-2 py-0.5 text-xs font-medium rounded-full"
-                                      x-text="task.success ? 'Pass' : 'Fail'"></span>
-                            </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-
-            <!-- Detail View -->
-            <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow">
-                <template x-if="selectedTask">
-                    <div>
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <div class="flex items-center justify-between">
-                                <h2 class="font-semibold" x-text="selectedTask.task_id"></h2>
-                                <span :class="selectedTask.success ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'"
-                                      class="px-3 py-1 text-sm font-medium rounded-full"
-                                      x-text="selectedTask.success ? 'Passed' : 'Failed'"></span>
-                            </div>
-                            <p class="mt-2 text-gray-600 dark:text-gray-300" x-text="selectedTask.instruction"></p>
-                            <div class="mt-2 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
-                                <span x-text="'Domain: ' + selectedTask.domain"></span>
-                                <span x-text="'Difficulty: ' + selectedTask.difficulty"></span>
-                                <span x-text="'Steps: ' + selectedTask.steps.length"></span>
-                            </div>
-                            <template x-if="selectedTask.error">
-                                <div class="mt-2 p-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 rounded text-sm" x-text="selectedTask.error"></div>
-                            </template>
-                        </div>
-
-                        <!-- Step Viewer -->
-                        <div class="p-4" x-show="selectedTask.steps.length > 0">
-                            <!-- Step Navigation -->
-                            <div class="flex items-center justify-between mb-4">
-                                <div class="flex items-center space-x-2">
-                                    <button @click="prevStep()" :disabled="currentStep === 0"
-                                            class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded disabled:opacity-50">Prev</button>
-                                    <span class="text-sm" x-text="'Step ' + (currentStep + 1) + ' of ' + selectedTask.steps.length"></span>
-                                    <button @click="nextStep()" :disabled="currentStep >= selectedTask.steps.length - 1"
-                                            class="px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded disabled:opacity-50">Next</button>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <button @click="togglePlayback()"
-                                            class="px-3 py-1 bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 rounded">
-                                        <span x-text="isPlaying ? 'Pause' : 'Play'"></span>
-                                    </button>
-                                    <select x-model="playbackSpeed" class="px-2 py-1 text-sm border rounded bg-white dark:bg-gray-700 dark:border-gray-600">
-                                        <option value="0.5">0.5x</option>
-                                        <option value="1">1x</option>
-                                        <option value="2">2x</option>
-                                        <option value="4">4x</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Progress Bar -->
-                            <div class="mb-4">
-                                <div class="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary-500 transition-all duration-200"
-                                         :style="'width: ' + ((currentStep + 1) / selectedTask.steps.length * 100) + '%'"></div>
-                                </div>
-                            </div>
-
-                            <!-- Current Step -->
-                            <template x-if="selectedTask.steps[currentStep]">
-                                <div>
-                                    <div class="screenshot-container bg-gray-100 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
-                                        <template x-if="selectedTask.steps[currentStep].screenshot_path">
-                                            <img :src="selectedTask.steps[currentStep].screenshot_path"
-                                                 class="max-w-full max-h-full object-contain rounded"
-                                                 alt="Screenshot">
-                                        </template>
-                                        <template x-if="!selectedTask.steps[currentStep].screenshot_path">
-                                            <div class="text-gray-400">No screenshot available</div>
-                                        </template>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <div class="flex items-center space-x-2">
-                                            <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-sm font-medium"
-                                                  x-text="selectedTask.steps[currentStep].action_type.toUpperCase()"></span>
-                                            <span class="text-sm text-gray-500" x-text="JSON.stringify(selectedTask.steps[currentStep].action_details)"></span>
-                                        </div>
-                                        <template x-if="selectedTask.steps[currentStep].reasoning">
-                                            <div class="p-3 bg-gray-50 dark:bg-gray-700 rounded text-sm">
-                                                <div class="font-medium mb-1">Reasoning:</div>
-                                                <div class="text-gray-600 dark:text-gray-300" x-text="selectedTask.steps[currentStep].reasoning"></div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-
-                        <div class="p-4 text-center text-gray-500" x-show="selectedTask.steps.length === 0">
-                            No steps recorded for this task
-                        </div>
-                    </div>
-                </template>
-
-                <div x-show="!selectedTask" class="p-8 text-center text-gray-500 dark:text-gray-400">
-                    Select a task from the list to view details
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="container mx-auto px-4 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
-        Generated by <a href="https://github.com/OpenAdaptAI/openadapt-viewer" class="text-primary-600 dark:text-primary-400 hover:underline">openadapt-viewer</a>
-    </footer>
-
-    <script>
-        function benchmarkViewer() {
-            return {
-                darkMode: localStorage.getItem('darkMode') === 'true',
-                tasks: {{ tasks_data | tojson_safe }},
+    # Add Alpine.js state management
+    alpine_script = """
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('viewer', () => ({
+                tasks: TASKS_DATA_PLACEHOLDER,
                 selectedTask: null,
                 currentStep: 0,
                 isPlaying: false,
                 playbackSpeed: 1,
                 playbackInterval: null,
-                filterDomain: '',
-                filterStatus: '',
+                filters: {
+                    domain: '',
+                    status: '',
+                },
 
                 init() {
-                    // Auto-select first task if available
                     if (this.filteredTasks.length > 0) {
                         this.selectTask(this.filteredTasks[0]);
                     }
@@ -373,9 +251,9 @@ def _get_benchmark_template() -> str:
 
                 get filteredTasks() {
                     return this.tasks.filter(task => {
-                        if (this.filterDomain && task.domain !== this.filterDomain) return false;
-                        if (this.filterStatus === 'passed' && !task.success) return false;
-                        if (this.filterStatus === 'failed' && task.success) return false;
+                        if (this.filters.domain && task.domain !== this.filters.domain) return false;
+                        if (this.filters.status === 'passed' && !task.success) return false;
+                        if (this.filters.status === 'failed' && task.success) return false;
                         return true;
                     });
                 },
@@ -423,8 +301,205 @@ def _get_benchmark_template() -> str:
                         this.playbackInterval = null;
                     }
                 }
-            }
-        }
-    </script>
-</body>
-</html>'''
+            }))
+        });
+    """.replace("TASKS_DATA_PLACEHOLDER", tasks_json)
+    page.add_script(alpine_script)
+
+    return page.render()
+
+
+def _generate_task_viewer_section(tasks_json: str) -> str:
+    """Generate the task list and detail viewer section using Alpine.js.
+
+    This section provides a two-column layout with task list on the left
+    and detail view on the right with step-by-step playback.
+
+    Args:
+        tasks_json: JSON string of tasks data
+
+    Returns:
+        HTML string for the task viewer section
+    """
+    return '''
+    <div x-data="viewer">
+        <!-- Task List -->
+        <div class="oa-list">
+            <div class="oa-list-header">
+                <div class="oa-list-title">Tasks</div>
+                <div class="oa-list-subtitle" x-text="'Showing ' + filteredTasks.length + ' of ' + tasks.length"></div>
+            </div>
+            <div class="oa-list-items">
+                <template x-for="task in filteredTasks" :key="task.task_id">
+                    <div class="oa-list-item"
+                         @click="selectTask(task)"
+                         :class="{'oa-list-item-selected': selectedTask?.task_id === task.task_id}">
+                        <div class="oa-list-item-content">
+                            <div style="flex: 1; min-width: 0;">
+                                <div class="oa-list-item-title" x-text="task.task_id"></div>
+                                <div class="oa-list-item-subtitle" x-text="task.instruction.length > 60 ? task.instruction.substring(0, 60) + '...' : task.instruction"></div>
+                            </div>
+                            <span class="oa-badge"
+                                  :class="task.success ? 'oa-badge-success' : 'oa-badge-error'"
+                                  x-text="task.success ? 'Pass' : 'Fail'"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Detail View -->
+        <div style="background: var(--oa-bg-secondary); border-radius: var(--oa-border-radius-lg); border: 1px solid var(--oa-border-color); overflow: hidden;">
+            <template x-if="selectedTask">
+                <div>
+                    <!-- Task Header -->
+                    <div style="padding: var(--oa-space-md); border-bottom: 1px solid var(--oa-border-color);">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <h2 style="font-weight: 600;" x-text="selectedTask.task_id"></h2>
+                            <span class="oa-badge"
+                                  :class="selectedTask.success ? 'oa-badge-success' : 'oa-badge-error'"
+                                  x-text="selectedTask.success ? 'Passed' : 'Failed'"></span>
+                        </div>
+                        <p style="margin-top: 8px; color: var(--oa-text-secondary);" x-text="selectedTask.instruction"></p>
+                        <div style="margin-top: 8px; display: flex; gap: 16px; font-size: 0.85rem; color: var(--oa-text-muted);">
+                            <span x-text="'Domain: ' + selectedTask.domain"></span>
+                            <span x-text="'Difficulty: ' + selectedTask.difficulty"></span>
+                            <span x-text="'Steps: ' + selectedTask.steps.length"></span>
+                        </div>
+                        <template x-if="selectedTask.error">
+                            <div style="margin-top: 8px; padding: 8px; background: var(--oa-error-bg); color: var(--oa-error); border-radius: var(--oa-border-radius); font-size: 0.85rem;" x-text="selectedTask.error"></div>
+                        </template>
+                    </div>
+
+                    <!-- Step Viewer -->
+                    <div style="padding: var(--oa-space-md);" x-show="selectedTask.steps.length > 0">
+                        <!-- Playback Controls -->
+                        <div class="oa-playback-controls" style="margin-bottom: 16px;">
+                            <button class="oa-playback-btn" @click="currentStep = 0" :disabled="currentStep === 0" title="Go to start">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 6h2v12H6V6zm3.5 6l8.5 6V6l-8.5 6z"/>
+                                </svg>
+                            </button>
+                            <button class="oa-playback-btn" @click="prevStep()" :disabled="currentStep === 0" title="Previous">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                                </svg>
+                            </button>
+                            <button class="oa-playback-btn oa-playback-btn-primary" @click="togglePlayback()" title="Play/Pause">
+                                <svg x-show="!isPlaying" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M8 5v14l11-7z"/>
+                                </svg>
+                                <svg x-show="isPlaying" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                </svg>
+                            </button>
+                            <button class="oa-playback-btn" @click="nextStep()" :disabled="currentStep >= selectedTask.steps.length - 1" title="Next">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                                </svg>
+                            </button>
+                            <button class="oa-playback-btn" @click="currentStep = selectedTask.steps.length - 1" :disabled="currentStep >= selectedTask.steps.length - 1" title="Go to end">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 18l8.5-6L6 6v12zm2-12v12h2V6h-2z" transform="scale(-1, 1) translate(-24, 0)"/>
+                                </svg>
+                            </button>
+                            <span class="oa-playback-counter" x-text="'Step ' + (currentStep + 1) + ' of ' + selectedTask.steps.length"></span>
+                            <select class="oa-playback-speed" x-model.number="playbackSpeed" @change="if (isPlaying) { stopPlayback(); startPlayback(); }">
+                                <option value="0.5">0.5x</option>
+                                <option value="1">1x</option>
+                                <option value="2">2x</option>
+                                <option value="4">4x</option>
+                            </select>
+                        </div>
+
+                        <!-- Timeline -->
+                        <div class="oa-timeline" style="margin-bottom: 16px;">
+                            <div class="oa-timeline-track" @click="(e) => {
+                                const rect = $el.getBoundingClientRect();
+                                const clickX = e.clientX - rect.left;
+                                const percent = clickX / rect.width;
+                                currentStep = Math.floor(percent * selectedTask.steps.length);
+                                if (currentStep >= selectedTask.steps.length) currentStep = selectedTask.steps.length - 1;
+                            }">
+                                <div class="oa-timeline-progress" :style="'width: ' + ((currentStep + 1) / selectedTask.steps.length * 100) + '%'"></div>
+                            </div>
+                        </div>
+
+                        <!-- Current Step -->
+                        <template x-if="selectedTask.steps[currentStep]">
+                            <div>
+                                <div class="screenshot-container" style="margin-bottom: 16px;">
+                                    <template x-if="selectedTask.steps[currentStep].screenshot_path">
+                                        <img :src="selectedTask.steps[currentStep].screenshot_path" alt="Screenshot">
+                                    </template>
+                                    <template x-if="!selectedTask.steps[currentStep].screenshot_path">
+                                        <div style="color: var(--oa-text-muted); font-size: 0.85rem;">No screenshot available</div>
+                                    </template>
+                                </div>
+                                <div class="oa-action" style="margin-bottom: 8px;">
+                                    <!-- Provenance badge -->
+                                    <span class="oa-badge oa-badge-ml"
+                                          x-show="selectedTask.steps[currentStep].action_details.provenance === 'ml_inferred'"
+                                          :title="'Generated by ' + selectedTask.steps[currentStep].action_details.model + ' with ' + (selectedTask.steps[currentStep].action_details.confidence * 100).toFixed(0) + '% confidence'">
+                                        ML-INFERRED
+                                    </span>
+                                    <span class="oa-badge oa-badge-raw"
+                                          x-show="selectedTask.steps[currentStep].action_details.provenance === 'raw'"
+                                          title="Raw hardware event">
+                                        RAW
+                                    </span>
+                                    <!-- Description -->
+                                    <span class="oa-action-details" x-text="selectedTask.steps[currentStep].action_details.description"></span>
+                                </div>
+                                <!-- Provenance metadata (expandable) -->
+                                <details class="oa-metadata-details" style="margin-bottom: 8px;">
+                                    <summary style="cursor: pointer; color: var(--oa-text-muted); font-size: 0.85rem;">
+                                        View Provenance & Metadata
+                                    </summary>
+                                    <div style="margin-top: 8px; padding: 12px; background: var(--oa-bg-tertiary); border-radius: var(--oa-border-radius); font-size: 0.85rem;">
+                                        <div class="oa-metadata">
+                                            <div class="oa-metadata-item" x-show="selectedTask.steps[currentStep].action_details.model">
+                                                <span class="oa-label">Model:</span>
+                                                <span class="oa-value" x-text="selectedTask.steps[currentStep].action_details.model"></span>
+                                            </div>
+                                            <div class="oa-metadata-item" x-show="selectedTask.steps[currentStep].action_details.confidence !== undefined">
+                                                <span class="oa-label">Confidence:</span>
+                                                <span class="oa-value" x-text="(selectedTask.steps[currentStep].action_details.confidence * 100).toFixed(1) + '%'"></span>
+                                            </div>
+                                            <div class="oa-metadata-item" x-show="selectedTask.steps[currentStep].action_details.source">
+                                                <span class="oa-label">Source:</span>
+                                                <span class="oa-value" x-text="selectedTask.steps[currentStep].action_details.source"></span>
+                                            </div>
+                                            <div class="oa-metadata-item" x-show="selectedTask.steps[currentStep].action_details.episode">
+                                                <span class="oa-label">Episode:</span>
+                                                <span class="oa-value" x-text="selectedTask.steps[currentStep].action_details.episode"></span>
+                                            </div>
+                                            <div class="oa-metadata-item" x-show="selectedTask.steps[currentStep].action_details.frame_index !== undefined && selectedTask.steps[currentStep].action_details.frame_index !== null">
+                                                <span class="oa-label">Frame Index:</span>
+                                                <span class="oa-value" x-text="selectedTask.steps[currentStep].action_details.frame_index"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                                <template x-if="selectedTask.steps[currentStep].reasoning">
+                                    <div style="padding: 12px; background: var(--oa-bg-tertiary); border-radius: var(--oa-border-radius); font-size: 0.85rem;">
+                                        <strong>Reasoning:</strong>
+                                        <div style="color: var(--oa-text-secondary); margin-top: 4px;" x-text="selectedTask.steps[currentStep].reasoning"></div>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div style="padding: var(--oa-space-lg); text-align: center; color: var(--oa-text-muted);" x-show="selectedTask.steps.length === 0">
+                        No steps recorded for this task
+                    </div>
+                </div>
+            </template>
+
+            <div x-show="!selectedTask" style="padding: 48px; text-align: center; color: var(--oa-text-muted);">
+                Select a task from the list to view details
+            </div>
+        </div>
+    </div>
+    '''

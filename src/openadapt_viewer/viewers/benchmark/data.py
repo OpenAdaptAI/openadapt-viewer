@@ -2,6 +2,10 @@
 
 This module handles loading benchmark results from directories
 and provides sample data for testing the viewer.
+
+POLICY: ALWAYS use real data from openadapt-capture by default.
+Sample data ONLY for unit tests, clearly marked.
+Use real_data_loader.py for loading real capture data.
 """
 
 from datetime import datetime, timedelta
@@ -31,6 +35,10 @@ def load_benchmark_data(data_path: Path | str) -> BenchmarkRun:
 
 def create_sample_data(num_tasks: int = 10) -> BenchmarkRun:
     """Create sample benchmark data for testing/demo purposes.
+
+    WARNING: This generates FAKE/SYNTHETIC data.
+    POLICY: ONLY use this for unit tests, clearly marked.
+    For all other purposes, use load_real_capture_data() from real_data_loader.
 
     Args:
         num_tasks: Number of sample tasks to generate
@@ -86,10 +94,16 @@ def create_sample_data(num_tasks: int = 10) -> BenchmarkRun:
         steps = []
         for j in range(num_steps):
             action_type = random.choice(["click", "type", "scroll", "wait"])
+            # Use a data URI placeholder image for demo screenshots
+            # This is a simple 16:9 gray rectangle with "Screenshot" text
+            placeholder_image = (
+                "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIHZpZXdCb3g9IjAgMCAxNjAwIDkwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI5MDAiIGZpbGw9IiMxYTFhMjQiLz4KICA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjQ4IiBmaWxsPSIjNTU1IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5TY3JlZW5zaG90IFN0ZXAgPC90ZXh0Pgo8L3N2Zz4="
+            ).replace("</text>", f"{j+1}</text>")
+
             step = ExecutionStep(
                 step_number=j,
                 timestamp=task_start + timedelta(seconds=j * 2),
-                screenshot_path=f"tasks/{task_id}/screenshots/step_{j:03d}.png",
+                screenshot_path=placeholder_image,
                 action_type=action_type,
                 action_details={
                     "click": {"x": random.randint(100, 1800), "y": random.randint(100, 900)},
