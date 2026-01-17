@@ -52,6 +52,17 @@ from openadapt_viewer.builders import PageBuilder
 
 # Viewer generators (re-exported for convenience)
 from openadapt_viewer.viewers.benchmark import generate_benchmark_html
+from openadapt_viewer.viewers.segmentation_generator import generate_segmentation_viewer
+
+# Catalog system
+from openadapt_viewer.catalog import (
+    RecordingCatalog,
+    Recording,
+    SegmentationResult,
+    Episode,
+    get_catalog,
+)
+from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
 
 __all__ = [
     # Core
@@ -76,4 +87,13 @@ __all__ = [
     "PageBuilder",
     # Viewers
     "generate_benchmark_html",
+    "generate_segmentation_viewer",
+    # Catalog
+    "RecordingCatalog",
+    "Recording",
+    "SegmentationResult",
+    "Episode",
+    "get_catalog",
+    "RecordingScanner",
+    "scan_and_update_catalog",
 ]

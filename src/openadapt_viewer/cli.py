@@ -3,9 +3,13 @@
 Usage:
     openadapt-viewer benchmark --data DIR [--output FILE] [--standalone]
     openadapt-viewer demo [--output FILE]
+    openadapt-viewer catalog scan [--capture-dir DIR] [--segmentation-dir DIR]
+    openadapt-viewer catalog list [--json]
+    openadapt-viewer catalog stats
 """
 
 import argparse
+import json as json_module
 import sys
 import webbrowser
 from pathlib import Path
@@ -62,6 +66,28 @@ Examples:
         help="Open the generated file in browser",
     )
 
+    # Segmentation command
+    seg_parser = subparsers.add_parser(
+        "segmentation", help="Generate segmentation viewer with catalog integration"
+    )
+    seg_parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        default=Path("segmentation_viewer_catalog.html"),
+        help="Output HTML file path (default: segmentation_viewer_catalog.html)",
+    )
+    seg_parser.add_argument(
+        "--auto-load",
+        type=str,
+        help="Recording ID to auto-load on page load",
+    )
+    seg_parser.add_argument(
+        "--open",
+        action="store_true",
+        help="Open the generated file in browser",
+    )
+
     # Demo command
     demo_parser = subparsers.add_parser(
         "demo", help="Generate a demo viewer with sample data"
@@ -86,6 +112,116 @@ Examples:
         help="Open the generated file in browser",
     )
 
+    # Screenshots command
+    screenshots_parser = subparsers.add_parser(
+        "screenshots", help="Generate screenshots of viewers for documentation"
+    )
+    screenshots_subparsers = screenshots_parser.add_subparsers(
+        dest="screenshots_command", help="Screenshot generation commands"
+    )
+
+    # screenshots segmentation
+    seg_screenshots_parser = screenshots_subparsers.add_parser(
+        "segmentation", help="Generate segmentation viewer screenshots"
+    )
+    seg_screenshots_parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        help="Output directory for screenshots (default: screenshots/segmentation/)",
+    )
+    seg_screenshots_parser.add_argument(
+        "--viewer",
+        type=Path,
+        help="Path to segmentation viewer HTML (default: segmentation_viewer.html)",
+    )
+    seg_screenshots_parser.add_argument(
+        "--test-data",
+        type=Path,
+        help="Path to test episodes JSON (default: test_episodes.json)",
+    )
+    seg_screenshots_parser.add_argument(
+        "--skip-responsive",
+        action="store_true",
+        help="Skip responsive (tablet/mobile) screenshots",
+    )
+    seg_screenshots_parser.add_argument(
+        "--save-metadata",
+        action="store_true",
+        help="Save metadata JSON alongside screenshots",
+    )
+    seg_screenshots_parser.add_argument(
+        "--viewport",
+        choices=["desktop", "tablet", "mobile"],
+        help="Generate only specific viewport screenshots",
+    )
+
+    # Catalog command
+    catalog_parser = subparsers.add_parser(
+        "catalog", help="Manage recording catalog"
+    )
+    catalog_subparsers = catalog_parser.add_subparsers(
+        dest="catalog_command", help="Catalog operations"
+    )
+
+    # catalog scan
+    scan_parser = catalog_subparsers.add_parser(
+        "scan", help="Scan directories for recordings and segmentation results"
+    )
+    scan_parser.add_argument(
+        "--capture-dir",
+        type=Path,
+        action="append",
+        dest="capture_dirs",
+        help="Directory to scan for recordings (can specify multiple times)",
+    )
+    scan_parser.add_argument(
+        "--segmentation-dir",
+        type=Path,
+        action="append",
+        dest="segmentation_dirs",
+        help="Directory to scan for segmentation results (can specify multiple times)",
+    )
+
+    # catalog list
+    list_parser = catalog_subparsers.add_parser(
+        "list", help="List all recordings in catalog"
+    )
+    list_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output as JSON",
+    )
+    list_parser.add_argument(
+        "--with-segmentations",
+        action="store_true",
+        help="Include segmentation results for each recording",
+    )
+
+    # catalog stats
+    stats_parser = catalog_subparsers.add_parser(
+        "stats", help="Show catalog statistics"
+    )
+
+    # catalog clean
+    clean_parser = catalog_subparsers.add_parser(
+        "clean", help="Remove entries for missing files"
+    )
+
+    # catalog register
+    register_parser = catalog_subparsers.add_parser(
+        "register", help="Manually register a recording"
+    )
+    register_parser.add_argument(
+        "path",
+        type=Path,
+        help="Path to recording directory",
+    )
+    register_parser.add_argument(
+        "--name",
+        help="Display name (defaults to directory name)",
+    )
+
     args = parser.parse_args()
 
     if not args.command:
@@ -94,8 +230,14 @@ Examples:
 
     if args.command == "benchmark":
         run_benchmark_command(args)
+    elif args.command == "segmentation":
+        run_segmentation_command(args)
     elif args.command == "demo":
         run_demo_command(args)
+    elif args.command == "screenshots":
+        run_screenshots_command(args)
+    elif args.command == "catalog":
+        run_catalog_command(args)
 
 
 def run_benchmark_command(args):
@@ -110,6 +252,23 @@ def run_benchmark_command(args):
         output_path=args.output,
         standalone=args.standalone,
     )
+    print(f"Generated: {output_path}")
+
+    if args.open:
+        webbrowser.open(f"file://{Path(output_path).absolute()}")
+
+
+def run_segmentation_command(args):
+    """Handle the segmentation command."""
+    from openadapt_viewer.viewers.segmentation_generator import generate_segmentation_viewer
+
+    print("Generating catalog-enabled segmentation viewer...")
+
+    output_path = generate_segmentation_viewer(
+        output_path=str(args.output),
+        auto_load_recording=args.auto_load,
+    )
+
     print(f"Generated: {output_path}")
 
     if args.open:
@@ -132,6 +291,157 @@ def run_demo_command(args):
 
     if args.open:
         webbrowser.open(f"file://{Path(output_path).absolute()}")
+
+
+def run_screenshots_command(args):
+    """Handle the screenshots command."""
+    import subprocess
+
+    if not args.screenshots_command:
+        print("Error: No screenshots subcommand specified", file=sys.stderr)
+        print("Use 'openadapt-viewer screenshots --help' to see available commands")
+        sys.exit(1)
+
+    if args.screenshots_command == "segmentation":
+        # Build command to run the screenshot generation script
+        script_path = Path(__file__).parent.parent.parent / "scripts" / "generate_segmentation_screenshots.py"
+
+        if not script_path.exists():
+            print(f"Error: Screenshot script not found: {script_path}", file=sys.stderr)
+            sys.exit(1)
+
+        # Build arguments
+        cmd_args = [sys.executable, str(script_path)]
+
+        if args.output:
+            cmd_args.extend(["--output", str(args.output)])
+        if args.viewer:
+            cmd_args.extend(["--viewer", str(args.viewer)])
+        if args.test_data:
+            cmd_args.extend(["--test-data", str(args.test_data)])
+        if args.skip_responsive:
+            cmd_args.append("--skip-responsive")
+        if args.save_metadata:
+            cmd_args.append("--save-metadata")
+
+        # Run the script
+        print("Generating segmentation viewer screenshots...")
+        result = subprocess.run(cmd_args)
+        sys.exit(result.returncode)
+
+
+def run_catalog_command(args):
+    """Handle catalog commands."""
+    from datetime import datetime
+
+    from openadapt_viewer.catalog import get_catalog
+    from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
+
+    if not args.catalog_command:
+        print("Error: No catalog subcommand specified", file=sys.stderr)
+        print("Use 'openadapt-viewer catalog --help' to see available commands")
+        sys.exit(1)
+
+    catalog = get_catalog()
+
+    if args.catalog_command == "scan":
+        print("Scanning for recordings and segmentation results...")
+
+        capture_dirs = [str(p) for p in args.capture_dirs] if args.capture_dirs else None
+        seg_dirs = [str(p) for p in args.segmentation_dirs] if args.segmentation_dirs else None
+
+        counts = scan_and_update_catalog(
+            catalog=catalog,
+            capture_dirs=capture_dirs,
+            segmentation_dirs=seg_dirs,
+        )
+
+        print(f"\nIndexed {counts['recordings']} recordings")
+        print(f"Indexed {counts['segmentations']} segmentation results")
+        print(f"\nCatalog location: {catalog.db_path}")
+
+    elif args.catalog_command == "list":
+        recordings = catalog.get_all_recordings()
+
+        if not recordings:
+            print("No recordings found in catalog")
+            print("Run 'openadapt-viewer catalog scan' to index recordings")
+            return
+
+        if args.json:
+            output = []
+            for rec in recordings:
+                rec_dict = rec.model_dump()
+                if args.with_segmentations:
+                    seg_results = catalog.get_segmentation_results(rec.id)
+                    rec_dict["segmentations"] = [s.model_dump() for s in seg_results]
+                output.append(rec_dict)
+            print(json_module.dumps(output, indent=2))
+        else:
+            print(f"\nFound {len(recordings)} recordings:\n")
+            for rec in recordings:
+                created = datetime.fromtimestamp(rec.created_at).strftime("%Y-%m-%d %H:%M")
+                duration = f"{rec.duration_seconds:.1f}s" if rec.duration_seconds else "N/A"
+                frames = rec.frame_count if rec.frame_count else "N/A"
+
+                print(f"  {rec.name}")
+                print(f"    ID: {rec.id}")
+                print(f"    Path: {rec.path}")
+                print(f"    Created: {created}")
+                print(f"    Duration: {duration}")
+                print(f"    Frames: {frames}")
+
+                if args.with_segmentations:
+                    seg_results = catalog.get_segmentation_results(rec.id)
+                    if seg_results:
+                        print(f"    Segmentations: {len(seg_results)}")
+                        for seg in seg_results:
+                            print(f"      - {seg.episode_count} episodes, {seg.boundary_count} boundaries")
+                    else:
+                        print(f"    Segmentations: None")
+
+                print()
+
+    elif args.catalog_command == "stats":
+        stats = catalog.get_stats()
+
+        print("\nCatalog Statistics:")
+        print(f"  Recordings: {stats['recording_count']}")
+        print(f"  Segmentation Results: {stats['segmentation_count']}")
+        print(f"  Episodes: {stats['episode_count']}")
+        print(f"\nDatabase: {stats['db_path']}")
+
+    elif args.catalog_command == "clean":
+        print("Cleaning missing entries from catalog...")
+        removed = catalog.clean_missing()
+
+        print(f"Removed {removed['recordings']} missing recordings")
+        print(f"Removed {removed['segmentations']} missing segmentation results")
+
+    elif args.catalog_command == "register":
+        if not args.path.exists():
+            print(f"Error: Path not found: {args.path}", file=sys.stderr)
+            sys.exit(1)
+
+        scanner = RecordingScanner(catalog)
+        recording_id = args.path.name
+        name = args.name or recording_id.replace("_", " ").replace("-", " ").title()
+
+        print(f"Registering recording: {args.path}")
+
+        try:
+            recording = scanner._extract_recording_info(args.path, recording_id)
+            if args.name:
+                recording.name = args.name
+
+            catalog.register_recording(**recording.model_dump())
+            print(f"Successfully registered: {recording.name}")
+            print(f"  ID: {recording.id}")
+            print(f"  Frames: {recording.frame_count}")
+            print(f"  Events: {recording.event_count}")
+        except Exception as e:
+            print(f"Error registering recording: {e}", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
