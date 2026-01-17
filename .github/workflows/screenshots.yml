@@ -47,6 +47,9 @@ jobs:
       - name: Set up Python 3.11
         run: uv python install 3.11
 
+      - name: Create virtual environment
+        run: uv venv --python 3.11
+
       - name: Install openadapt-capture
         working-directory: openadapt-capture
         run: |
