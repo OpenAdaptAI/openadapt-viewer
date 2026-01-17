@@ -13,6 +13,9 @@ from openadapt_viewer.core.types import (
     ExecutionStep,
 )
 
+# Import Playwright fixtures via pytest_playwright
+# The plugin is automatically loaded when pytest-playwright is installed
+
 
 @pytest.fixture
 def sample_execution_step():

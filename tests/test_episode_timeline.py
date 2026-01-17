@@ -238,7 +238,8 @@ class TestEpisodeTimelineComponent:
 
         # Second episode label should have current class
         second_label = page.locator(".oa-episode-label").nth(1)
-        expect(second_label).to_have_class(/oa-episode-current/)
+        class_attr = second_label.get_attribute("class")
+        assert "oa-episode-current" in class_attr
 
     def test_simulate_playback(self, page: Page, test_page_url: str):
         """Test the simulate playback functionality."""
