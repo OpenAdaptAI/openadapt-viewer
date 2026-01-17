@@ -155,28 +155,57 @@ src/openadapt_viewer/
 └── templates/            # Jinja2 templates
 ```
 
+## Audio Transcript Feature
+
+The viewer includes a powerful **audio transcript** feature that displays real-time transcription of captured audio alongside the visual playback. This is particularly useful for:
+
+- **Debugging workflows**: See what was said at each step
+- **Documentation**: Auto-generate narrative descriptions of recorded sessions
+- **Analysis**: Correlate verbal instructions with UI actions
+- **Training**: Review narrated demonstrations with synchronized visuals
+
+### Key Capabilities
+
+The transcript panel provides:
+
+- **Timestamped transcription**: Each transcript segment is stamped with its time in the recording (e.g., `0:00.00`, `0:05.60`)
+- **Synchronized playback**: Transcript automatically highlights and scrolls as the video plays
+- **Searchable text**: Find specific moments in long recordings by searching transcript content
+- **Copy functionality**: Export transcript text for documentation or analysis
+
+### How It Works
+
+When captures are recorded with audio (using `openadapt-capture`'s audio recording features), the viewer automatically:
+
+1. Displays the transcript in a dedicated panel in the sidebar
+2. Timestamps each transcript segment relative to the recording start time
+3. Syncs transcript highlighting with the current playback position
+4. Updates the displayed transcript as you navigate through events
+
+The transcript appears alongside the event list and event details, providing a complete picture of what happened during the recording.
+
 ## Screenshots
 
 ### Full Viewer Interface
 
-The viewer provides a complete interface for exploring captured GUI interactions with playback controls, timeline navigation, and event details.
+The viewer provides a complete interface for exploring captured GUI interactions with playback controls, timeline navigation, event details, and **real-time audio transcript**.
 
 ![Turn off Night Shift - Full Viewer](docs/images/turn-off-nightshift_full.png)
-*Interactive viewer showing the "Turn off Night Shift" workflow in macOS System Settings*
+*Interactive viewer showing the "Turn off Night Shift" workflow with screenshot display (center), event list (right sidebar top), and **audio transcript** (right sidebar bottom)*
 
 ### Playback Controls
 
 Step through captures with playback controls, timeline scrubbing, and keyboard shortcuts (Space to play/pause, arrow keys to navigate).
 
 ![Playback Controls](docs/images/turn-off-nightshift_controls.png)
-*Timeline and playback controls with overlay toggle*
+*Timeline and playback controls with overlay toggle, plus event details and **synchronized transcript panel***
 
-### Event List and Details
+### Event List, Details, and Transcript
 
-Browse all captured events with detailed information about each action, including coordinates, timing, and action type.
+Browse all captured events with detailed information about each action. The **transcript panel** displays timestamped audio transcription that syncs with playback, showing exactly what was said at each moment in the recording.
 
 ![Event List](docs/images/turn-off-nightshift_events.png)
-*Event list sidebar showing captured actions with timing and type information*
+*Event list sidebar showing captured actions with timing and type information, plus **live audio transcript with timestamps***
 
 ### Demo Workflow
 
