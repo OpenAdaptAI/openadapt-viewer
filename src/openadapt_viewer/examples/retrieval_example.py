@@ -15,7 +15,6 @@ from openadapt_viewer.builders import PageBuilder
 from openadapt_viewer.components import (
     metrics_grid,
     screenshot_display,
-    selectable_list,
 )
 
 

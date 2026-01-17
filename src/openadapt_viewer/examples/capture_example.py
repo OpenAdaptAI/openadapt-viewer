@@ -14,10 +14,6 @@ from pathlib import Path
 from openadapt_viewer.builders import PageBuilder
 from openadapt_viewer.components import (
     metrics_grid,
-    screenshot_display,
-    playback_controls,
-    timeline,
-    action_display,
 )
 
 

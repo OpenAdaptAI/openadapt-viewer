@@ -119,7 +119,7 @@ def generate_enhanced_capture_viewer(
     # Feature 1: Video Playback from Screenshots (HIGH PRIORITY)
     # ===================
     # Properly escape JSON for HTML attributes to prevent Alpine.js parsing errors
-    frames_json = html.escape(json.dumps(frames))
+    html.escape(json.dumps(frames))
 
     builder.add_section(f'''
         <div class="demo-section" id="video">

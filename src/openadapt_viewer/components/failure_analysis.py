@@ -352,11 +352,11 @@ def failure_summary_card(
             <div style="font-size: var(--oa-font-size-xs); color: var(--oa-text-muted);">of {total_tasks} total</div>
         </div>
     </div>
-    {f'''<div style="margin-top: var(--oa-space-md); padding-top: var(--oa-space-md); border-top: 1px solid var(--oa-border-color);">
-        <div style="font-size: var(--oa-font-size-xs); color: var(--oa-text-muted);">Most Common Error</div>
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: var(--oa-space-xs);">
-            <span style="font-size: var(--oa-font-size-sm); font-weight: 500;">{top_error_type}</span>
-            <span class="oa-badge oa-badge-error">{top_error_count}</span>
-        </div>
-    </div>''' if top_error_type else ""}
+    {f'<div style="margin-top: var(--oa-space-md); padding-top: var(--oa-space-md); border-top: 1px solid var(--oa-border-color);">' +
+        f'<div style="font-size: var(--oa-font-size-xs); color: var(--oa-text-muted);">Most Common Error</div>' +
+        f'<div style="display: flex; align-items: center; justify-content: space-between; margin-top: var(--oa-space-xs);">' +
+            f'<span style="font-size: var(--oa-font-size-sm); font-weight: 500;">{top_error_type}</span>' +
+            f'<span class="oa-badge oa-badge-error">{top_error_count}</span>' +
+        f'</div>' +
+    f'</div>' if top_error_type else ""}
 </div>'''

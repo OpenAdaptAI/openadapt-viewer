@@ -4,7 +4,6 @@ This module generates standalone HTML files for visualizing
 benchmark evaluation results with interactive features.
 """
 
-import json
 from pathlib import Path
 from typing import Optional
 
