@@ -73,8 +73,10 @@ def generate_capture_viewer(
 
     # Main viewer with playback controls
     # This uses Alpine.js for state management
+    import html
     import json
-    steps_json = json.dumps(steps)
+    # Properly escape JSON for HTML attributes to prevent Alpine.js parsing errors
+    steps_json = html.escape(json.dumps(steps))
 
     builder.add_section(f'''
         <div x-data="{{
