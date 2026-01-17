@@ -50,12 +50,12 @@ jobs:
       - name: Install openadapt-capture
         working-directory: openadapt-capture
         run: |
-          uv pip install -e . --system
+          uv pip install -e .
 
       - name: Install openadapt-viewer with screenshots extra
         working-directory: openadapt-viewer
         run: |
-          uv pip install -e ".[screenshots]" --system
+          uv pip install -e ".[screenshots]"
 
       - name: Install Playwright browsers
         working-directory: openadapt-viewer
