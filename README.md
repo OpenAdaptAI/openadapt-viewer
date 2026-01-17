@@ -184,6 +184,54 @@ When captures are recorded with audio (using `openadapt-capture`'s audio recordi
 
 The transcript appears alongside the event list and event details, providing a complete picture of what happened during the recording.
 
+## Synthetic Demo Viewer
+
+**NEW:** Interactive browser-based viewer for synthetic WAA demonstration data.
+
+### Quick Start
+
+```bash
+# Open the synthetic demo viewer
+open synthetic_demo_viewer.html
+```
+
+### What It Shows
+
+- **82 synthetic demos** across 6 domains (notepad, paint, clock, browser, file_explorer, office)
+- **Filter by domain** and select specific tasks
+- **View demo content** with syntax-highlighted steps
+- **See how demos are used** in actual API prompts
+- **Impact comparison**: 33% → 100% accuracy improvement with demo-conditioned prompting
+- **Action reference**: All 8 action types (CLICK, TYPE, WAIT, etc.)
+
+### Purpose
+
+Synthetic demos are **AI-generated example trajectories** that show step-by-step how to complete Windows automation tasks. They are included in prompts when calling Claude/GPT APIs during benchmark evaluation - this is called **demo-conditioned prompting**.
+
+**Impact:** Improved first-action accuracy from 33% to 100%!
+
+### Documentation
+
+- **Quick Start**: `QUICK_REFERENCE.md` - One-page overview
+- **Complete Guide**: `SYNTHETIC_DEMOS_EXPLAINED.md` - Full explanation
+- **Examples**: `DEMO_EXAMPLES_SHOWCASE.md` - 5 diverse demo examples
+- **Master Index**: `SYNTHETIC_DEMO_INDEX.md` - Central navigation hub
+
+### Features
+
+- Beautiful dark theme matching OpenAdapt style
+- Domain filtering (All, Notepad, Paint, Clock, Browser, File Explorer, Office)
+- Task selector with estimated step counts
+- Dual-panel display: demo content + prompt usage
+- Side-by-side impact comparison (with vs without demos)
+- Complete action types reference
+- Fully self-contained (no external dependencies)
+- Works offline
+
+See `SYNTHETIC_DEMO_INDEX.md` for complete documentation.
+
+---
+
 ## Screenshots
 
 ### Full Viewer Interface
