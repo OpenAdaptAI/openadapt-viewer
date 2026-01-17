@@ -47,23 +47,25 @@ jobs:
       - name: Set up Python 3.11
         run: uv python install 3.11
 
-      - name: Create virtual environment
-        run: uv venv --python 3.11
+      - name: Create shared virtual environment
+        run: uv venv --python 3.11 .venv
 
       - name: Install openadapt-capture
         working-directory: openadapt-capture
         run: |
+          source ../.venv/bin/activate
           uv pip install -e .
 
       - name: Install openadapt-viewer with screenshots extra
         working-directory: openadapt-viewer
         run: |
+          source ../.venv/bin/activate
           uv pip install -e ".[screenshots]"
 
       - name: Install Playwright browsers
-        working-directory: openadapt-viewer
         run: |
-          uv run playwright install chromium
+          source .venv/bin/activate
+          playwright install chromium
 
       - name: Check if captures exist
         id: check-captures
@@ -87,7 +89,8 @@ jobs:
         if: steps.check-captures.outputs.nightshift_exists == 'true' || steps.check-captures.outputs.demo_exists == 'true'
         working-directory: openadapt-viewer
         run: |
-          uv run python scripts/generate_readme_screenshots.py \
+          source ../.venv/bin/activate
+          python scripts/generate_readme_screenshots.py \
             --capture-dir ../openadapt-capture \
             --output-dir docs/images \
             --max-events 50
