@@ -285,7 +285,6 @@ def run_benchmark_command(args):
         print("Generating benchmark viewer with REAL nightshift recording data...")
     else:
         print(f"Generating benchmark viewer from: {args.data}")
-
     output_path = generate_benchmark_html(
         data_path=args.data,
         output_path=args.output,
