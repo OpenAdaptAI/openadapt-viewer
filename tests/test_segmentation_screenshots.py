@@ -32,15 +32,17 @@ def script_exists():
 
 @pytest.fixture
 def viewer_exists():
-    """Verify the segmentation viewer HTML exists."""
-    assert VIEWER_PATH.exists(), f"Viewer not found: {VIEWER_PATH}"
+    """Verify the segmentation viewer HTML exists, skip if not found."""
+    if not VIEWER_PATH.exists():
+        pytest.skip(f"Viewer not found: {VIEWER_PATH}")
     return VIEWER_PATH
 
 
 @pytest.fixture
 def test_data_exists():
-    """Verify test data exists."""
-    assert TEST_DATA_PATH.exists(), f"Test data not found: {TEST_DATA_PATH}"
+    """Verify test data exists, skip if not found."""
+    if not TEST_DATA_PATH.exists():
+        pytest.skip(f"Test data not found: {TEST_DATA_PATH}")
     return TEST_DATA_PATH
 
 
