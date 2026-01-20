@@ -3,11 +3,25 @@ Tests for the Episode Timeline component.
 
 This test suite verifies the JavaScript-based Episode Timeline component
 using Playwright for browser automation.
+
+NOTE: These tests require:
+1. Playwright browsers installed: `uv run playwright install chromium`
+2. A local server running at localhost:8080: `uv run python -m http.server 8080`
+
+Run with: pytest tests/test_episode_timeline.py -m playwright
+Skip with: pytest -m "not playwright"
 """
 
 import pytest
 from pathlib import Path
 from playwright.sync_api import Page, expect
+
+
+# Mark all tests in this module as requiring playwright
+pytestmark = [
+    pytest.mark.playwright,
+    pytest.mark.skip(reason="Requires localhost:8080 server - run manually with `python -m http.server 8080`"),
+]
 
 
 # Test data matching test_episodes.json
