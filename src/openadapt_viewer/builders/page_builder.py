@@ -5,6 +5,7 @@ This module provides a fluent API for building viewer HTML pages.
 
 from __future__ import annotations
 
+import html
 from pathlib import Path
 from typing import Any
 
@@ -77,13 +78,15 @@ class PageBuilder:
         Returns:
             Self for chaining
         """
-        subtitle_html = f'<p style="font-size: 0.85rem; color: var(--oa-text-secondary);">{subtitle}</p>' if subtitle else ""
+        # Escape title and subtitle for XSS prevention
+        safe_title = html.escape(title)
+        subtitle_html = f'<p style="font-size: 0.85rem; color: var(--oa-text-secondary);">{html.escape(subtitle)}</p>' if subtitle else ""
 
         self._header_html = f'''
         <header style="padding: 16px 24px; background: var(--oa-bg-secondary); border-bottom: 1px solid var(--oa-border-color); margin-bottom: 24px;">
             <div style="display: flex; align-items: center; justify-content: space-between;">
                 <div>
-                    <h1 style="font-size: 1.25rem; font-weight: 600; margin: 0;">{title}</h1>
+                    <h1 style="font-size: 1.25rem; font-weight: 600; margin: 0;">{safe_title}</h1>
                     {subtitle_html}
                 </div>
                 <div style="display: flex; align-items: center; gap: 16px;">
@@ -128,7 +131,8 @@ class PageBuilder:
             Self for chaining
         """
         extra_class = f" {class_name}" if class_name else ""
-        title_html = f'<h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">{title}</h2>' if title else ""
+        # Escape title for XSS prevention
+        title_html = f'<h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 16px;">{html.escape(title)}</h2>' if title else ""
 
         self._sections.append(f'''
         <section class="oa-section{extra_class}" style="margin-bottom: 24px;">
@@ -216,12 +220,15 @@ class PageBuilder:
                 </script>
                 '''
 
+        # Escape title for XSS prevention
+        safe_title = html.escape(self.title)
+
         return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{self.title}</title>
+    <title>{safe_title}</title>
     {scripts_html}
     <style>
         {core_css}
