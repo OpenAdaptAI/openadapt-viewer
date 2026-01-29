@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "openadapt-viewer"
-version = "0.1.0"
+version = "0.2.0"
 description = "Standalone HTML viewer generation for OpenAdapt ML dashboards and benchmarks"
 readme = "README.md"
 requires-python = ">=3.10"
