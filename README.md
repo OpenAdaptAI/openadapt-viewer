@@ -1,6 +1,6 @@
 # openadapt-viewer
 
-[![Build Status](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/publish.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/publish.yml)
+[![Release](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/release.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/release.yml)
 [![PyPI version](https://img.shields.io/pypi/v/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
