@@ -13,9 +13,9 @@ as a single source of truth for all OpenAdapt viewers and tools.
 import json
 import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -25,15 +25,15 @@ class Recording(BaseModel):
 
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     path: str
     created_at: float
-    duration_seconds: Optional[float] = None
-    frame_count: Optional[int] = None
-    event_count: Optional[int] = None
-    task_description: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    duration_seconds: float | None = None
+    frame_count: int | None = None
+    event_count: int | None = None
+    task_description: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class SegmentationResult(BaseModel):
@@ -46,8 +46,8 @@ class SegmentationResult(BaseModel):
     episode_count: int = 0
     boundary_count: int = 0
     status: str = "complete"
-    llm_model: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    llm_model: str | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class Episode(BaseModel):
@@ -56,20 +56,20 @@ class Episode(BaseModel):
     id: str
     segmentation_result_id: str
     recording_id: str
-    name: Optional[str] = None
-    description: Optional[str] = None
-    start_time: Optional[float] = None
-    end_time: Optional[float] = None
-    start_frame: Optional[int] = None
-    end_frame: Optional[int] = None
-    confidence: Optional[float] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    name: str | None = None
+    description: str | None = None
+    start_time: float | None = None
+    end_time: float | None = None
+    start_frame: int | None = None
+    end_frame: int | None = None
+    confidence: float | None = None
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class RecordingCatalog:
     """Centralized catalog for all OpenAdapt recordings and results."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         """
         Initialize the catalog.
 
@@ -144,7 +144,7 @@ class RecordingCatalog:
         recording_id: str,
         name: str,
         path: str,
-        created_at: Optional[float] = None,
+        created_at: float | None = None,
         **kwargs
     ) -> Recording:
         """
@@ -161,7 +161,7 @@ class RecordingCatalog:
             The registered Recording object
         """
         if created_at is None:
-            created_at = datetime.now().timestamp()
+            created_at = datetime.now(timezone.utc).timestamp()
 
         recording = Recording(
             id=recording_id,
@@ -198,7 +198,7 @@ class RecordingCatalog:
         segmentation_id: str,
         recording_id: str,
         path: str,
-        created_at: Optional[float] = None,
+        created_at: float | None = None,
         **kwargs
     ) -> SegmentationResult:
         """
@@ -215,7 +215,7 @@ class RecordingCatalog:
             The registered SegmentationResult object
         """
         if created_at is None:
-            created_at = datetime.now().timestamp()
+            created_at = datetime.now(timezone.utc).timestamp()
 
         result = SegmentationResult(
             id=segmentation_id,
@@ -293,7 +293,7 @@ class RecordingCatalog:
 
         return episode
 
-    def get_all_recordings(self) -> List[Recording]:
+    def get_all_recordings(self) -> list[Recording]:
         """Get all recordings in the catalog, ordered by creation date (newest first)."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -320,7 +320,7 @@ class RecordingCatalog:
 
             return recordings
 
-    def get_recording(self, recording_id: str) -> Optional[Recording]:
+    def get_recording(self, recording_id: str) -> Recording | None:
         """Get a specific recording by ID."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -347,7 +347,7 @@ class RecordingCatalog:
                 metadata=json.loads(row["metadata"]) if row["metadata"] else {},
             )
 
-    def get_segmentation_results(self, recording_id: str) -> List[SegmentationResult]:
+    def get_segmentation_results(self, recording_id: str) -> list[SegmentationResult]:
         """Get all segmentation results for a recording."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -374,9 +374,9 @@ class RecordingCatalog:
 
     def get_episodes(
         self,
-        recording_id: Optional[str] = None,
-        segmentation_result_id: Optional[str] = None
-    ) -> List[Episode]:
+        recording_id: str | None = None,
+        segmentation_result_id: str | None = None
+    ) -> list[Episode]:
         """
         Get episodes, optionally filtered by recording or segmentation result.
 
@@ -423,9 +423,9 @@ class RecordingCatalog:
 
     def search_recordings(
         self,
-        query: Optional[str] = None,
-        tags: Optional[List[str]] = None
-    ) -> List[Recording]:
+        query: str | None = None,
+        tags: list[str] | None = None
+    ) -> list[Recording]:
         """
         Search recordings by name/description or tags.
 
@@ -449,7 +449,7 @@ class RecordingCatalog:
 
             if tags:
                 # Check if any tag matches
-                tag_conditions = " OR ".join([f"tags LIKE ?" for _ in tags])
+                tag_conditions = " OR ".join(["tags LIKE ?" for _ in tags])
                 sql += f" AND ({tag_conditions})"
                 params.extend([f'%"{tag}"%' for tag in tags])
 
@@ -475,7 +475,7 @@ class RecordingCatalog:
 
             return recordings
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get catalog statistics."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("""
@@ -494,7 +494,7 @@ class RecordingCatalog:
                 "db_path": self.db_path,
             }
 
-    def clean_missing(self) -> Dict[str, int]:
+    def clean_missing(self) -> dict[str, int]:
         """
         Remove catalog entries for recordings/files that no longer exist.
 
@@ -536,10 +536,10 @@ class RecordingCatalog:
 
 
 # Global catalog instance
-_catalog_instance: Optional[RecordingCatalog] = None
+_catalog_instance: RecordingCatalog | None = None
 
 
-def get_catalog(db_path: Optional[str] = None) -> RecordingCatalog:
+def get_catalog(db_path: str | None = None) -> RecordingCatalog:
     """Get the global catalog instance (singleton pattern)."""
     global _catalog_instance
 

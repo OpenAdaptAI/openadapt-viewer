@@ -28,14 +28,24 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 # Add src to path for imports
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
+
+try:
+    from playwright.sync_api import Error as PlaywrightError
+except ImportError:
+    # playwright is an optional extra. generate_all_screenshots() raises a
+    # RuntimeError with install instructions before any handler below can run,
+    # so this alias only exists to keep the module importable (the test suite
+    # imports it to check --help and --check-deps).
+    PlaywrightError = Exception
 
 
 @dataclass
@@ -47,8 +57,8 @@ class ScreenshotScenario:
     viewport_width: int
     viewport_height: int
     full_page: bool = False
-    interact: Optional[Callable] = None
-    wait_for_selector: Optional[str] = None
+    interact: Callable | None = None
+    wait_for_selector: str | None = None
     wait_timeout: int = 1000
 
 
@@ -67,6 +77,9 @@ class SegmentationScreenshotGenerator:
         self.viewer_path = viewer_path
         self.test_data_path = test_data_path
         self.screenshots_generated = []
+        # Scenarios that raised. A run in which every scenario failed used
+        # to still exit 0 and print "completed successfully".
+        self.scenarios_failed: list[str] = []
 
         # Create output directory
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -278,7 +291,7 @@ class SegmentationScreenshotGenerator:
                 if scenario.wait_for_selector:
                     try:
                         page.wait_for_selector(scenario.wait_for_selector, timeout=5000)
-                    except Exception as e:
+                    except PlaywrightError as e:
                         print(f"    Warning: Selector '{scenario.wait_for_selector}' not found: {e}")
 
                 # Additional wait after interaction
@@ -293,8 +306,12 @@ class SegmentationScreenshotGenerator:
 
                 self.screenshots_generated.append(output_path)
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
+                # Deliberately blind: one bad scenario must not abandon the
+                # other twelve. The failure is now recorded so main() can exit
+                # non-zero instead of reporting success.
                 print(f"    Error: {e}")
+                self.scenarios_failed.append(scenario.name)
 
             finally:
                 page.close()
@@ -330,7 +347,7 @@ class SegmentationScreenshotGenerator:
         try:
             page.click(".episode-card:first-child")
             page.wait_for_timeout(500)
-        except Exception as e:
+        except PlaywrightError as e:
             print(f"    Warning: Could not click first episode: {e}")
 
     def _focus_search(self, page):
@@ -341,8 +358,11 @@ class SegmentationScreenshotGenerator:
         # Focus search input
         try:
             page.click("#search-input")
-        except Exception:
-            pass
+        except PlaywrightError as e:
+            # Was `except Exception: pass`. A failed click still produced a
+            # screenshot named "search focused" showing an unfocused search box
+            # and reported it as generated.
+            print(f"    Warning: Could not focus search input: {e}")
 
     def _search_nightshift(self, page):
         """Load data and search for 'nightshift'."""
@@ -353,7 +373,7 @@ class SegmentationScreenshotGenerator:
         try:
             page.fill("#search-input", "nightshift")
             page.wait_for_timeout(500)
-        except Exception as e:
+        except PlaywrightError as e:
             print(f"    Warning: Could not search: {e}")
 
     def _show_recording_filter(self, page):
@@ -364,8 +384,11 @@ class SegmentationScreenshotGenerator:
         # Click recording filter dropdown
         try:
             page.click("#recording-filter")
-        except Exception:
-            pass
+        except PlaywrightError as e:
+            # Was `except Exception: pass`. Same failure mode as _focus_search:
+            # a screenshot named "recording filter open" showing a closed
+            # dropdown, reported as generated.
+            print(f"    Warning: Could not open recording filter: {e}")
 
     def generate_metadata(self) -> dict[str, Any]:
         """Generate metadata about the screenshot generation.
@@ -376,7 +399,7 @@ class SegmentationScreenshotGenerator:
         from datetime import datetime
 
         return {
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now().astimezone().isoformat(),
             "viewer_path": str(self.viewer_path),
             "test_data_path": str(self.test_data_path),
             "output_dir": str(self.output_dir),
@@ -494,10 +517,23 @@ Examples:
         for path in screenshots:
             print(f"  - {path.name}")
 
+        if generator.scenarios_failed:
+            # Previously this returned 0 however many scenarios raised, so a run
+            # that captured nothing still printed "completed successfully" and
+            # `openadapt-viewer screenshots` exited 0.
+            print(
+                f"\n✗ {len(generator.scenarios_failed)} scenario(s) failed: "
+                f"{', '.join(generator.scenarios_failed)}",
+                file=sys.stderr,
+            )
+            return 1
+
         print("\n✓ Screenshot generation completed successfully!")
         return 0
 
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
+        # Top of the process: turn any unexpected failure into an exit status
+        # and a traceback rather than an unhandled crash.
         print(f"\nError: {e}", file=sys.stderr)
         import traceback
 

@@ -1,16 +1,14 @@
 """Tests for data models and data loading functionality."""
 
-import pytest
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
+from openadapt_viewer.core.data_loader import DataLoader
 from openadapt_viewer.core.types import (
     BenchmarkRun,
     BenchmarkTask,
-    TaskExecution,
     ExecutionStep,
+    TaskExecution,
 )
-from openadapt_viewer.core.data_loader import DataLoader
 from openadapt_viewer.viewers.benchmark.data import create_sample_data, load_benchmark_data
 
 
@@ -21,7 +19,7 @@ class TestExecutionStep:
         """Test creating an ExecutionStep with all fields."""
         step = ExecutionStep(
             step_number=0,
-            timestamp=datetime.now(),
+            timestamp=datetime.now().astimezone(),
             screenshot_path="path/to/screenshot.png",
             action_type="click",
             action_details={"x": 100, "y": 200},
@@ -210,7 +208,7 @@ class TestDataLoader:
 
     def test_parse_datetime_object(self):
         """Test parsing datetime object returns the same object."""
-        original = datetime.now()
+        original = datetime.now().astimezone()
         result = DataLoader.parse_datetime(original)
         assert result == original
 

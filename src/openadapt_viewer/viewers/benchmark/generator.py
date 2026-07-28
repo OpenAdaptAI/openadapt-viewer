@@ -5,19 +5,18 @@ benchmark evaluation results with interactive features.
 """
 
 from pathlib import Path
-from typing import Optional
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
-from openadapt_viewer.viewers.benchmark.data import load_benchmark_data, create_sample_data
+from openadapt_viewer.viewers.benchmark.data import create_sample_data, load_benchmark_data
 from openadapt_viewer.viewers.benchmark.real_data_loader import load_real_capture_data
 
 
 def generate_benchmark_html(
-    data_path: Optional[Path | str] = None,
+    data_path: Path | str | None = None,
     output_path: Path | str = "benchmark_viewer.html",
     standalone: bool = False,
-    run_data: Optional[BenchmarkRun] = None,
+    run_data: BenchmarkRun | None = None,
     use_real_data: bool = True,
 ) -> str:
     """Generate a standalone HTML viewer for benchmark results.
@@ -71,14 +70,14 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
 
     Uses PageBuilder and components instead of inline template.
     """
+    import json
+
     from openadapt_viewer.builders.page_builder import PageBuilder
     from openadapt_viewer.components import (
-        metrics_grid,
         filter_bar,
-        badge,
+        metrics_grid,
     )
     from openadapt_viewer.components.metrics import domain_stats_grid
-    import json
 
     # Prepare data for template
     domain_stats = run.get_domain_stats()
@@ -137,7 +136,7 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
     )
 
     # Add filters
-    domain_options = [{"value": domain, "label": domain.capitalize()} for domain in domain_stats.keys()]
+    domain_options = [{"value": domain, "label": domain.capitalize()} for domain in domain_stats]
     page.add_section(
         filter_bar(
             filters=[

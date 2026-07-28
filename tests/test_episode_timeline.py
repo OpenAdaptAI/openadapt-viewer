@@ -12,10 +12,9 @@ Run with: pytest tests/test_episode_timeline.py -m playwright
 Skip with: pytest -m "not playwright"
 """
 
-import pytest
-from pathlib import Path
-from playwright.sync_api import Page, expect
 
+import pytest
+from playwright.sync_api import Page, expect
 
 # Mark all tests in this module as requiring playwright
 pytestmark = [

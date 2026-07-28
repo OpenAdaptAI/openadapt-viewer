@@ -1,13 +1,16 @@
 """Tests for CLI functionality and demo command."""
 
-import pytest
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
-import tempfile
+from unittest.mock import MagicMock, patch
 
-from openadapt_viewer.cli import main, run_demo_command, run_benchmark_command
+import pytest
+
+from openadapt_viewer.cli import main, run_benchmark_command, run_demo_command
+
+# Every subprocess.run below passes check=False on purpose: each test asserts on
+# result.returncode itself, so the call must return rather than raise.
 
 
 class TestDemoCommand:
@@ -92,6 +95,7 @@ class TestCLIIntegration:
                 "--output", str(output_path),
                 "--tasks", "3"
             ],
+            check=False,
             capture_output=True,
             text=True,
             cwd=str(temp_dir),
@@ -110,6 +114,7 @@ class TestCLIIntegration:
         """Test that running CLI without command shows help."""
         result = subprocess.run(
             [sys.executable, "-m", "openadapt_viewer.cli"],
+            check=False,
             capture_output=True,
             text=True,
             env={**dict(__import__("os").environ), "PYTHONPATH": str(Path(__file__).parent.parent / "src")},
@@ -124,6 +129,7 @@ class TestCLIIntegration:
         """Test that --help flag works."""
         result = subprocess.run(
             [sys.executable, "-m", "openadapt_viewer.cli", "--help"],
+            check=False,
             capture_output=True,
             text=True,
             env={**dict(__import__("os").environ), "PYTHONPATH": str(Path(__file__).parent.parent / "src")},
@@ -137,6 +143,7 @@ class TestCLIIntegration:
         """Test that demo --help works."""
         result = subprocess.run(
             [sys.executable, "-m", "openadapt_viewer.cli", "demo", "--help"],
+            check=False,
             capture_output=True,
             text=True,
             env={**dict(__import__("os").environ), "PYTHONPATH": str(Path(__file__).parent.parent / "src")},

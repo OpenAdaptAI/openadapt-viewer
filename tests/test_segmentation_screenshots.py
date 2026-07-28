@@ -14,8 +14,12 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
+
+# Every subprocess.run below passes check=False on purpose: each test asserts on
+# result.returncode itself, so the call must return rather than raise.
 
 REPO_ROOT = Path(__file__).parent.parent
 SCRIPT_PATH = REPO_ROOT / "scripts" / "generate_segmentation_screenshots.py"
@@ -81,6 +85,7 @@ def test_dependency_check():
     """Test that dependency checking works."""
     result = subprocess.run(
         [sys.executable, str(SCRIPT_PATH), "--check-deps"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -94,6 +99,7 @@ def test_help_message(script_exists):
     """Test that the script shows help message."""
     result = subprocess.run(
         [sys.executable, str(script_exists), "--help"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -159,6 +165,7 @@ def test_screenshot_generation_desktop_only(tmp_path, viewer_exists, test_data_e
             str(test_data_exists),
             "--skip-responsive",  # Skip responsive for faster test
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=60,
@@ -225,6 +232,7 @@ def test_screenshot_generation_with_metadata(tmp_path, viewer_exists, test_data_
             "--skip-responsive",
             "--save-metadata",
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=60,
@@ -296,6 +304,7 @@ def test_screenshot_generation_full(tmp_path, viewer_exists, test_data_exists):
             str(test_data_exists),
             # Don't skip responsive - test everything
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=120,  # Longer timeout for all screenshots
@@ -350,6 +359,7 @@ def test_error_handling_missing_viewer(tmp_path):
             "--test-data",
             str(TEST_DATA_PATH),
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -378,6 +388,7 @@ def test_error_handling_missing_test_data(tmp_path):
             "--test-data",
             "/nonexistent/test_data.json",
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -394,6 +405,7 @@ def test_cli_integration():
     """Test that CLI integration works."""
     result = subprocess.run(
         [sys.executable, "-m", "openadapt_viewer.cli", "screenshots", "--help"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -416,6 +428,7 @@ def test_cli_segmentation_help():
             "segmentation",
             "--help",
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -465,6 +478,7 @@ def test_command_line_options(args, tmp_path):
             str(TEST_DATA_PATH),
         ]
         + args,
+        check=False,
         capture_output=True,
         text=True,
         timeout=120,  # Increased timeout for screenshot generation
@@ -472,3 +486,75 @@ def test_command_line_options(args, tmp_path):
 
     # Should succeed with these options
     assert result.returncode == 0, f"Script failed: {result.stderr}"
+
+
+# --- exit status --------------------------------------------------------------
+#
+# Regression: `main()` used to `return 0` unconditionally once the generator
+# returned, so a run in which every scenario raised still printed
+# "Screenshot generation completed successfully!" and exited 0 -- and
+# `openadapt-viewer screenshots` propagates that exit status verbatim
+# (cli.run_screenshots_command). A CI job wired to this script was green while
+# producing nothing.
+
+
+def _load_script_module():
+    """Import the screenshot script as a module (it is not an installed package)."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("_seg_screenshots", SCRIPT_PATH)
+    module = importlib.util.module_from_spec(spec)
+    # @dataclass resolves annotations via sys.modules[cls.__module__].
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+class _StubGenerator:
+    """Stands in for SegmentationScreenshotGenerator without a browser."""
+
+    failed: ClassVar[list[str]] = []
+
+    def __init__(self, **kwargs):
+        self.scenarios_failed = list(self.failed)
+        self.screenshots_generated = []
+
+    def generate_all_screenshots(self, skip_responsive=False):
+        return self.screenshots_generated
+
+    def generate_metadata(self):
+        return {}
+
+
+def _run_main(monkeypatch, tmp_path, failed):
+    """Drive the script's main() with a stubbed generator; no browser needed."""
+    viewer = tmp_path / "viewer.html"
+    viewer.write_text("<html></html>")
+    data = tmp_path / "episodes.json"
+    data.write_text("{}")
+
+    module = _load_script_module()
+    stub = type("Stub", (_StubGenerator,), {"failed": failed})
+    monkeypatch.setattr(module, "SegmentationScreenshotGenerator", stub)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            str(SCRIPT_PATH),
+            "--output",
+            str(tmp_path),
+            "--viewer",
+            str(viewer),
+            "--test-data",
+            str(data),
+        ],
+    )
+    return module.main()
+
+
+def test_exit_code_is_nonzero_when_scenarios_fail(monkeypatch, tmp_path):
+    assert _run_main(monkeypatch, tmp_path, ["03_search_focused"]) == 1
+
+
+def test_exit_code_is_zero_when_no_scenario_fails(monkeypatch, tmp_path):
+    assert _run_main(monkeypatch, tmp_path, []) == 0

@@ -24,45 +24,44 @@ Quick Start:
 __version__ = "0.1.0"
 
 # Core types and utilities
-from openadapt_viewer.core.html_builder import HTMLBuilder
-from openadapt_viewer.core.types import (
-    BenchmarkRun,
-    BenchmarkTask,
-    TaskExecution,
-    ExecutionStep,
+# Builders - high-level page construction
+from openadapt_viewer.builders import PageBuilder
+
+# Catalog system
+from openadapt_viewer.catalog import (
+    Episode,
+    Recording,
+    RecordingCatalog,
+    SegmentationResult,
+    get_catalog,
 )
 
 # Components - reusable UI building blocks
 from openadapt_viewer.components import (
-    screenshot_display,
-    playback_controls,
-    timeline,
     action_display,
-    metrics_card,
-    metrics_grid,
+    badge,
     filter_bar,
     filter_dropdown,
-    selectable_list,
     list_item,
-    badge,
+    metrics_card,
+    metrics_grid,
+    playback_controls,
+    screenshot_display,
+    selectable_list,
+    timeline,
 )
-
-# Builders - high-level page construction
-from openadapt_viewer.builders import PageBuilder
+from openadapt_viewer.core.html_builder import HTMLBuilder
+from openadapt_viewer.core.types import (
+    BenchmarkRun,
+    BenchmarkTask,
+    ExecutionStep,
+    TaskExecution,
+)
+from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
 
 # Viewer generators (re-exported for convenience)
 from openadapt_viewer.viewers.benchmark import generate_benchmark_html
 from openadapt_viewer.viewers.segmentation_generator import generate_segmentation_viewer
-
-# Catalog system
-from openadapt_viewer.catalog import (
-    RecordingCatalog,
-    Recording,
-    SegmentationResult,
-    Episode,
-    get_catalog,
-)
-from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
 
 __all__ = [
     # Core

@@ -12,6 +12,7 @@ print()
 # Test 1: Import and load real data
 print('Test 1: Loading real data...')
 from openadapt_viewer.viewers.benchmark.real_data_loader import load_real_capture_data
+
 run = load_real_capture_data()
 print(f'  ✓ Loaded: {run.benchmark_name}')
 print(f'  ✓ Model: {run.model_id}')
@@ -43,7 +44,7 @@ for execution in run.executions:
             screenshot_count += 1
             assert 'capture_31807990_step_' in step.screenshot_path
 print(f'  ✓ Found {screenshot_count} screenshot paths')
-print(f'  ✓ All paths contain real capture IDs')
+print('  ✓ All paths contain real capture IDs')
 print()
 
 # Test 5: Verify metadata

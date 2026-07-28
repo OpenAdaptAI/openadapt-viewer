@@ -1,8 +1,5 @@
 """Tests for screenshot component."""
 
-import pytest
-from pathlib import Path
-import tempfile
 
 from openadapt_viewer.components import screenshot_display
 

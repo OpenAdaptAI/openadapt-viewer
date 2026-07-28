@@ -1,6 +1,5 @@
 """Tests for metrics components."""
 
-import pytest
 
 from openadapt_viewer.components import metrics_card, metrics_grid
 from openadapt_viewer.components.metrics import domain_stats_grid

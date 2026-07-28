@@ -38,7 +38,7 @@ class HTMLBuilder:
         return json.dumps(value).replace("</", "<\\/")
 
     @staticmethod
-    def _format_duration(seconds: float | int | None) -> str:
+    def _format_duration(seconds: float | None) -> str:
         """Format duration in seconds to human-readable string."""
         if seconds is None:
             return "N/A"

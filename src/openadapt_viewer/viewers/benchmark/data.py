@@ -8,17 +8,17 @@ Sample data ONLY for unit tests, clearly marked.
 Use real_data_loader.py for loading real capture data.
 """
 
+import random
 from datetime import datetime, timedelta
 from pathlib import Path
-import random
 
+from openadapt_viewer.core.data_loader import DataLoader
 from openadapt_viewer.core.types import (
     BenchmarkRun,
     BenchmarkTask,
-    TaskExecution,
     ExecutionStep,
+    TaskExecution,
 )
-from openadapt_viewer.core.data_loader import DataLoader
 
 
 def load_benchmark_data(data_path: Path | str) -> BenchmarkRun:
@@ -69,7 +69,7 @@ def create_sample_data(num_tasks: int = 10) -> BenchmarkRun:
 
     tasks = []
     executions = []
-    start_time = datetime.now() - timedelta(hours=2)
+    start_time = datetime.now().astimezone() - timedelta(hours=2)
 
     for i in range(num_tasks):
         task_id = f"task_{i+1:03d}"
@@ -131,7 +131,7 @@ def create_sample_data(num_tasks: int = 10) -> BenchmarkRun:
         benchmark_name="Sample Benchmark",
         model_id="sample-agent-v1",
         start_time=start_time,
-        end_time=datetime.now(),
+        end_time=datetime.now().astimezone(),
         tasks=tasks,
         executions=executions,
         config={

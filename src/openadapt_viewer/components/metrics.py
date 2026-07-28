@@ -12,7 +12,7 @@ from typing import Any
 
 def metrics_card(
     label: str,
-    value: str | int | float,
+    value: str | float,
     change: float | None = None,
     color: str = "default",
     icon: str | None = None,

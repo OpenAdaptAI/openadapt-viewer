@@ -19,16 +19,16 @@ from pathlib import Path
 
 from openadapt_viewer.builders import PageBuilder
 from openadapt_viewer.components import (
+    action_timeline,
+    action_timeline_vertical,
+    action_type_filter,
+    comparison_view,
+    failure_analysis_panel,
+    failure_summary_card,
     # Core components
     metrics_grid,
     # New enhanced components
     video_playback,
-    action_timeline,
-    action_timeline_vertical,
-    comparison_view,
-    action_type_filter,
-    failure_analysis_panel,
-    failure_summary_card,
 )
 
 
