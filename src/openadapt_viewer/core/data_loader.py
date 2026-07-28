@@ -7,13 +7,13 @@ from various file formats (JSON, directories with images, etc.).
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from openadapt_viewer.core.types import (
     BenchmarkRun,
     BenchmarkTask,
-    TaskExecution,
     ExecutionStep,
+    TaskExecution,
 )
 
 
@@ -39,7 +39,7 @@ class DataLoader:
             return json.load(f)
 
     @staticmethod
-    def parse_datetime(value: Any) -> Optional[datetime]:
+    def parse_datetime(value: Any) -> datetime | None:
         """Parse a datetime value from various formats.
 
         Args:
@@ -53,17 +53,24 @@ class DataLoader:
         if isinstance(value, datetime):
             return value
         if isinstance(value, (int, float)):
-            return datetime.fromtimestamp(value)
+            # .astimezone() attaches the local zone without moving the wall
+            # clock: the rendered time is the one the run happened at on this
+            # machine, exactly as before, but now unambiguous.
+            return datetime.fromtimestamp(value).astimezone()
         if isinstance(value, str):
-            # Try ISO format first
+            # Try ISO format first. An offset-bearing string ("...Z", "...+02:00")
+            # is already aware and is left alone; a naive one is anchored to the
+            # local zone, again without moving the wall clock.
             try:
-                return datetime.fromisoformat(value.replace("Z", "+00:00"))
+                parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
             except ValueError:
                 pass
+            else:
+                return parsed if parsed.tzinfo else parsed.astimezone()
             # Try common formats
             for fmt in ["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
                 try:
-                    return datetime.strptime(value, fmt)
+                    return datetime.strptime(value, fmt).astimezone()
                 except ValueError:
                     continue
         return None
@@ -127,7 +134,7 @@ class DataLoader:
     @classmethod
     def _load_task_from_dir(
         cls, task_dir: Path
-    ) -> tuple[Optional[BenchmarkTask], Optional[TaskExecution]]:
+    ) -> tuple[BenchmarkTask | None, TaskExecution | None]:
         """Load a single task and its execution from a directory.
 
         Args:

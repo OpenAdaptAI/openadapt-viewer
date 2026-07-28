@@ -9,7 +9,6 @@ for automatic discovery and selection.
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from .catalog import RecordingCatalog, get_catalog
 
@@ -33,23 +32,28 @@ class SegmentationCatalogEntry:
         self.episode_count = episode_count
         self.file_type = file_type
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
         return {
             "file_path": self.file_path,
             "recording_name": self.recording_name,
             "recording_id": self.recording_id,
             "created_at": self.created_at,
-            "created_at_formatted": datetime.fromtimestamp(self.created_at).strftime("%Y-%m-%d %H:%M:%S"),
+            # .astimezone() attaches the local zone without shifting the wall
+            # clock, so this rendered string is unchanged; it is what the
+            # user recorded on this machine, not UTC.
+            "created_at_formatted": datetime.fromtimestamp(self.created_at)
+            .astimezone()
+            .strftime("%Y-%m-%d %H:%M:%S"),
             "episode_count": self.episode_count,
             "file_type": self.file_type,
         }
 
 
 def discover_episode_files(
-    segmentation_dirs: Optional[List[str]] = None,
-    catalog: Optional[RecordingCatalog] = None
-) -> List[SegmentationCatalogEntry]:
+    segmentation_dirs: list[str] | None = None,
+    catalog: RecordingCatalog | None = None
+) -> list[SegmentationCatalogEntry]:
     """
     Discover all available episode files (episode_library.json and *_episodes.json).
 
@@ -88,11 +92,11 @@ def discover_episode_files(
                     data = json.load(f)
 
                 episode_count = len(data.get("episodes", []))
-                recording_count = len(set(
+                recording_count = len({
                     rid
                     for ep in data.get("episodes", [])
                     for rid in ep.get("source_recordings", [])
-                ))
+                })
 
                 entries.append(SegmentationCatalogEntry(
                     file_path=str(library_file),
@@ -102,7 +106,11 @@ def discover_episode_files(
                     episode_count=episode_count,
                     file_type="episode_library",
                 ))
-            except Exception as e:
+            except (OSError, ValueError, TypeError, AttributeError) as e:
+                # ValueError covers json.JSONDecodeError; TypeError and
+                # AttributeError cover a JSON document whose top level is not
+                # the mapping this reader expects. A bad file is skipped; a
+                # bug in this module is not.
                 print(f"Warning: Failed to read {library_file}: {e}")
 
         # Find individual *_episodes.json files
@@ -126,7 +134,11 @@ def discover_episode_files(
                     episode_count=episode_count,
                     file_type="episodes",
                 ))
-            except Exception as e:
+            except (OSError, ValueError, TypeError, AttributeError) as e:
+                # ValueError covers json.JSONDecodeError; TypeError and
+                # AttributeError cover a JSON document whose top level is not
+                # the mapping this reader expects. A bad file is skipped; a
+                # bug in this module is not.
                 print(f"Warning: Failed to read {episodes_file}: {e}")
 
     # Sort by creation time (newest first)
@@ -136,8 +148,8 @@ def discover_episode_files(
 
 
 def generate_catalog_javascript(
-    segmentation_dirs: Optional[List[str]] = None,
-    catalog: Optional[RecordingCatalog] = None
+    segmentation_dirs: list[str] | None = None,
+    catalog: RecordingCatalog | None = None
 ) -> str:
     """
     Generate JavaScript code that embeds episode file catalog data.
@@ -158,7 +170,7 @@ def generate_catalog_javascript(
 
     catalog_data = {
         "files": [entry.to_dict() for entry in entries],
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now().astimezone().isoformat(),
         "total_files": len(entries),
     }
 
@@ -221,8 +233,8 @@ console.log('Segmentation Catalog loaded:', window.SEGMENTATION_CATALOG.total_fi
 
 def generate_catalog_json(
     output_path: str,
-    segmentation_dirs: Optional[List[str]] = None,
-    catalog: Optional[RecordingCatalog] = None
+    segmentation_dirs: list[str] | None = None,
+    catalog: RecordingCatalog | None = None
 ):
     """
     Generate a standalone JSON catalog file.
@@ -239,7 +251,7 @@ def generate_catalog_json(
 
     catalog_data = {
         "files": [entry.to_dict() for entry in entries],
-        "generated_at": datetime.now().isoformat(),
+        "generated_at": datetime.now().astimezone().isoformat(),
         "total_files": len(entries),
     }
 

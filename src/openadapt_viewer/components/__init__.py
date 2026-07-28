@@ -18,34 +18,34 @@ This module provides building blocks for creating viewer HTML:
 All components return HTML strings that can be composed together.
 """
 
-from openadapt_viewer.components.screenshot import screenshot_display
-from openadapt_viewer.components.playback import playback_controls
-from openadapt_viewer.components.timeline import timeline
 from openadapt_viewer.components.action_display import action_display
-from openadapt_viewer.components.metrics import metrics_card, metrics_grid
-from openadapt_viewer.components.filters import filter_bar, filter_dropdown
-from openadapt_viewer.components.list_view import selectable_list, list_item
-from openadapt_viewer.components.badge import badge
-from openadapt_viewer.components.video_playback import (
-    video_playback,
-    video_playback_with_actions,
+from openadapt_viewer.components.action_filter import (
+    action_type_dropdown,
+    action_type_filter,
+    action_type_pills,
 )
 from openadapt_viewer.components.action_timeline import (
     action_timeline,
     action_timeline_vertical,
 )
+from openadapt_viewer.components.badge import badge
 from openadapt_viewer.components.comparison import (
     comparison_view,
     overlay_comparison,
 )
-from openadapt_viewer.components.action_filter import (
-    action_type_filter,
-    action_type_pills,
-    action_type_dropdown,
-)
 from openadapt_viewer.components.failure_analysis import (
     failure_analysis_panel,
     failure_summary_card,
+)
+from openadapt_viewer.components.filters import filter_bar, filter_dropdown
+from openadapt_viewer.components.list_view import list_item, selectable_list
+from openadapt_viewer.components.metrics import metrics_card, metrics_grid
+from openadapt_viewer.components.playback import playback_controls
+from openadapt_viewer.components.screenshot import screenshot_display
+from openadapt_viewer.components.timeline import timeline
+from openadapt_viewer.components.video_playback import (
+    video_playback,
+    video_playback_with_actions,
 )
 
 __all__ = [

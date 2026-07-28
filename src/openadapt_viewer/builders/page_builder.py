@@ -66,7 +66,7 @@ class PageBuilder:
         subtitle: str | None = None,
         nav_tabs: list[dict[str, str]] | None = None,
         actions_html: str = "",
-    ) -> "PageBuilder":
+    ) -> PageBuilder:
         """Add a header with optional navigation tabs.
 
         Args:
@@ -102,7 +102,7 @@ class PageBuilder:
 
         return self
 
-    def add_nav_tabs(self, tabs: list[dict[str, str]]) -> "PageBuilder":
+    def add_nav_tabs(self, tabs: list[dict[str, str]]) -> PageBuilder:
         """Add navigation tabs.
 
         Args:
@@ -119,7 +119,7 @@ class PageBuilder:
         content: str,
         title: str | None = None,
         class_name: str = "",
-    ) -> "PageBuilder":
+    ) -> PageBuilder:
         """Add a content section.
 
         Args:
@@ -143,7 +143,7 @@ class PageBuilder:
 
         return self
 
-    def add_script(self, script: str) -> "PageBuilder":
+    def add_script(self, script: str) -> PageBuilder:
         """Add a JavaScript script.
 
         Args:
@@ -155,7 +155,7 @@ class PageBuilder:
         self._scripts.append(script)
         return self
 
-    def add_alpine_data(self, name: str, data: dict[str, Any]) -> "PageBuilder":
+    def add_alpine_data(self, name: str, data: dict[str, Any]) -> PageBuilder:
         """Add Alpine.js data.
 
         Args:
@@ -168,7 +168,7 @@ class PageBuilder:
         self._alpine_data[name] = data
         return self
 
-    def add_css(self, css: str) -> "PageBuilder":
+    def add_css(self, css: str) -> PageBuilder:
         """Add custom CSS.
 
         Args:
@@ -307,12 +307,15 @@ class PageBuilder:
     def _get_core_css(self) -> str:
         """Return core CSS with variables and base styles."""
         # Read from styles/core.css if available, otherwise inline minimal version
+        css_path = Path(__file__).parent.parent / "styles" / "core.css"
         try:
-            css_path = Path(__file__).parent.parent / "styles" / "core.css"
             if css_path.exists():
                 return css_path.read_text()
-        except Exception:
-            pass
+        except (OSError, UnicodeDecodeError) as e:
+            # A packaged core.css that exists but cannot be read used to fall
+            # through to the truncated inline fallback in total silence, so a
+            # page rendered with visibly different styling and nothing said why.
+            print(f"Warning: Could not read {css_path}, using inline CSS: {e}")
 
         # Fallback minimal CSS
         return '''

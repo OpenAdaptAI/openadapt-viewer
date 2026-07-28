@@ -9,26 +9,23 @@ Sample data should ONLY be used for unit tests, clearly marked.
 
 import json
 import sqlite3
-import base64
-from pathlib import Path
 from datetime import datetime
-from typing import Optional
+from pathlib import Path
 
 from openadapt_viewer.core.types import (
     BenchmarkRun,
     BenchmarkTask,
-    TaskExecution,
     ExecutionStep,
+    TaskExecution,
 )
-
 
 # Default to nightshift recording if no path specified
 DEFAULT_CAPTURE_PATH = Path("/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift")
 
 
 def load_real_capture_data(
-    capture_path: Optional[Path | str] = None,
-    run_id: Optional[str] = None,
+    capture_path: Path | str | None = None,
+    run_id: str | None = None,
 ) -> BenchmarkRun:
     """Load REAL data from a capture recording.
 
@@ -127,7 +124,10 @@ def load_real_capture_data(
                 if frame_path:
                     # Handle paths that start with ../openadapt-capture/
                     if frame_path.startswith("../openadapt-capture/"):
-                        screenshot_path = str(Path("/Users/abrichr/oa/src") / frame_path.lstrip("../"))
+                        screenshot_path = str(
+                            Path("/Users/abrichr/oa/src")
+                            / frame_path.removeprefix("../")
+                        )
                     else:
                         screenshot_path = str(capture_path / frame_path)
 
@@ -136,7 +136,7 @@ def load_real_capture_data(
 
             step = ExecutionStep(
                 step_number=i,
-                timestamp=datetime.fromtimestamp(started_at + step_timestamp),
+                timestamp=datetime.fromtimestamp(started_at + step_timestamp).astimezone(),
                 screenshot_path=screenshot_path,
                 action_type="ml_inferred",  # Mark as ML-inferred (not raw hardware event)
                 action_details={
@@ -158,8 +158,12 @@ def load_real_capture_data(
         # Create execution
         execution = TaskExecution(
             task_id=task_id,
-            start_time=datetime.fromtimestamp(started_at + episode["start_time"]),
-            end_time=datetime.fromtimestamp(started_at + episode["end_time"]),
+            start_time=datetime.fromtimestamp(
+                started_at + episode["start_time"]
+            ).astimezone(),
+            end_time=datetime.fromtimestamp(
+                started_at + episode["end_time"]
+            ).astimezone(),
             steps=steps,
             success=True,  # Real recordings are successful completions
             error=None,
@@ -176,8 +180,8 @@ def load_real_capture_data(
         run_id=run_id,
         benchmark_name=f"Real Capture: {recording_name}",
         model_id="human_demonstration",
-        start_time=datetime.fromtimestamp(started_at),
-        end_time=datetime.fromtimestamp(ended_at),
+        start_time=datetime.fromtimestamp(started_at).astimezone(),
+        end_time=datetime.fromtimestamp(ended_at).astimezone(),
         tasks=tasks,
         executions=executions,
         config={

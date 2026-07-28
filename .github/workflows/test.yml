@@ -31,13 +31,30 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras
 
+      # This step used to read:
+      #
+      #     run: uv run ruff check src/openadapt_viewer/ || true
+      #     continue-on-error: true
+      #
+      # `|| true` AND `continue-on-error: true` -- belt and braces. It could not
+      # fail, and so had never enforced anything: at the point it was made real
+      # the tree had 261 findings under ruff 0.16's default rule set. It is now
+      # a blocking gate over the whole repository (src, tests, scripts and the
+      # root-level scripts), which is what the residual was cleared against, and
+      # the ruff version is bounded to >=0.16,<0.17 in pyproject.toml so a new
+      # ruff release cannot turn this red without a person raising the ceiling.
       - name: Run ruff linter (check)
-        run: uv run ruff check src/openadapt_viewer/ || true
-        continue-on-error: true
+        run: uv run ruff check .
 
-      - name: Run ruff formatter (check)
-        run: uv run ruff format --check src/openadapt_viewer/ || true
-        continue-on-error: true
+      # The companion `ruff format --check src/openadapt_viewer/` step was
+      # deleted rather than made real. It carried the same `|| true` +
+      # continue-on-error, and 31 of the 41 files under src/ do not match
+      # `ruff format` today (90 of 143 across the repo). Making it blocking here
+      # would mean reformatting the tree inside a lint-configuration change,
+      # burying every real fix in whitespace. A check that cannot fail is worse
+      # than no check -- it reads as coverage that does not exist -- so it is
+      # gone until someone does the reformat as its own reviewable commit and
+      # adds the step back.
 
       - name: Run pytest
         run: uv run pytest tests/ -v

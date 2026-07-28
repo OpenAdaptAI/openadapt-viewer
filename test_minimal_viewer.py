@@ -8,6 +8,7 @@ Tests:
 """
 
 import json
+import sys
 from pathlib import Path
 
 
@@ -120,9 +121,13 @@ if __name__ == "__main__":
         print("\n✅ All tests passed!")
     except AssertionError as e:
         print(f"\n❌ Test failed: {e}")
-        exit(1)
-    except Exception as e:
+        # sys.exit, not the builtin `exit`: `exit` is injected by the `site`
+        # module and is absent under `python -S` and in frozen builds, where
+        # this script would have died with NameError instead of exiting 1.
+        sys.exit(1)
+    except Exception as e:  # noqa: BLE001
+        # Top of a standalone script: report and exit 1 rather than crash.
         print(f"\n❌ Error: {e}")
         import traceback
         traceback.print_exc()
-        exit(1)
+        sys.exit(1)

@@ -22,7 +22,7 @@ from openadapt_viewer.segmentation_catalog import generate_catalog_javascript
 def generate_viewer_with_catalog(
     template_path: str,
     output_path: str,
-    segmentation_dirs: list = None
+    segmentation_dirs: list | None = None
 ):
     """
     Generate segmentation viewer with embedded catalog data.

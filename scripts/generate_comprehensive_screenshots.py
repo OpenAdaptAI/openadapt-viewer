@@ -15,13 +15,23 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
 
 # Add parent directory to path for imports
 SCRIPT_DIR = Path(__file__).parent
 REPO_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
+
+try:
+    from playwright.sync_api import Error as PlaywrightError
+except ImportError:
+    # playwright is an optional extra; main() refuses to run without it. The
+    # alias only keeps this module importable.
+    PlaywrightError = Exception
+
+# Scenarios that raised during this process, so main() can exit non-zero.
+FAILED_SCENARIOS: list[str] = []
 
 
 class ScreenshotConfig:
@@ -34,7 +44,7 @@ class ScreenshotConfig:
         viewport_width: int = 1400,
         viewport_height: int = 900,
         full_page: bool = False,
-        interact: Optional[Callable] = None,
+        interact: Callable | None = None,
         wait_after_load: int = 1000,
         wait_after_interact: int = 500,
     ):
@@ -244,7 +254,7 @@ def generate_screenshot(
             try:
                 config.interact(page)
                 page.wait_for_timeout(config.wait_after_interact)
-            except Exception as e:
+            except PlaywrightError as e:
                 print(f"    Warning: Interaction failed: {e}")
 
         # Take screenshot
@@ -292,8 +302,12 @@ def generate_viewer_screenshots(
         try:
             screenshot_path = generate_screenshot(viewer_html, output_path, scenario)
             screenshots.append(screenshot_path)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
+            # Deliberately blind: one bad scenario must not abandon the rest of
+            # the batch. The failure is recorded so main() exits non-zero
+            # instead of printing a success line.
             print(f"  ERROR: Failed to generate {scenario.name}: {e}")
+            FAILED_SCENARIOS.append(f"{viewer_type}_{scenario.name}")
 
     return screenshots
 
@@ -417,6 +431,17 @@ def main() -> int:
 
         total_size_mb = sum(p.stat().st_size for p in all_screenshots) / 1024 / 1024
         print(f"\nTotal size: {total_size_mb:.2f} MB")
+
+    if FAILED_SCENARIOS:
+        # Previously this returned 0 regardless, so a run in which every
+        # scenario raised still printed a success line and exited 0. A viewer
+        # HTML that is simply absent is still a skip, not a failure.
+        print(
+            f"\n✗ {len(FAILED_SCENARIOS)} scenario(s) failed: "
+            f"{', '.join(FAILED_SCENARIOS)}",
+            file=sys.stderr,
+        )
+        return 1
 
     print("\n✓ Screenshot generation completed!")
     return 0

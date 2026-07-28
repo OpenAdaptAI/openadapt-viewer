@@ -11,6 +11,7 @@ Usage:
 
 import argparse
 import json as json_module
+import sqlite3
 import sys
 import webbrowser
 from pathlib import Path
@@ -228,14 +229,10 @@ Examples:
     )
 
     # catalog stats
-    stats_parser = catalog_subparsers.add_parser(
-        "stats", help="Show catalog statistics"
-    )
+    catalog_subparsers.add_parser("stats", help="Show catalog statistics")
 
     # catalog clean
-    clean_parser = catalog_subparsers.add_parser(
-        "clean", help="Remove entries for missing files"
-    )
+    catalog_subparsers.add_parser("clean", help="Remove entries for missing files")
 
     # catalog register
     register_parser = catalog_subparsers.add_parser(
@@ -419,7 +416,9 @@ def run_screenshots_command(args):
 
         # Run the script
         print("Generating segmentation viewer screenshots...")
-        result = subprocess.run(cmd_args)
+        # check=False: the exit status is propagated on the next line, so a
+        # non-zero return is handled here rather than raised.
+        result = subprocess.run(cmd_args, check=False)
         sys.exit(result.returncode)
 
 
@@ -473,7 +472,11 @@ def run_catalog_command(args):
         else:
             print(f"\nFound {len(recordings)} recordings:\n")
             for rec in recordings:
-                created = datetime.fromtimestamp(rec.created_at).strftime("%Y-%m-%d %H:%M")
+                created = (
+                    datetime.fromtimestamp(rec.created_at)
+                    .astimezone()
+                    .strftime("%Y-%m-%d %H:%M")
+                )
                 duration = f"{rec.duration_seconds:.1f}s" if rec.duration_seconds else "N/A"
                 frames = rec.frame_count if rec.frame_count else "N/A"
 
@@ -491,7 +494,7 @@ def run_catalog_command(args):
                         for seg in seg_results:
                             print(f"      - {seg.episode_count} episodes, {seg.boundary_count} boundaries")
                     else:
-                        print(f"    Segmentations: None")
+                        print("    Segmentations: None")
 
                 print()
 
@@ -518,7 +521,6 @@ def run_catalog_command(args):
 
         scanner = RecordingScanner(catalog)
         recording_id = args.path.name
-        name = args.name or recording_id.replace("_", " ").replace("-", " ").title()
 
         print(f"Registering recording: {args.path}")
 
@@ -532,7 +534,12 @@ def run_catalog_command(args):
             print(f"  ID: {recording.id}")
             print(f"  Frames: {recording.frame_count}")
             print(f"  Events: {recording.event_count}")
-        except Exception as e:
+        except (OSError, sqlite3.Error, ValueError) as e:
+            # OSError: unreadable recording directory. sqlite3.Error: unreadable
+            # capture.db or a failed catalog write. ValueError: a row that does
+            # not validate as a Recording. Anything else is a bug in this
+            # package and should surface as a traceback rather than as a
+            # one-line "Error registering recording".
             print(f"Error registering recording: {e}", file=sys.stderr)
             sys.exit(1)
 

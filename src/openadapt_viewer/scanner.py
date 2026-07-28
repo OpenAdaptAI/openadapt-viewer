@@ -8,13 +8,11 @@ This module scans directories to find:
 """
 
 import json
-import os
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
-from .catalog import Episode, Recording, RecordingCatalog, SegmentationResult
+from .catalog import Recording, RecordingCatalog, SegmentationResult
 
 
 class RecordingScanner:
@@ -33,7 +31,7 @@ class RecordingScanner:
         self,
         base_path: str,
         recursive: bool = False
-    ) -> List[Recording]:
+    ) -> list[Recording]:
         """
         Scan a directory for recordings (directories containing capture.db).
 
@@ -76,7 +74,11 @@ class RecordingScanner:
                     metadata=recording.metadata,
                 )
                 recordings.append(registered)
-            except Exception as e:
+            except (OSError, sqlite3.Error, ValueError) as e:
+                # Narrow on purpose: an unreadable directory, a corrupt
+                # capture.db or a row that fails Recording validation should
+                # skip that recording, not the whole scan. Anything else is a
+                # bug in this module and must surface.
                 print(f"Warning: Failed to index {recording_dir}: {e}")
                 continue
 
@@ -129,7 +131,11 @@ class RecordingScanner:
                 # Count events
                 cursor = conn.execute("SELECT COUNT(*) FROM events")
                 event_count = cursor.fetchone()[0]
-        except Exception as e:
+        except (sqlite3.Error, IndexError, TypeError) as e:
+            # sqlite3.Error covers a missing/corrupt db and a missing table;
+            # IndexError is sqlite3.Row's "no such column"; TypeError is a NULL
+            # in an arithmetic column. Each means "no event metadata", not
+            # "abort".
             print(f"Warning: Could not read capture.db: {e}")
             event_count = None
 
@@ -157,7 +163,7 @@ class RecordingScanner:
     def scan_segmentation_results(
         self,
         segmentation_dir: str
-    ) -> List[SegmentationResult]:
+    ) -> list[SegmentationResult]:
         """
         Scan directory for segmentation result JSON files.
 
@@ -195,7 +201,10 @@ class RecordingScanner:
                 self._index_episodes_from_file(episodes_file, registered.id, registered.recording_id)
 
                 results.append(registered)
-            except Exception as e:
+            except (OSError, ValueError, KeyError, TypeError) as e:
+                # ValueError covers json.JSONDecodeError and SegmentationResult
+                # validation; KeyError/TypeError cover an episodes file whose
+                # shape is not what this scanner expects.
                 print(f"Warning: Failed to index {episodes_file}: {e}")
                 continue
 
@@ -219,7 +228,10 @@ class RecordingScanner:
 
         # Extract recording ID from filename
         recording_id = episodes_file.stem.replace("_episodes", "")
-        segmentation_id = f"{recording_id}_segmentation_{int(datetime.now().timestamp())}"
+        segmentation_id = (
+            f"{recording_id}_segmentation_"
+            f"{int(datetime.now(timezone.utc).timestamp())}"
+        )
 
         created_at = episodes_file.stat().st_mtime
 
@@ -228,8 +240,17 @@ class RecordingScanner:
             try:
                 dt = datetime.fromisoformat(data["processing_timestamp"])
                 created_at = dt.timestamp()
-            except:
-                pass
+            except (ValueError, TypeError) as e:
+                # Falling back to the file mtime is deliberate, but say so. A
+                # bare `except: pass` here also swallowed KeyboardInterrupt and
+                # made an unparseable timestamp indistinguishable from an
+                # absent one -- the catalog then showed the file's mtime as the
+                # segmentation date with no indication it was a guess.
+                print(
+                    f"Warning: Could not parse processing_timestamp "
+                    f"{data['processing_timestamp']!r} in {episodes_file}; "
+                    f"using file mtime instead ({e})"
+                )
 
         episode_count = len(data.get("episodes", []))
         boundary_count = len(data.get("boundaries", []))
@@ -287,9 +308,9 @@ class RecordingScanner:
 
     def scan_all(
         self,
-        capture_dirs: Optional[List[str]] = None,
-        segmentation_dirs: Optional[List[str]] = None
-    ) -> Dict[str, int]:
+        capture_dirs: list[str] | None = None,
+        segmentation_dirs: list[str] | None = None
+    ) -> dict[str, int]:
         """
         Scan multiple directories for recordings and segmentation results.
 
@@ -335,7 +356,7 @@ class RecordingScanner:
                 recordings = self.scan_recording_directory(capture_dir, recursive=False)
                 counts["recordings"] += len(recordings)
                 print(f"Found {len(recordings)} recordings in {capture_dir}")
-            except Exception as e:
+            except (OSError, sqlite3.Error, ValueError) as e:
                 print(f"Warning: Failed to scan {capture_dir}: {e}")
 
         # Scan segmentation results
@@ -344,17 +365,17 @@ class RecordingScanner:
                 results = self.scan_segmentation_results(seg_dir)
                 counts["segmentations"] += len(results)
                 print(f"Found {len(results)} segmentation results in {seg_dir}")
-            except Exception as e:
+            except (OSError, ValueError, KeyError, TypeError) as e:
                 print(f"Warning: Failed to scan {seg_dir}: {e}")
 
         return counts
 
 
 def scan_and_update_catalog(
-    catalog: Optional[RecordingCatalog] = None,
-    capture_dirs: Optional[List[str]] = None,
-    segmentation_dirs: Optional[List[str]] = None
-) -> Dict[str, int]:
+    catalog: RecordingCatalog | None = None,
+    capture_dirs: list[str] | None = None,
+    segmentation_dirs: list[str] | None = None
+) -> dict[str, int]:
     """
     Convenience function to scan and update the catalog.
 

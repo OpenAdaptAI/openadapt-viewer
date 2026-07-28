@@ -14,10 +14,10 @@ To update:
 3. Update expected element structures
 """
 
-import pytest
-from playwright.sync_api import Page, expect
 from pathlib import Path
 
+import pytest
+from playwright.sync_api import Page
 
 # Skip all tests in this module - implementation has diverged
 pytestmark = [
@@ -29,14 +29,15 @@ pytestmark = [
 @pytest.fixture
 def sample_benchmark_with_screenshots(tmp_path):
     """Generate benchmark data with screenshots for testing."""
+    import base64
+    from datetime import datetime, timedelta
+
     from openadapt_viewer.core.types import (
         BenchmarkRun,
         BenchmarkTask,
-        TaskExecution,
         ExecutionStep,
+        TaskExecution,
     )
-    from datetime import datetime, timedelta
-    import base64
 
     # Create minimal PNG for testing
     minimal_png = base64.b64decode(
@@ -75,8 +76,8 @@ def sample_benchmark_with_screenshots(tmp_path):
     executions = [
         TaskExecution(
             task_id="task_001",
-            start_time=datetime.now(),
-            end_time=datetime.now() + timedelta(seconds=5),
+            start_time=datetime.now().astimezone(),
+            end_time=datetime.now().astimezone() + timedelta(seconds=5),
             steps=[
                 ExecutionStep(
                     step_number=0,
@@ -104,8 +105,8 @@ def sample_benchmark_with_screenshots(tmp_path):
         ),
         TaskExecution(
             task_id="task_002",
-            start_time=datetime.now(),
-            end_time=datetime.now() + timedelta(seconds=3),
+            start_time=datetime.now().astimezone(),
+            end_time=datetime.now().astimezone() + timedelta(seconds=3),
             steps=[
                 ExecutionStep(
                     step_number=0,
@@ -119,8 +120,8 @@ def sample_benchmark_with_screenshots(tmp_path):
         ),
         TaskExecution(
             task_id="task_003",
-            start_time=datetime.now(),
-            end_time=datetime.now() + timedelta(seconds=4),
+            start_time=datetime.now().astimezone(),
+            end_time=datetime.now().astimezone() + timedelta(seconds=4),
             steps=[
                 ExecutionStep(
                     step_number=0,
@@ -137,8 +138,8 @@ def sample_benchmark_with_screenshots(tmp_path):
         run_id="test_run",
         benchmark_name="Test Benchmark",
         model_id="test-model-v1",
-        start_time=datetime.now() - timedelta(minutes=10),
-        end_time=datetime.now(),
+        start_time=datetime.now().astimezone() - timedelta(minutes=10),
+        end_time=datetime.now().astimezone(),
         tasks=tasks,
         executions=executions,
     )

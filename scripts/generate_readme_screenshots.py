@@ -28,7 +28,6 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 class ScreenshotGenerationError(Exception):
     """Base exception for screenshot generation errors."""
 
-    pass
 
 
 def check_dependencies() -> dict[str, bool]:

@@ -13,8 +13,8 @@ from pathlib import Path
 
 from openadapt_viewer.builders import PageBuilder
 from openadapt_viewer.components import (
-    metrics_grid,
     filter_bar,
+    metrics_grid,
     selectable_list,
 )
 from openadapt_viewer.components.metrics import domain_stats_grid

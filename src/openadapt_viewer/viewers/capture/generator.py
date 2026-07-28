@@ -404,12 +404,15 @@ def _generate_viewer_html(
 def _get_core_css() -> str:
     """Return core CSS with variables and component styles."""
     # Try to read from core.css file
+    css_path = Path(__file__).parent.parent.parent / "styles" / "core.css"
     try:
-        css_path = Path(__file__).parent.parent.parent / "styles" / "core.css"
         if css_path.exists():
             return css_path.read_text()
-    except Exception:
-        pass
+    except (OSError, UnicodeDecodeError) as e:
+        # A packaged core.css that exists but cannot be read used to fall
+        # through to the truncated inline fallback in total silence, so a
+        # page rendered with visibly different styling and nothing said why.
+        print(f"Warning: Could not read {css_path}, using inline CSS: {e}")
 
     # Fallback: inline CSS (same as in capture_viewer.html)
     return """/* OpenAdapt Viewer - Core Styles

@@ -1,16 +1,17 @@
 """Shared pytest fixtures for openadapt-viewer tests."""
 
-import pytest
+import json
+import tempfile
 from datetime import datetime, timedelta
 from pathlib import Path
-import tempfile
-import json
+
+import pytest
 
 from openadapt_viewer.core.types import (
     BenchmarkRun,
     BenchmarkTask,
-    TaskExecution,
     ExecutionStep,
+    TaskExecution,
 )
 
 # Import Playwright fixtures via pytest_playwright
@@ -22,7 +23,7 @@ def sample_execution_step():
     """Create a sample ExecutionStep for testing."""
     return ExecutionStep(
         step_number=0,
-        timestamp=datetime.now(),
+        timestamp=datetime.now().astimezone(),
         screenshot_path="tasks/task_001/screenshots/step_000.png",
         action_type="click",
         action_details={"x": 500, "y": 300},
@@ -38,14 +39,14 @@ def sample_task_execution(sample_execution_step):
         sample_execution_step,
         ExecutionStep(
             step_number=1,
-            timestamp=datetime.now() + timedelta(seconds=2),
+            timestamp=datetime.now().astimezone() + timedelta(seconds=2),
             action_type="type",
             action_details={"text": "Hello World"},
             reasoning="Typing the required text",
         ),
         ExecutionStep(
             step_number=2,
-            timestamp=datetime.now() + timedelta(seconds=4),
+            timestamp=datetime.now().astimezone() + timedelta(seconds=4),
             action_type="click",
             action_details={"x": 800, "y": 600},
             reasoning="Clicking the submit button",
@@ -53,8 +54,8 @@ def sample_task_execution(sample_execution_step):
     ]
     return TaskExecution(
         task_id="task_001",
-        start_time=datetime.now(),
-        end_time=datetime.now() + timedelta(seconds=10),
+        start_time=datetime.now().astimezone(),
+        end_time=datetime.now().astimezone() + timedelta(seconds=10),
         steps=steps,
         success=True,
         error=None,
@@ -66,8 +67,8 @@ def failed_task_execution():
     """Create a failed TaskExecution for testing."""
     return TaskExecution(
         task_id="task_002",
-        start_time=datetime.now(),
-        end_time=datetime.now() + timedelta(seconds=5),
+        start_time=datetime.now().astimezone(),
+        end_time=datetime.now().astimezone() + timedelta(seconds=5),
         steps=[
             ExecutionStep(
                 step_number=0,
@@ -118,8 +119,8 @@ def sample_benchmark_run(sample_benchmark_task, sample_task_execution, failed_ta
     # Add a third successful execution
     third_execution = TaskExecution(
         task_id="task_003",
-        start_time=datetime.now(),
-        end_time=datetime.now() + timedelta(seconds=8),
+        start_time=datetime.now().astimezone(),
+        end_time=datetime.now().astimezone() + timedelta(seconds=8),
         steps=[
             ExecutionStep(
                 step_number=0,
@@ -141,8 +142,8 @@ def sample_benchmark_run(sample_benchmark_task, sample_task_execution, failed_ta
         run_id="test_run_001",
         benchmark_name="Test Benchmark",
         model_id="test-model-v1",
-        start_time=datetime.now() - timedelta(hours=1),
-        end_time=datetime.now(),
+        start_time=datetime.now().astimezone() - timedelta(hours=1),
+        end_time=datetime.now().astimezone(),
         tasks=tasks,
         executions=executions,
         config={"max_steps": 10, "timeout": 300},
@@ -170,7 +171,7 @@ def benchmark_data_dir(temp_dir):
         "run_id": "test_run",
         "benchmark_name": "Test Benchmark",
         "model_id": "test-model",
-        "start_time": datetime.now().isoformat(),
+        "start_time": datetime.now().astimezone().isoformat(),
         "config": {"max_steps": 10},
     }
     with open(temp_dir / "metadata.json", "w") as f:
@@ -189,7 +190,7 @@ def benchmark_data_dir(temp_dir):
     # Create execution.json
     execution_data = {
         "task_id": "task_001",
-        "start_time": datetime.now().isoformat(),
+        "start_time": datetime.now().astimezone().isoformat(),
         "steps": [
             {
                 "action_type": "click",

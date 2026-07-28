@@ -7,7 +7,6 @@ from the catalog database instead of requiring manual file selection.
 
 import json
 from pathlib import Path
-from typing import Optional
 
 from ..catalog import RecordingCatalog, get_catalog
 from ..catalog_api import generate_catalog_javascript, generate_recording_dropdown_html
@@ -15,8 +14,8 @@ from ..catalog_api import generate_catalog_javascript, generate_recording_dropdo
 
 def generate_segmentation_viewer(
     output_path: str = "segmentation_viewer_catalog.html",
-    catalog: Optional[RecordingCatalog] = None,
-    auto_load_recording: Optional[str] = None,
+    catalog: RecordingCatalog | None = None,
+    auto_load_recording: str | None = None,
 ) -> str:
     """
     Generate segmentation viewer with automatic catalog integration.
@@ -57,7 +56,10 @@ def generate_segmentation_viewer(
         '{auto_load_recording}': {json.dumps(seg_data, indent=2)}
     }};
 """
-                except Exception as e:
+                except (OSError, ValueError) as e:
+                    # OSError: the catalogued segmentation file has moved or is
+                    # unreadable. ValueError covers json.JSONDecodeError. The
+                    # viewer is still generated, just without pre-loaded data.
                     print(f"Warning: Could not embed segmentation data: {e}")
 
     # Read base segmentation viewer template

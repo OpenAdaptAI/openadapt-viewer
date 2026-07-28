@@ -1,13 +1,10 @@
 """Tests for HTML generation functionality."""
 
-import pytest
-import re
 from pathlib import Path
-import tempfile
 
-from openadapt_viewer.viewers.benchmark import generate_benchmark_html, create_sample_data
 from openadapt_viewer.core.html_builder import HTMLBuilder
-from openadapt_viewer.core.types import BenchmarkRun, BenchmarkTask, TaskExecution, ExecutionStep
+from openadapt_viewer.core.types import BenchmarkRun
+from openadapt_viewer.viewers.benchmark import create_sample_data, generate_benchmark_html
 
 
 class TestGenerateBenchmarkHtml:

@@ -1,6 +1,5 @@
 """Tests for playback controls component."""
 
-import pytest
 
 from openadapt_viewer.components import playback_controls
 

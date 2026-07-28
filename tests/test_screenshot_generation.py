@@ -18,6 +18,9 @@ from pathlib import Path
 
 import pytest
 
+# Every subprocess.run below passes check=False on purpose: each test asserts on
+# result.returncode itself, so the call must return rather than raise.
+
 REPO_ROOT = Path(__file__).parent.parent
 SCRIPT_PATH = REPO_ROOT / "scripts" / "generate_readme_screenshots.py"
 CAPTURE_DIR = Path("/Users/abrichr/oa/src/openadapt-capture")
@@ -65,6 +68,7 @@ def test_dependency_check():
     """Test that dependency checking works."""
     result = subprocess.run(
         [sys.executable, str(SCRIPT_PATH), "--check-deps"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -101,6 +105,7 @@ def test_help_message():
     """Test that the script shows help message."""
     result = subprocess.run(
         [sys.executable, str(SCRIPT_PATH), "--help"],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -151,6 +156,7 @@ def test_html_generation_only(tmp_path):
             "10",  # Limit events for faster test
             "--skip-screenshots",  # Skip screenshot generation
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=60,
@@ -211,6 +217,7 @@ def test_full_screenshot_generation(tmp_path):
             "--max-events",
             "10",  # Limit events for faster test
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=120,  # Screenshots take longer
@@ -259,6 +266,7 @@ def test_error_handling_invalid_capture():
             "--max-events",
             "5",
         ],
+        check=False,
         capture_output=True,
         text=True,
         timeout=10,
@@ -302,6 +310,7 @@ def test_command_line_options(args, expected_in_output, tmp_path):
             str(output_dir),
         ]
         + args,
+        check=False,
         capture_output=True,
         text=True,
         timeout=60,

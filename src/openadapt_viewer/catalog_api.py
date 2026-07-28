@@ -6,13 +6,12 @@ data that embeds catalog information directly into the HTML.
 """
 
 import json
-from typing import Dict, List, Optional
 
 from .catalog import RecordingCatalog, get_catalog
 
 
 def generate_catalog_javascript(
-    catalog: Optional[RecordingCatalog] = None,
+    catalog: RecordingCatalog | None = None,
     include_segmentations: bool = True
 ) -> str:
     """
@@ -103,8 +102,8 @@ window.OpenAdaptCatalog = {{
 
 
 def generate_recording_dropdown_html(
-    catalog: Optional[RecordingCatalog] = None,
-    selected_id: Optional[str] = None,
+    catalog: RecordingCatalog | None = None,
+    selected_id: str | None = None,
     filter_with_segmentations: bool = True
 ) -> str:
     """
@@ -145,7 +144,7 @@ def generate_recording_dropdown_html(
     return '\n'.join(html_parts)
 
 
-def get_catalog_summary() -> Dict:
+def get_catalog_summary() -> dict:
     """
     Get a summary of the catalog for display in viewers.
 

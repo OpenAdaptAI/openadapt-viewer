@@ -5,7 +5,7 @@ They provide type safety, validation, and clear documentation of data formats.
 """
 
 from datetime import datetime
-from typing import Optional, Any
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -18,18 +18,18 @@ class ExecutionStep(BaseModel):
     """
 
     step_number: int = Field(description="Step index (0-based)")
-    timestamp: Optional[datetime] = Field(default=None, description="When this step occurred")
-    screenshot_path: Optional[str] = Field(
+    timestamp: datetime | None = Field(default=None, description="When this step occurred")
+    screenshot_path: str | None = Field(
         default=None, description="Relative path to screenshot image"
     )
     action_type: str = Field(description="Type of action (e.g., 'click', 'type', 'scroll')")
     action_details: dict[str, Any] = Field(
         default_factory=dict, description="Action-specific parameters (coordinates, text, etc.)"
     )
-    reasoning: Optional[str] = Field(
+    reasoning: str | None = Field(
         default=None, description="Model's reasoning/chain-of-thought for this action"
     )
-    raw_output: Optional[str] = Field(
+    raw_output: str | None = Field(
         default=None, description="Raw model output before parsing"
     )
 
@@ -41,11 +41,11 @@ class TaskExecution(BaseModel):
     """
 
     task_id: str = Field(description="Unique identifier for the task")
-    start_time: Optional[datetime] = Field(default=None, description="When execution started")
-    end_time: Optional[datetime] = Field(default=None, description="When execution ended")
+    start_time: datetime | None = Field(default=None, description="When execution started")
+    end_time: datetime | None = Field(default=None, description="When execution ended")
     steps: list[ExecutionStep] = Field(default_factory=list, description="Ordered list of steps")
     success: bool = Field(default=False, description="Whether the task was completed successfully")
-    error: Optional[str] = Field(default=None, description="Error message if task failed")
+    error: str | None = Field(default=None, description="Error message if task failed")
 
 
 class BenchmarkTask(BaseModel):
@@ -56,13 +56,13 @@ class BenchmarkTask(BaseModel):
 
     task_id: str = Field(description="Unique identifier for the task")
     instruction: str = Field(description="Natural language instruction for the task")
-    domain: Optional[str] = Field(
+    domain: str | None = Field(
         default=None, description="Task domain (e.g., 'office', 'browser', 'system')"
     )
-    difficulty: Optional[str] = Field(
+    difficulty: str | None = Field(
         default=None, description="Difficulty level (e.g., 'easy', 'medium', 'hard')"
     )
-    time_limit: Optional[int] = Field(
+    time_limit: int | None = Field(
         default=None, description="Maximum time allowed in seconds"
     )
     metadata: dict[str, Any] = Field(
@@ -79,8 +79,8 @@ class BenchmarkRun(BaseModel):
     run_id: str = Field(description="Unique identifier for this run")
     benchmark_name: str = Field(description="Name of the benchmark (e.g., 'WAA', 'WebArena')")
     model_id: str = Field(description="Identifier of the model being evaluated")
-    start_time: Optional[datetime] = Field(default=None, description="When the run started")
-    end_time: Optional[datetime] = Field(default=None, description="When the run ended")
+    start_time: datetime | None = Field(default=None, description="When the run started")
+    end_time: datetime | None = Field(default=None, description="When the run ended")
     tasks: list[BenchmarkTask] = Field(default_factory=list, description="Task definitions")
     executions: list[TaskExecution] = Field(
         default_factory=list, description="Execution traces for each task"
