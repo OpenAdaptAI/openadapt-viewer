@@ -20,6 +20,13 @@ on:
       - 'src/openadapt_viewer/**'
       - 'scripts/generate_readme_screenshots.py'
 
+# The repository default for the workflow token is read-only, and this workflow
+# both pushes a screenshot branch and opens a pull request from it. Without
+# these the push fails and no pull request is ever attempted.
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   generate-screenshots:
     name: Generate README Screenshots
