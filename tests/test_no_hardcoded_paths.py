@@ -34,6 +34,10 @@ ALLOWLIST = {
     "scripts/generate_readme_screenshots.py",
 }
 
+# This file necessarily spells out the prefixes it bans, so it always matches
+# itself. Skipping it by path keeps the check honest for every other file.
+SELF = "tests/test_no_hardcoded_paths.py"
+
 
 def _tracked_code_files() -> list[str]:
     """List tracked files whose extension marks them as code."""
@@ -56,7 +60,7 @@ def test_tracked_code_has_no_absolute_home_paths():
     offenders: list[str] = []
 
     for name in _tracked_code_files():
-        if name in ALLOWLIST:
+        if name in ALLOWLIST or name == SELF:
             continue
         path = REPO_ROOT / name
         try:
@@ -80,7 +84,9 @@ def test_allowlist_entries_still_exist():
     Without this, a renamed or deleted file leaves a stale exemption that
     silently widens the hole in the guard above.
     """
-    missing = [name for name in ALLOWLIST if not (REPO_ROOT / name).exists()]
+    missing = [
+        name for name in ALLOWLIST | {SELF} if not (REPO_ROOT / name).exists()
+    ]
     assert not missing, (
         f"ALLOWLIST names files that no longer exist: {missing}. "
         "Remove the stale entries."
