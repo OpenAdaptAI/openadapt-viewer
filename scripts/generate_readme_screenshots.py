@@ -15,6 +15,7 @@ Captures used:
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -289,8 +290,13 @@ def main() -> int:
     parser.add_argument(
         "--capture-dir",
         type=Path,
-        default=Path("/Users/abrichr/oa/src/openadapt-capture"),
-        help="Path to openadapt-capture directory",
+        default=Path(
+            os.environ.get("OPENADAPT_CAPTURE_DIR", REPO_ROOT.parent / "openadapt-capture")
+        ),
+        help=(
+            "Path to the openadapt-capture checkout holding the demo captures. "
+            "Defaults to a sibling checkout, or $OPENADAPT_CAPTURE_DIR."
+        ),
     )
     parser.add_argument(
         "--output-dir",

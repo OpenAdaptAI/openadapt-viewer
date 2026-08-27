@@ -71,7 +71,7 @@ if [ ! -d "$(dirname "$WEB_DIR")" ]; then
     echo -e "${YELLOW}Expected: $WEB_DIR${NC}"
     echo ""
     echo "Please ensure openadapt-web is cloned adjacent to openadapt-viewer:"
-    echo "  /Users/abrichr/oa/src/"
+    echo "  <your checkout root>/"
     echo "    ├── openadapt-viewer/"
     echo "    └── openadapt-web/"
     echo ""
@@ -201,7 +201,7 @@ These screenshots are automatically generated from openadapt-viewer.
 To regenerate these screenshots:
 
 \`\`\`bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 ./scripts/generate_for_web.sh
 \`\`\`
 
