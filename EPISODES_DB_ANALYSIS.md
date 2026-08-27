@@ -819,14 +819,14 @@ Benefits:
 ### 9.1 Files Analyzed
 
 **Databases**:
-- `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/capture.db` (320 KB, 1561 events)
-- `/Users/abrichr/oa/src/OpenAdapt/openadapt.db` (legacy schema with alembic_version)
+- `/path/to/openadapt-capture/turn-off-nightshift/capture.db` (320 KB, 1561 events)
+- `/path/to/OpenAdapt/openadapt.db` (legacy schema with alembic_version)
 - `~/.openadapt/catalog.db` (central index, correct use of SQLite)
 
 **JSON Files**:
-- `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json` (4 KB, 2 episodes)
-- `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/transcript.json` (4 KB, 4 segments)
-- `/Users/abrichr/oa/src/openadapt-ml/segmentation_output/*.json` (various)
+- `/path/to/openadapt-capture/turn-off-nightshift/episodes.json` (4 KB, 2 episodes)
+- `/path/to/openadapt-capture/turn-off-nightshift/transcript.json` (4 KB, 4 segments)
+- `/path/to/openadapt-ml/segmentation_output/*.json` (various)
 
 **Code Files**:
 - `src/openadapt_viewer/catalog.py` - Catalog schema (correct DB use)

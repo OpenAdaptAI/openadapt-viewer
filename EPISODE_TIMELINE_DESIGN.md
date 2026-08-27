@@ -69,7 +69,7 @@ Transform the capture viewer and other viewers into episode-aware applications w
 }
 ```
 
-**Current Capture Viewer** (`/Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html`):
+**Current Capture Viewer** (`/path/to/openadapt-viewer/capture_viewer.html`):
 - ✅ Playback controls (play/pause, prev/next step)
 - ✅ Timeline scrubber (clickable progress bar)
 - ✅ Speed controls (0.5x, 1x, 2x, 4x)
@@ -79,7 +79,7 @@ Transform the capture viewer and other viewers into episode-aware applications w
 - ❌ No episode navigation buttons
 - ❌ Timeline is just a gradient progress bar
 
-**Current Segmentation Viewer** (`/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`):
+**Current Segmentation Viewer** (`/path/to/openadapt-viewer/segmentation_viewer.html`):
 - ✅ Episode cards in grid layout
 - ✅ Episode detail view with steps
 - ✅ Links to capture viewer with URL parameters
@@ -795,7 +795,7 @@ class EpisodeTimeline {
 
 ### Capture Viewer Integration
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html`
+**File**: `/path/to/openadapt-viewer/capture_viewer.html`
 
 **Steps**:
 
@@ -1060,7 +1060,7 @@ get totalDuration() {
 
 ### Segmentation Viewer Integration
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+**File**: `/path/to/openadapt-viewer/segmentation_viewer.html`
 
 **Enhancement**: Add mini timeline preview to episode cards
 

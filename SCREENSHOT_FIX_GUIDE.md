@@ -10,7 +10,7 @@ Changed screenshot paths in `test_episodes.json` from absolute `file://` URLs to
 
 ### Before (Broken)
 ```json
-"thumbnail": "file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
+"thumbnail": "file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
 ```
 
 ### After (Fixed)
@@ -22,12 +22,12 @@ Changed screenshot paths in `test_episodes.json` from absolute `file://` URLs to
 
 ### Step 1: Open the Viewer
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+open /path/to/openadapt-viewer/segmentation_viewer.html
 ```
 
 ### Step 2: Load Test Data
 1. Click "Choose File" button
-2. Navigate to: `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json`
+2. Navigate to: `/path/to/openadapt-viewer/test_episodes.json`
 3. Select the file
 4. Click "Load File" button
 
@@ -113,7 +113,7 @@ Successfully loaded key frame: ../openadapt-capture/...
 Use the dedicated test page:
 
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
+open /path/to/openadapt-viewer/verify_screenshots.html
 ```
 
 This page will:
@@ -130,20 +130,20 @@ This page will:
 
 **1. Check file paths exist:**
 ```bash
-ls /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/
+ls /path/to/openadapt-capture/turn-off-nightshift/screenshots/
 ```
 Should list files like `capture_31807990_step_0.png`, `capture_31807990_step_2.png`, etc.
 
 **2. Verify relative path from viewer directory:**
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 ls -la ../openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png
 ```
 Should show the file exists.
 
 **3. Check JSON is properly formatted:**
 ```bash
-cat /Users/abrichr/oa/src/openadapt-viewer/test_episodes.json | grep "thumbnail"
+cat /path/to/openadapt-viewer/test_episodes.json | grep "thumbnail"
 ```
 Should show relative paths starting with `../` NOT `file://`.
 
@@ -171,10 +171,10 @@ Safari can be strict about `file://` protocol. Try:
 
 ## Files Modified
 
-1. `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json`
+1. `/path/to/openadapt-viewer/test_episodes.json`
    - Changed all screenshot paths to relative paths
 
-2. `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+2. `/path/to/openadapt-viewer/segmentation_viewer.html`
    - Added console.log debugging
    - Added onerror handlers for image loading
    - Improved error visibility
@@ -220,7 +220,7 @@ episode_data = {
     "screenshots": {
         "thumbnail": make_relative_path(
             screenshot_abs_path,
-            "/Users/abrichr/oa/src/openadapt-viewer"
+            "/path/to/openadapt-viewer"
         )
     }
 }

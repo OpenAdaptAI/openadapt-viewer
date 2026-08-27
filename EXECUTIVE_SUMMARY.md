@@ -337,7 +337,7 @@ This executive summary is part of a comprehensive analysis package:
 3. **openadaptai_repository_inventory.csv** - Full repository spreadsheet
 4. **archival_action_plan.md** - Step-by-step execution guide
 
-**Files Location:** `/Users/abrichr/oa/src/openadapt-viewer/`
+**Files Location:** `/path/to/openadapt-viewer/`
 
 ---
 

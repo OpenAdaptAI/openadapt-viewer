@@ -33,7 +33,7 @@ Fake/sample/synthetic data is ONLY permitted for:
 ### Default Capture Location
 
 ```
-/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/
+/path/to/openadapt-capture/turn-off-nightshift/
 ├── capture.db          # 1,561 real events
 ├── episodes.json       # 2 ML-segmented episodes
 ├── screenshots/        # 22 real PNG files
@@ -402,8 +402,8 @@ Add dropdown in viewer to switch between recordings:
 - **Generator**: `src/openadapt_viewer/viewers/benchmark/generator.py`
 - **Sample Data** (deprecated for production): `src/openadapt_viewer/viewers/benchmark/data.py`
 - **CLI**: `src/openadapt_viewer/cli.py`
-- **Nightshift Recording**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/`
-- **Episodes**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json`
+- **Nightshift Recording**: `/path/to/openadapt-capture/turn-off-nightshift/`
+- **Episodes**: `/path/to/openadapt-capture/turn-off-nightshift/episodes.json`
 
 ## Questions & Support
 

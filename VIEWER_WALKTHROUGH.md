@@ -5,7 +5,7 @@ This document shows you exactly what you'll see when you open the interactive HT
 ## Opening the Viewer
 
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 ---
@@ -322,7 +322,7 @@ When you select a task, two panels appear side-by-side:
 ║  Powered by Claude Sonnet 4.5                                   ║
 ║                                                                  ║
 ║  For more information, see:                                     ║
-║  /Users/abrichr/oa/src/openadapt-evals/demo_library/           ║
+║  /path/to/openadapt-evals/demo_library/           ║
 ║  synthetic_demos/README.md                                      ║
 ║                                                                  ║
 ╚══════════════════════════════════════════════════════════════════╝

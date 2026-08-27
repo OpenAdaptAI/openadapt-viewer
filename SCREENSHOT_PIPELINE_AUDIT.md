@@ -56,13 +56,13 @@ docs/images/
 - **NOT loading real episodes from recordings**
 
 **Missing integration:**
-- No `episodes.json` in `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/`
+- No `episodes.json` in `/path/to/openadapt-capture/turn-off-nightshift/`
 - Episodes need to be generated via segmentation pipeline in openadapt-ml
 - test_episodes.json exists in viewer root (appears to be test data)
 
 **Segmentation output exists in openadapt-ml:**
 ```
-/Users/abrichr/oa/src/openadapt-ml/segmentation_output/
+/path/to/openadapt-ml/segmentation_output/
 ├── turn-off-nightshift_episodes.json  (626 bytes)
 ├── turn-off-nightshift_transcript.json (15 KB)
 ├── demo_new_episodes.json
@@ -155,8 +155,8 @@ docs/images/
 **Actions:**
 1. Copy episode JSON from openadapt-ml to capture directories
    ```bash
-   cp /Users/abrichr/oa/src/openadapt-ml/segmentation_output/turn-off-nightshift_episodes.json \
-      /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json
+   cp /path/to/openadapt-ml/segmentation_output/turn-off-nightshift_episodes.json \
+      /path/to/openadapt-capture/turn-off-nightshift/episodes.json
    ```
 
 2. Update segmentation_viewer.html to auto-load from known path
@@ -503,8 +503,8 @@ Visualize benchmark evaluation results with task-level metrics, step-by-step rep
 - [ ] `CONTRIBUTING.md` - Document screenshot pipeline
 
 ### Data Files Needed
-- [ ] `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json` (from ML)
-- [ ] `/Users/abrichr/oa/src/openadapt-capture/demo_new/episodes.json` (from ML)
+- [ ] `/path/to/openadapt-capture/turn-off-nightshift/episodes.json` (from ML)
+- [ ] `/path/to/openadapt-capture/demo_new/episodes.json` (from ML)
 
 ## Timeline Estimate
 
@@ -523,7 +523,7 @@ Visualize benchmark evaluation results with task-level metrics, step-by-step rep
 
 1. **Generate episodes** (30 min):
    ```bash
-   cd /Users/abrichr/oa/src/openadapt-ml
+   cd /path/to/openadapt-ml
    # Check if segmentation CLI works
    python -m openadapt_ml.segmentation.cli --help
    # Or use existing episodes
@@ -533,7 +533,7 @@ Visualize benchmark evaluation results with task-level metrics, step-by-step rep
 
 2. **Test segmentation viewer** (15 min):
    ```bash
-   cd /Users/abrichr/oa/src/openadapt-viewer
+   cd /path/to/openadapt-viewer
    uv run python -m openadapt_viewer.cli segmentation \
      --auto-load turn-off-nightshift --open
    ```

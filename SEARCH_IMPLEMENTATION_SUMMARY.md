@@ -8,7 +8,7 @@ Successfully implemented advanced token-based search for OpenAdapt viewers, solv
 
 ### 1. Created Reusable Search Module
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/search.js`
+**File:** `/path/to/openadapt-viewer/src/openadapt_viewer/search.js`
 
 **Features:**
 - Token-based search with normalization
@@ -28,7 +28,7 @@ Successfully implemented advanced token-based search for OpenAdapt viewers, solv
 
 ### 2. Updated Segmentation Viewer
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+**File:** `/path/to/openadapt-viewer/segmentation_viewer.html`
 
 **Changes:**
 - Added `advancedSearch()` function (lines 669-723)
@@ -51,7 +51,7 @@ filtered = advancedSearch(filtered, searchQuery, ['name', 'description', 'steps'
 
 ### 3. Enhanced Synthetic Demo Viewer
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+**File:** `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
 
 **Changes:**
 - Added search input field with real-time filtering
@@ -68,7 +68,7 @@ filtered = advancedSearch(filtered, searchQuery, ['name', 'description', 'steps'
 
 ### 4. Created Test Page
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/test_search.html`
+**File:** `/path/to/openadapt-viewer/test_search.html`
 
 **Features:**
 - 8 automated test cases validating the algorithm
@@ -91,7 +91,7 @@ filtered = advancedSearch(filtered, searchQuery, ['name', 'description', 'steps'
 
 ### 5. Comprehensive Documentation
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/docs/SEARCH_FUNCTIONALITY.md`
+**File:** `/path/to/openadapt-viewer/docs/SEARCH_FUNCTIONALITY.md`
 
 **Contents:**
 - Overview and features
@@ -107,7 +107,7 @@ filtered = advancedSearch(filtered, searchQuery, ['name', 'description', 'steps'
 
 ### 6. Updated CLAUDE.md
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/CLAUDE.md`
+**File:** `/path/to/openadapt-viewer/CLAUDE.md`
 
 **Added Section:** "Search Functionality"
 - Overview of features
@@ -177,14 +177,14 @@ Step 3: Match tokens
 ## Files Modified/Created
 
 ### Created
-- `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/search.js` (289 lines)
-- `/Users/abrichr/oa/src/openadapt-viewer/test_search.html` (243 lines)
-- `/Users/abrichr/oa/src/openadapt-viewer/docs/SEARCH_FUNCTIONALITY.md` (469 lines)
+- `/path/to/openadapt-viewer/src/openadapt_viewer/search.js` (289 lines)
+- `/path/to/openadapt-viewer/test_search.html` (243 lines)
+- `/path/to/openadapt-viewer/docs/SEARCH_FUNCTIONALITY.md` (469 lines)
 
 ### Modified
-- `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` (added search function)
-- `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html` (added search input and function)
-- `/Users/abrichr/oa/src/openadapt-viewer/CLAUDE.md` (added Search Functionality section)
+- `/path/to/openadapt-viewer/segmentation_viewer.html` (added search function)
+- `/path/to/openadapt-viewer/synthetic_demo_viewer.html` (added search input and function)
+- `/path/to/openadapt-viewer/CLAUDE.md` (added Search Functionality section)
 
 ## Testing
 
@@ -192,7 +192,7 @@ Step 3: Match tokens
 
 Run the test page:
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/test_search.html
+open /path/to/openadapt-viewer/test_search.html
 ```
 
 **Results:** 8/8 tests passing (100% success rate)

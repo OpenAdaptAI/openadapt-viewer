@@ -20,7 +20,7 @@
 
 ### 1.1 benchmark_viewer.html (Current Refactored Version)
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/benchmark_viewer.html`
+**File**: `/path/to/openadapt-viewer/benchmark_viewer.html`
 
 **Timeline Features**:
 ```html
@@ -44,7 +44,7 @@
 
 ### 1.2 capture_viewer.html (Best Timeline Implementation)
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html`
+**File**: `/path/to/openadapt-viewer/capture_viewer.html`
 
 **Timeline Features**:
 ```javascript
@@ -81,7 +81,7 @@ initializeEpisodeTimeline() {
 
 ### 1.3 segmentation_viewer.html (Episode-Based Timeline)
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+**File**: `/path/to/openadapt-viewer/segmentation_viewer.html`
 
 **Timeline Features**:
 ```javascript
@@ -125,7 +125,7 @@ function renderTimeline(episode) {
 
 ### 1.4 synthetic_demo_viewer.html (No Timeline)
 
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+**File**: `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
 
 **Timeline Features**: NONE
 
@@ -135,7 +135,7 @@ function renderTimeline(episode) {
 
 ### 1.5 episode_timeline.js (Reusable Component)
 
-**File**: `/Users/abrichr/oa/src/openadapt_viewer/components/episode_timeline.js`
+**File**: `/path/to/openadapt_viewer/components/episode_timeline.js`
 
 **Core Features**:
 ```javascript
@@ -964,17 +964,17 @@ function benchmarkViewer() {
 ## 10. Appendix: Code Locations
 
 ### Key Files Reviewed
-- `/Users/abrichr/oa/src/openadapt-viewer/benchmark_viewer.html` - Current refactored version (minimal timeline)
-- `/Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html` - Best reference implementation
-- `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` - Episode-based timeline
-- `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/components/episode_timeline.js` - Reusable component
-- `/Users/abrichr/oa/src/openadapt-viewer/test_benchmark_refactored.html` - Test file
-- `/Users/abrichr/oa/src/openadapt-viewer/viewers/benchmark/minimal_viewer.html` - Minimal reference
+- `/path/to/openadapt-viewer/benchmark_viewer.html` - Current refactored version (minimal timeline)
+- `/path/to/openadapt-viewer/capture_viewer.html` - Best reference implementation
+- `/path/to/openadapt-viewer/segmentation_viewer.html` - Episode-based timeline
+- `/path/to/openadapt-viewer/src/openadapt_viewer/components/episode_timeline.js` - Reusable component
+- `/path/to/openadapt-viewer/test_benchmark_refactored.html` - Test file
+- `/path/to/openadapt-viewer/viewers/benchmark/minimal_viewer.html` - Minimal reference
 
 ### Related Documentation
-- `/Users/abrichr/oa/src/openadapt-viewer/CLAUDE.md` - Episode Timeline Component section
-- `/Users/abrichr/oa/src/openadapt-viewer/EPISODE_TIMELINE_DESIGN.md` - Component design doc
-- `/Users/abrichr/oa/src/openadapt-viewer/EPISODE_TIMELINE_QUICKSTART.md` - Integration guide
+- `/path/to/openadapt-viewer/CLAUDE.md` - Episode Timeline Component section
+- `/path/to/openadapt-viewer/EPISODE_TIMELINE_DESIGN.md` - Component design doc
+- `/path/to/openadapt-viewer/EPISODE_TIMELINE_QUICKSTART.md` - Integration guide
 
 ---
 

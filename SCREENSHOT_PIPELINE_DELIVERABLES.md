@@ -44,7 +44,7 @@ This project successfully reviewed and enhanced the openadapt-viewer image autog
   - Files to create/modify checklist
 - **Size**: ~15,000 words
 - **Status**: ✅ Complete
-- **Location**: `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_PIPELINE_AUDIT.md`
+- **Location**: `/path/to/openadapt-viewer/SCREENSHOT_PIPELINE_AUDIT.md`
 
 #### `SCREENSHOT_IMPLEMENTATION_GUIDE.md`
 - **Purpose**: Step-by-step implementation instructions
@@ -57,13 +57,13 @@ This project successfully reviewed and enhanced the openadapt-viewer image autog
   - Timeline estimates (3-4 hours total)
 - **Size**: ~7,500 words
 - **Status**: ✅ Complete
-- **Location**: `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_IMPLEMENTATION_GUIDE.md`
+- **Location**: `/path/to/openadapt-viewer/SCREENSHOT_IMPLEMENTATION_GUIDE.md`
 
 #### `SCREENSHOT_PIPELINE_DELIVERABLES.md`
 - **Purpose**: Executive summary and handoff document
 - **Contents**: This document
 - **Status**: ✅ Complete
-- **Location**: `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_PIPELINE_DELIVERABLES.md`
+- **Location**: `/path/to/openadapt-viewer/SCREENSHOT_PIPELINE_DELIVERABLES.md`
 
 ### 2. Implementation Files (✅ Complete)
 
@@ -78,7 +78,7 @@ This project successfully reviewed and enhanced the openadapt-viewer image autog
   - CLI interface with `--viewers` selector
 - **Size**: ~450 lines
 - **Status**: ✅ Complete, tested (dependency check passed)
-- **Location**: `/Users/abrichr/oa/src/openadapt-viewer/scripts/generate_comprehensive_screenshots.py`
+- **Location**: `/path/to/openadapt-viewer/scripts/generate_comprehensive_screenshots.py`
 
 **Script capabilities**:
 ```bash
@@ -125,8 +125,8 @@ python scripts/generate_comprehensive_screenshots.py --viewers segmentation
 #### Episode JSON Files
 - **Purpose**: Provide real episode data for segmentation viewer
 - **Files Created**:
-  - `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json`
-  - `/Users/abrichr/oa/src/openadapt-capture/demo_new/episodes.json` (optional)
+  - `/path/to/openadapt-capture/turn-off-nightshift/episodes.json`
+  - `/path/to/openadapt-capture/demo_new/episodes.json` (optional)
 - **Source**: Copied from openadapt-ml segmentation output
 - **Format**: Standard episode JSON with episodes, boundaries, metadata
 - **Status**: ✅ Complete
@@ -429,22 +429,22 @@ Episodes in segmentation viewer have "View Full Recording" button that:
 ## File Locations
 
 ### Documentation
-- `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_PIPELINE_AUDIT.md`
-- `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_IMPLEMENTATION_GUIDE.md`
-- `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_PIPELINE_DELIVERABLES.md` (this file)
+- `/path/to/openadapt-viewer/SCREENSHOT_PIPELINE_AUDIT.md`
+- `/path/to/openadapt-viewer/SCREENSHOT_IMPLEMENTATION_GUIDE.md`
+- `/path/to/openadapt-viewer/SCREENSHOT_PIPELINE_DELIVERABLES.md` (this file)
 
 ### Implementation
-- `/Users/abrichr/oa/src/openadapt-viewer/scripts/generate_comprehensive_screenshots.py`
-- `/Users/abrichr/oa/src/openadapt-viewer/scripts/generate_readme_screenshots.py` (existing)
-- `/Users/abrichr/oa/src/openadapt-viewer/.github/workflows/screenshots.yml` (existing)
+- `/path/to/openadapt-viewer/scripts/generate_comprehensive_screenshots.py`
+- `/path/to/openadapt-viewer/scripts/generate_readme_screenshots.py` (existing)
+- `/path/to/openadapt-viewer/.github/workflows/screenshots.yml` (existing)
 
 ### Data
-- `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json`
-- `/Users/abrichr/oa/src/openadapt-capture/demo_new/episodes.json`
+- `/path/to/openadapt-capture/turn-off-nightshift/episodes.json`
+- `/path/to/openadapt-capture/demo_new/episodes.json`
 
 ### Output
-- `/Users/abrichr/oa/src/openadapt-viewer/docs/images/*.png` (20 screenshots)
-- `/Users/abrichr/oa/src/openadapt-viewer/README.md` (to be updated)
+- `/path/to/openadapt-viewer/docs/images/*.png` (20 screenshots)
+- `/path/to/openadapt-viewer/README.md` (to be updated)
 
 ---
 

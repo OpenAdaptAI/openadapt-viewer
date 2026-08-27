@@ -312,7 +312,7 @@ function CaptureViewer({ episodes, currentTime, onSeek }) {
 - **Design Docs**: See EPISODE_TIMELINE_DESIGN*.md files
 - **API Reference**: See Part 3, Appendix B
 - **CSS Classes**: See Part 3, Appendix C
-- **Examples**: `/Users/abrichr/oa/src/openadapt-viewer/test_episode_timeline.html`
+- **Examples**: `/path/to/openadapt-viewer/test_episode_timeline.html`
 
 ## Support
 

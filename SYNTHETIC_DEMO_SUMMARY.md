@@ -7,17 +7,17 @@ This interactive visualization system helps you understand synthetic demonstrati
 ### Deliverables
 
 1. **Interactive HTML Viewer** (`synthetic_demo_viewer.html`)
-   - Location: `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+   - Location: `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
    - Features: Browse 35 synthetic demos, filter by domain, see how demos are used in prompts
    - Status: ✅ Complete and ready to use
 
 2. **Comprehensive Documentation** (`SYNTHETIC_DEMOS_EXPLAINED.md`)
-   - Location: `/Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
+   - Location: `/path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
    - Content: What synthetic demos are, why they matter, how they're used, examples
    - Status: ✅ Complete
 
 3. **Example Showcase** (`DEMO_EXAMPLES_SHOWCASE.md`)
-   - Location: `/Users/abrichr/oa/src/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md`
+   - Location: `/path/to/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md`
    - Content: 5 diverse demo examples with detailed breakdown
    - Status: ✅ Complete
 
@@ -28,7 +28,7 @@ This interactive visualization system helps you understand synthetic demonstrati
 ### Open the Interactive Viewer
 
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 Or double-click the file in Finder.
@@ -433,37 +433,37 @@ uv run python -m openadapt_evals.benchmarks.validate_demos \
 ### Created Files
 
 1. **Interactive Viewer**
-   - Path: `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+   - Path: `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
    - Type: Standalone HTML file
    - Usage: Open in any browser
 
 2. **Comprehensive Explanation**
-   - Path: `/Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
+   - Path: `/path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
    - Type: Markdown documentation
    - Content: Complete guide to synthetic demos
 
 3. **Example Showcase**
-   - Path: `/Users/abrichr/oa/src/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md`
+   - Path: `/path/to/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md`
    - Type: Markdown with examples
    - Content: 5 diverse demo examples
 
 4. **This Summary**
-   - Path: `/Users/abrichr/oa/src/openadapt-viewer/SYNTHETIC_DEMO_SUMMARY.md`
+   - Path: `/path/to/openadapt-viewer/SYNTHETIC_DEMO_SUMMARY.md`
    - Type: Executive summary
    - Content: Quick reference guide
 
 ### Existing Files Referenced
 
 1. **Demo Library Index**
-   - Path: `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/demos.json`
+   - Path: `/path/to/openadapt-evals/demo_library/synthetic_demos/demos.json`
    - Contains: Metadata for all 35 demos
 
 2. **Individual Demo Files**
-   - Path: `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/*.txt`
+   - Path: `/path/to/openadapt-evals/demo_library/synthetic_demos/*.txt`
    - Count: 35 files (notepad_1.txt, paint_1.txt, etc.)
 
 3. **Demo Library README**
-   - Path: `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/README.md`
+   - Path: `/path/to/openadapt-evals/demo_library/synthetic_demos/README.md`
    - Contains: Technical documentation
 
 ---
@@ -501,9 +501,9 @@ uv run python -m openadapt_evals.benchmarks.validate_demos \
 ### Documentation
 
 - **This Summary:** `SYNTHETIC_DEMO_SUMMARY.md`
-- **Full Explanation:** `/Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
+- **Full Explanation:** `/path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
 - **Example Showcase:** `DEMO_EXAMPLES_SHOWCASE.md`
-- **Demo Library README:** `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/README.md`
+- **Demo Library README:** `/path/to/openadapt-evals/demo_library/synthetic_demos/README.md`
 
 ### Tools
 
@@ -513,7 +513,7 @@ uv run python -m openadapt_evals.benchmarks.validate_demos \
 
 ### Project Documentation
 
-- **Main README:** `/Users/abrichr/oa/src/openadapt-evals/CLAUDE.md`
+- **Main README:** `/path/to/openadapt-evals/CLAUDE.md`
 
 ---
 

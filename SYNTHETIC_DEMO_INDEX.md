@@ -9,7 +9,7 @@ This is a complete interactive visualization system for understanding synthetic 
 ### 1. Open the Interactive Viewer (Start Here!)
 
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 **What you'll see:**
@@ -40,26 +40,26 @@ Choose based on your needs:
 
 | File | Type | Purpose | Location |
 |------|------|---------|----------|
-| `synthetic_demo_viewer.html` | HTML | Interactive browser viewer | `/Users/abrichr/oa/src/openadapt-viewer/` |
+| `synthetic_demo_viewer.html` | HTML | Interactive browser viewer | `/path/to/openadapt-viewer/` |
 
 ### Documentation
 
 | File | Type | Purpose | Location |
 |------|------|---------|----------|
-| `SYNTHETIC_DEMO_INDEX.md` | Index | This file - master index | `/Users/abrichr/oa/src/openadapt-viewer/` |
-| `QUICK_REFERENCE.md` | Reference | One-page quick reference card | `/Users/abrichr/oa/src/openadapt-viewer/` |
-| `SYNTHETIC_DEMO_SUMMARY.md` | Summary | Executive summary and overview | `/Users/abrichr/oa/src/openadapt-viewer/` |
-| `SYNTHETIC_DEMOS_EXPLAINED.md` | Guide | Complete explanation and guide | `/Users/abrichr/oa/src/openadapt-evals/` |
-| `DEMO_EXAMPLES_SHOWCASE.md` | Examples | 5 diverse demo examples | `/Users/abrichr/oa/src/openadapt-viewer/` |
-| `DEMO_FLOW_DIAGRAM.md` | Diagram | Visual flow diagrams | `/Users/abrichr/oa/src/openadapt-viewer/` |
+| `SYNTHETIC_DEMO_INDEX.md` | Index | This file - master index | `/path/to/openadapt-viewer/` |
+| `QUICK_REFERENCE.md` | Reference | One-page quick reference card | `/path/to/openadapt-viewer/` |
+| `SYNTHETIC_DEMO_SUMMARY.md` | Summary | Executive summary and overview | `/path/to/openadapt-viewer/` |
+| `SYNTHETIC_DEMOS_EXPLAINED.md` | Guide | Complete explanation and guide | `/path/to/openadapt-evals/` |
+| `DEMO_EXAMPLES_SHOWCASE.md` | Examples | 5 diverse demo examples | `/path/to/openadapt-viewer/` |
+| `DEMO_FLOW_DIAGRAM.md` | Diagram | Visual flow diagrams | `/path/to/openadapt-viewer/` |
 
 ### Demo Library (Source Data)
 
 | Path | Description |
 |------|-------------|
-| `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Directory with 82 demo files |
-| `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/demos.json` | Index of all demos with metadata |
-| `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/README.md` | Technical README for demo library |
+| `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Directory with 82 demo files |
+| `/path/to/openadapt-evals/demo_library/synthetic_demos/demos.json` | Index of all demos with metadata |
+| `/path/to/openadapt-evals/demo_library/synthetic_demos/README.md` | Technical README for demo library |
 
 ---
 
@@ -142,7 +142,7 @@ Included in the system prompt when calling Claude/GPT APIs during real benchmark
 1. Read [`SYNTHETIC_DEMOS_EXPLAINED.md`](../openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md) - complete guide
 2. Study the impact comparison (33% → 100% accuracy)
 3. Review [`DEMO_FLOW_DIAGRAM.md`](DEMO_FLOW_DIAGRAM.md) for technical flow
-4. Examine actual demo files in `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/`
+4. Examine actual demo files in `/path/to/openadapt-evals/demo_library/synthetic_demos/`
 5. Check validation results and quality metrics
 
 **Estimated time:** 90 minutes
@@ -434,9 +434,9 @@ uv run python -m openadapt_evals.benchmarks.generate_synthetic_demos \
 ## Related Resources
 
 ### Project Documentation
-- **openadapt-evals:** `/Users/abrichr/oa/src/openadapt-evals/CLAUDE.md`
-- **openadapt-viewer:** `/Users/abrichr/oa/src/openadapt-viewer/CLAUDE.md`
-- **Demo library README:** `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/README.md`
+- **openadapt-evals:** `/path/to/openadapt-evals/CLAUDE.md`
+- **openadapt-viewer:** `/path/to/openadapt-viewer/CLAUDE.md`
+- **Demo library README:** `/path/to/openadapt-evals/demo_library/synthetic_demos/README.md`
 
 ### Generation & Validation Scripts
 - **Generator:** `openadapt_evals/benchmarks/generate_synthetic_demos.py`

@@ -14,14 +14,14 @@ Quick setup guide for generating README screenshots.
 ### 1. Install openadapt-capture
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-capture
+cd /path/to/openadapt-capture
 uv pip install -e .
 ```
 
 ### 2. Install openadapt-viewer with screenshots support
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 uv pip install -e ".[screenshots]"
 ```
 
@@ -68,7 +68,7 @@ uv run python scripts/generate_readme_screenshots.py
 ================================================================================
 STEP 1: Generate HTML Viewers
 ================================================================================
-Loading capture from: /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift
+Loading capture from: /path/to/openadapt-capture/turn-off-nightshift
   - Capture ID: ...
   - Duration: ...s
   - Platform: darwin
@@ -161,11 +161,11 @@ uv run playwright install chromium
 **Solution**: Verify capture paths
 ```bash
 # Check captures exist
-ls -la /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/
-ls -la /Users/abrichr/oa/src/openadapt-capture/demo_new/
+ls -la /path/to/openadapt-capture/turn-off-nightshift/
+ls -la /path/to/openadapt-capture/demo_new/
 
 # Look for capture.db
-ls -la /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/capture.db
+ls -la /path/to/openadapt-capture/turn-off-nightshift/capture.db
 ```
 
 **Or use custom path**:

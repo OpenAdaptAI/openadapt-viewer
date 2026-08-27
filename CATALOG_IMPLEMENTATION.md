@@ -105,7 +105,7 @@ $ uv run openadapt-viewer catalog list
 Found 9 recordings:
   Turn Off Nightshift
     ID: turn-off-nightshift
-    Path: /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift
+    Path: /path/to/openadapt-capture/turn-off-nightshift
     Created: 2025-12-13 19:37
     Duration: 60.3s
     Frames: 21

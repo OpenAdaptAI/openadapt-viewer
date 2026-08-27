@@ -25,7 +25,7 @@ The screenshot generation system automatically captures UI states of viewers for
 
 ```bash
 # Install dependencies
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 uv sync
 
 # Install Playwright browsers (one-time setup)
@@ -278,14 +278,14 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd /Users/abrichr/oa/src/openadapt-viewer
+          cd /path/to/openadapt-viewer
           uv sync
           uv pip install playwright
           uv run playwright install chromium --with-deps
 
       - name: Generate screenshots
         run: |
-          cd /Users/abrichr/oa/src/openadapt-viewer
+          cd /path/to/openadapt-viewer
           uv run python scripts/generate_segmentation_screenshots.py \
             --output screenshots/segmentation \
             --save-metadata

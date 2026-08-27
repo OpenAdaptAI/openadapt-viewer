@@ -388,7 +388,7 @@ All requirements met:
 python --version
 
 # Install dependencies
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 uv sync
 ```
 

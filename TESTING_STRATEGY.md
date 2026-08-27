@@ -672,7 +672,7 @@ jobs:
 
 ```bash
 # Run full CI locally before pushing
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 # Install fresh
 uv sync --extra dev

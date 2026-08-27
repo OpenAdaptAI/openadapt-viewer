@@ -169,13 +169,13 @@ Created comprehensive documentation:
 ## Captures Used
 
 ### turn-off-nightshift
-- **Location**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift`
+- **Location**: `/path/to/openadapt-capture/turn-off-nightshift`
 - **Frames**: 22 screenshots
 - **Description**: Turning off Night Shift in macOS System Settings
 - **Use Case**: Complex UI navigation demonstration
 
 ### demo_new
-- **Location**: `/Users/abrichr/oa/src/openadapt-capture/demo_new`
+- **Location**: `/path/to/openadapt-capture/demo_new`
 - **Frames**: 14 screenshots
 - **Description**: Demo workflow
 - **Use Case**: Quick example and testing

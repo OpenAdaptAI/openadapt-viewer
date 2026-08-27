@@ -277,7 +277,7 @@ def benchmark_viewer_html(tmp_path, sample_benchmark_run):
 ### Setup (One-time)
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 # Install with dev dependencies
 uv sync --extra dev
@@ -375,7 +375,7 @@ jobs:
 
 ```bash
 # Run full CI locally before pushing
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 # Fresh install
 uv sync --extra dev

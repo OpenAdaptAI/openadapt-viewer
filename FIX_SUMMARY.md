@@ -1,7 +1,7 @@
 # Screenshot Loading Fix - Summary
 
 ## Issue
-Segmentation viewer at `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` was not displaying screenshots despite complete implementation by agent a1378d1.
+Segmentation viewer at `/path/to/openadapt-viewer/segmentation_viewer.html` was not displaying screenshots despite complete implementation by agent a1378d1.
 
 ## Root Cause
 **Browser Same-Origin Policy restrictions on `file://` protocol.**
@@ -13,7 +13,7 @@ When HTML files are opened directly (via `file://` protocol), modern browsers bl
 
 Changed all screenshot paths in test_episodes.json from:
 ```json
-"file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
+"file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
 ```
 
 To:
@@ -51,7 +51,7 @@ To:
 ### Quick Test
 ```bash
 # 1. Open viewer
-open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+open /path/to/openadapt-viewer/segmentation_viewer.html
 
 # 2. Load test_episodes.json through the UI
 # 3. Check that both episode cards show thumbnails
@@ -61,7 +61,7 @@ open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
 
 ### Automated Test
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
+open /path/to/openadapt-viewer/verify_screenshots.html
 # Should show "5 / 5 tests passed" in green
 ```
 
@@ -89,12 +89,12 @@ open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
 ### Why Relative Paths Work
 The viewer HTML is at:
 ```
-/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+/path/to/openadapt-viewer/segmentation_viewer.html
 ```
 
 Screenshots are at:
 ```
-/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/
+/path/to/openadapt-capture/turn-off-nightshift/screenshots/
 ```
 
 Relative path from viewer:
@@ -114,15 +114,15 @@ This solution works with:
 All tested with direct `file://` opening (no web server needed).
 
 ## Files Modified
-1. `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json` - Updated all paths
-2. `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` - Added logging and error handling
+1. `/path/to/openadapt-viewer/test_episodes.json` - Updated all paths
+2. `/path/to/openadapt-viewer/segmentation_viewer.html` - Added logging and error handling
 
 ## Files Created
-1. `/Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html` - Test harness
-2. `/Users/abrichr/oa/src/openadapt-viewer/test_image_loading.html` - Diagnostic tool
-3. `/Users/abrichr/oa/src/openadapt-viewer/SCREENSHOT_FIX_GUIDE.md` - Testing guide
-4. `/Users/abrichr/oa/src/openadapt-viewer/TEST_RESULTS.md` - Technical docs
-5. `/Users/abrichr/oa/src/openadapt-viewer/FIX_SUMMARY.md` - This summary
+1. `/path/to/openadapt-viewer/verify_screenshots.html` - Test harness
+2. `/path/to/openadapt-viewer/test_image_loading.html` - Diagnostic tool
+3. `/path/to/openadapt-viewer/SCREENSHOT_FIX_GUIDE.md` - Testing guide
+4. `/path/to/openadapt-viewer/TEST_RESULTS.md` - Technical docs
+5. `/path/to/openadapt-viewer/FIX_SUMMARY.md` - This summary
 
 ## Console Output
 
@@ -175,7 +175,7 @@ To verify the fix is complete, check all items:
 ## Issue Resolution
 
 Original report:
-> "file:///Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html still doesn't show screenshots even though agent a1378d1 completed the implementation."
+> "file:///path/to/openadapt-viewer/segmentation_viewer.html still doesn't show screenshots even though agent a1378d1 completed the implementation."
 
 **Status: RESOLVED ✓**
 

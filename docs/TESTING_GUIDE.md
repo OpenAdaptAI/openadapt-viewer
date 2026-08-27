@@ -8,7 +8,7 @@
 
 ```bash
 # Install with dev dependencies
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 uv sync --extra dev
 
 # Install Playwright browsers (one-time setup)

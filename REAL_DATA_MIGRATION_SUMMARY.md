@@ -150,7 +150,7 @@ uv run openadapt-viewer benchmark --output test_benchmark_refactored.html
 
 ### Nightshift Recording
 
-**Location**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/`
+**Location**: `/path/to/openadapt-capture/turn-off-nightshift/`
 
 **Files**:
 - `capture.db` - SQLite database with 1,561 events

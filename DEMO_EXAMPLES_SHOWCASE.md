@@ -475,11 +475,11 @@ response = client.chat.completions.create(
 
 All examples can be viewed interactively in the browser-based viewer:
 
-**Location:** `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+**Location:** `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
 
 **Open with:**
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 The viewer provides:

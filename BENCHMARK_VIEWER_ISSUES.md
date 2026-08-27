@@ -25,13 +25,13 @@ The user has an Azure evaluation running (agent aace3b9) via:
 ```bash
 uv run python -m openadapt_evals.benchmarks.cli azure \
   --workers 10 \
-  --waa-path /Users/abrichr/oa/WindowsAgentArena \
+  --waa-path /path/to/WindowsAgentArena \
   --experiment-name waa-30tasks-demo-fix-validation
 ```
 
 **Process is running** (confirmed by `ps aux`):
 ```
-abrichr  76824  python3 -m openadapt_evals.benchmarks.cli azure --workers 10
+youruser 76824  python3 -m openadapt_evals.benchmarks.cli azure --workers 10
 ```
 
 ### Why It's Not Showing
@@ -45,7 +45,7 @@ openadapt-evals CLI
 
 openadapt-ml viewer
   └─ Reads from: benchmark_live.json
-  └─ Location: /Users/abrichr/oa/src/openadapt-ml/training_output/current/
+  └─ Location: /path/to/openadapt-ml/training_output/current/
 ```
 
 **Current benchmark_live.json content** (last updated Jan 9):
@@ -88,7 +88,7 @@ live_state = {
     }
 }
 
-benchmark_live_path = Path("/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json")
+benchmark_live_path = Path("/path/to/openadapt-ml/training_output/current/benchmark_live.json")
 benchmark_live_path.write_text(json.dumps(live_state, indent=2))
 ```
 
@@ -102,7 +102,7 @@ class LiveEvaluationTracker:
         self.live_state_path = output_dir / "live_eval_state.json"
 
         # ADDED: Also write to openadapt-ml location
-        self.benchmark_live_path = Path("/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json")
+        self.benchmark_live_path = Path("/path/to/openadapt-ml/training_output/current/benchmark_live.json")
 
     def update_state(self, state: dict):
         # Write to both locations
@@ -438,8 +438,8 @@ The viewer should show:
 ```bash
 # Create symlink from viewer location to eval location
 ln -sf \
-  /Users/abrichr/oa/src/openadapt-evals/live_eval_state.json \
-  /Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json
+  /path/to/openadapt-evals/live_eval_state.json \
+  /path/to/openadapt-ml/training_output/current/benchmark_live.json
 ```
 
 **Option 2: File watcher (robust)**

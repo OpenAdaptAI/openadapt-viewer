@@ -1,4 +1,4 @@
-"""Guard against absolute developer paths in tracked code.
+"""Guard against absolute developer paths in tracked files.
 
 This is a public repository. A path like ``/Users/<someone>/oa/src/...`` baked
 into shipped code breaks that code for every other user, and it leaks the
@@ -8,9 +8,9 @@ The failure this catches is real: ``real_data_loader.py`` shipped a default
 capture path under one developer's home directory, so ``openadapt-viewer
 benchmark`` raised FileNotFoundError for everyone else.
 
-Markdown is deliberately out of scope here. Roughly 50 status documents at the
-repository root still carry these paths; they are prose, not code, and cleaning
-them up is a separate change.
+Documentation counts too. A command a reader cannot run without first editing
+out someone else's home directory is a broken command. Write ``/path/to/...``,
+which is what the docs here already use in the places that got it right.
 """
 
 from __future__ import annotations
@@ -20,8 +20,10 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
 
-# Extensions that hold code or code-adjacent configuration.
-CODE_SUFFIXES = {".py", ".sh", ".html", ".js", ".css", ".json", ".yml", ".yaml", ".toml"}
+# Extensions that hold code, code-adjacent configuration, or documentation.
+SCANNED_SUFFIXES = {
+    ".py", ".sh", ".html", ".js", ".css", ".json", ".yml", ".yaml", ".toml", ".md",
+}
 
 # Absolute home-directory prefixes that must never appear in tracked code.
 FORBIDDEN_PREFIXES = ("/Users/", "/home/")
@@ -35,8 +37,8 @@ ALLOWLIST: set[str] = set()
 SELF = "tests/test_no_hardcoded_paths.py"
 
 
-def _tracked_code_files() -> list[str]:
-    """List tracked files whose extension marks them as code."""
+def _tracked_files() -> list[str]:
+    """List tracked files whose extension puts them in scope for this check."""
     result = subprocess.run(
         ["git", "ls-files"],
         cwd=REPO_ROOT,
@@ -47,15 +49,15 @@ def _tracked_code_files() -> list[str]:
     return [
         name
         for name in result.stdout.splitlines()
-        if Path(name).suffix in CODE_SUFFIXES
+        if Path(name).suffix in SCANNED_SUFFIXES
     ]
 
 
-def test_tracked_code_has_no_absolute_home_paths():
-    """No tracked code file may hardcode an absolute home-directory path."""
+def test_tracked_files_have_no_absolute_home_paths():
+    """No tracked file may hardcode an absolute home-directory path."""
     offenders: list[str] = []
 
-    for name in _tracked_code_files():
+    for name in _tracked_files():
         if name in ALLOWLIST or name == SELF:
             continue
         path = REPO_ROOT / name
@@ -68,9 +70,9 @@ def test_tracked_code_has_no_absolute_home_paths():
                 offenders.append(f"{name}:{line_number}: {line.strip()[:120]}")
 
     assert not offenders, (
-        "Tracked code hardcodes absolute home-directory paths. Resolve the "
-        "location from an environment variable with a repository-relative "
-        "fallback instead.\n" + "\n".join(offenders)
+        "Tracked files hardcode absolute home-directory paths. In code, resolve "
+        "the location from an environment variable with a repository-relative "
+        "fallback. In documentation, write /path/to/...\n" + "\n".join(offenders)
     )
 
 

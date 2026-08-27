@@ -175,14 +175,14 @@ Found 9 recordings:
 
   Turn Off Nightshift
     ID: turn-off-nightshift
-    Path: /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift
+    Path: /path/to/openadapt-capture/turn-off-nightshift
     Created: 2025-12-13 19:37
     Duration: 60.3s
     Frames: 21
 
   Demo New
     ID: demo_new
-    Path: /Users/abrichr/oa/src/openadapt-capture/demo_new
+    Path: /path/to/openadapt-capture/demo_new
     Created: 2025-12-12 15:41
     Duration: 13.3s
     Frames: 14
@@ -203,7 +203,7 @@ Catalog Statistics:
   Segmentation Results: 2
   Episodes: 0
 
-Database: /Users/abrichr/.openadapt/catalog.db
+Database: ~/.openadapt/catalog.db
 ```
 
 ### Register Recording Manually
@@ -608,4 +608,4 @@ When adding new features that use recordings:
 
 - **openadapt-viewer**: Main package containing catalog implementation
 - **SQLite Documentation**: https://www.sqlite.org/docs.html
-- **Legacy openadapt.db**: `/Users/abrichr/oa/src/OpenAdapt/openadapt.db`
+- **Legacy openadapt.db**: `/path/to/OpenAdapt/openadapt.db`
