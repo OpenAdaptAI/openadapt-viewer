@@ -26,12 +26,12 @@ def generate_benchmark_html(
         output_path: Where to write the HTML file
         standalone: If True, embed Plotly.js for offline viewing
         run_data: Pre-loaded BenchmarkRun data (optional, will load from data_path if not provided)
-        use_real_data: If True (default), load real capture data from nightshift recording
+        use_real_data: If True (default), load real capture data from $OPENADAPT_CAPTURE_RECORDING
 
     Returns:
         Path to the generated HTML file
 
-    POLICY: ALWAYS defaults to real data from nightshift recording.
+    POLICY: ALWAYS defaults to real data, from $OPENADAPT_CAPTURE_RECORDING.
     Set use_real_data=False ONLY for unit tests with sample data.
     """
     # Load data
@@ -45,7 +45,7 @@ def generate_benchmark_html(
             # Fall back to benchmark data format
             run = load_benchmark_data(data_path)
     else:
-        # DEFAULT: Use real data from nightshift recording
+        # DEFAULT: Use the real recording named by $OPENADAPT_CAPTURE_RECORDING
         if use_real_data:
             run = load_real_capture_data()
         else:

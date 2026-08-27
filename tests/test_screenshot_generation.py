@@ -12,6 +12,7 @@ if captures are not available.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,7 +24,14 @@ import pytest
 
 REPO_ROOT = Path(__file__).parent.parent
 SCRIPT_PATH = REPO_ROOT / "scripts" / "generate_readme_screenshots.py"
-CAPTURE_DIR = Path("/Users/abrichr/oa/src/openadapt-capture")
+
+# Captures are local data that lives outside this repository. Look for a sibling
+# openadapt-capture checkout, and let $OPENADAPT_CAPTURE_DIR override that. Every
+# test that reads a capture skips when the directory is absent, so CI and any
+# contributor without recordings still run the rest of this file.
+CAPTURE_DIR = Path(
+    os.environ.get("OPENADAPT_CAPTURE_DIR", REPO_ROOT.parent / "openadapt-capture")
+).expanduser()
 
 
 @pytest.fixture

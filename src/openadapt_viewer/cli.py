@@ -47,7 +47,10 @@ Examples:
         "--data",
         "-d",
         type=Path,
-        help="Path to capture/benchmark directory (defaults to nightshift recording)",
+        help=(
+            "Path to a capture/benchmark directory "
+            "(defaults to $OPENADAPT_CAPTURE_RECORDING)"
+        ),
     )
     benchmark_parser.add_argument(
         "--output",
@@ -271,7 +274,7 @@ Examples:
 def run_benchmark_command(args):
     """Handle the benchmark command.
 
-    POLICY: Defaults to real nightshift recording data.
+    POLICY: Defaults to real recording data, from $OPENADAPT_CAPTURE_RECORDING.
     Only uses sample data if explicitly disabled in code.
     """
     if args.data and not args.data.exists():
@@ -279,15 +282,21 @@ def run_benchmark_command(args):
         sys.exit(1)
 
     if args.data is None:
-        print("Generating benchmark viewer with REAL nightshift recording data...")
+        print("Generating benchmark viewer with REAL recording data from $OPENADAPT_CAPTURE_RECORDING...")
     else:
         print(f"Generating benchmark viewer from: {args.data}")
-    output_path = generate_benchmark_html(
-        data_path=args.data,
-        output_path=args.output,
-        standalone=args.standalone,
-        use_real_data=True,  # ALWAYS use real data by default
-    )
+    try:
+        output_path = generate_benchmark_html(
+            data_path=args.data,
+            output_path=args.output,
+            standalone=args.standalone,
+            use_real_data=True,  # ALWAYS use real data by default
+        )
+    except FileNotFoundError as exc:
+        # Recordings are local data. Report the missing one plainly instead of
+        # dumping a traceback at anyone who has not configured one yet.
+        print(f"Error: {exc}", file=sys.stderr)
+        sys.exit(1)
     print(f"Generated: {output_path}")
 
     if args.open:
