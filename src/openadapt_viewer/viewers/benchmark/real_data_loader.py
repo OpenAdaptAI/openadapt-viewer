@@ -1,16 +1,25 @@
-"""Real data loader for benchmark viewer from nightshift recording.
+"""Real data loader for the benchmark viewer, reading openadapt-capture recordings.
 
 This module loads REAL data from openadapt-capture recordings
 instead of fake/sample data.
 
 POLICY: ALWAYS use real data from actual recordings by default.
 Sample data should ONLY be used for unit tests, clearly marked.
+
+There is no built-in default recording. A recording is local data that lives
+outside this repository, so the caller names one -- either by passing
+``capture_path`` or by setting ``$OPENADAPT_CAPTURE_RECORDING``.
+
+Note the two variables are different. ``$OPENADAPT_CAPTURE_DIR`` names the
+openadapt-capture checkout, which holds many recordings; the screenshot scripts
+use it. ``$OPENADAPT_CAPTURE_RECORDING`` names one recording directory inside it.
 """
 
 import json
+import os
 import sqlite3
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from openadapt_viewer.core.types import (
     BenchmarkRun,
@@ -19,8 +28,47 @@ from openadapt_viewer.core.types import (
     TaskExecution,
 )
 
-# Default to nightshift recording if no path specified
-DEFAULT_CAPTURE_PATH = Path("/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift")
+#: Environment variable naming one recording directory to load by default.
+CAPTURE_RECORDING_ENV = "OPENADAPT_CAPTURE_RECORDING"
+
+
+def default_capture_path() -> Path | None:
+    """Return the recording directory from the environment, or None if unset.
+
+    Returns:
+        The directory named by ``$OPENADAPT_CAPTURE_RECORDING``, or None.
+    """
+    value = os.environ.get(CAPTURE_RECORDING_ENV)
+    return Path(value).expanduser() if value else None
+
+
+def _resolve_frame_path(capture_path: Path, frame_path: str) -> str:
+    """Resolve a key frame path from episodes.json against a capture directory.
+
+    episodes.json stores frame paths relative to the checkout root that holds
+    the capture repository, for example
+    ``../openadapt-capture/<recording>/screenshots/step_0.png``. Re-anchor those
+    on the capture directory the caller actually passed, so a recording loads
+    from any checkout rather than only from the one that wrote the file.
+
+    Args:
+        capture_path: The capture directory being loaded.
+        frame_path: The path recorded in episodes.json.
+
+    Returns:
+        An absolute path to the frame, as a string.
+    """
+    if not frame_path.startswith("../"):
+        return str(capture_path / frame_path)
+
+    parts = PurePosixPath(frame_path.removeprefix("../")).parts
+    # "<capture-repo>/<recording>/..." -> strip the two leading segments and
+    # re-anchor the tail on the capture directory we were given.
+    if parts[:2] == (capture_path.parent.name, capture_path.name):
+        return str(capture_path.joinpath(*parts[2:]))
+
+    # Unknown layout: fall back to reading "../" literally.
+    return str((capture_path / frame_path).resolve())
 
 
 def load_real_capture_data(
@@ -30,18 +78,26 @@ def load_real_capture_data(
     """Load REAL data from a capture recording.
 
     Args:
-        capture_path: Path to capture directory (defaults to nightshift recording)
+        capture_path: Path to a capture directory. If omitted, falls back to
+            ``$OPENADAPT_CAPTURE_RECORDING``.
         run_id: Optional run ID (defaults to recording name)
 
     Returns:
         BenchmarkRun with real data from the recording
 
     Raises:
-        FileNotFoundError: If capture directory or required files don't exist
+        FileNotFoundError: If no capture directory was named, or if the named
+            directory or its required files don't exist.
     """
-    # Use default nightshift recording if no path specified
     if capture_path is None:
-        capture_path = DEFAULT_CAPTURE_PATH
+        capture_path = default_capture_path()
+
+    if capture_path is None:
+        raise FileNotFoundError(
+            "No capture directory given. Pass capture_path, or set "
+            f"${CAPTURE_RECORDING_ENV} to a directory holding a recording "
+            "(episodes.json plus capture.db)."
+        )
 
     capture_path = Path(capture_path)
 
@@ -122,14 +178,7 @@ def load_real_capture_data(
                 # Convert relative path to absolute
                 frame_path = frame.get("path", "")
                 if frame_path:
-                    # Handle paths that start with ../openadapt-capture/
-                    if frame_path.startswith("../openadapt-capture/"):
-                        screenshot_path = str(
-                            Path("/Users/abrichr/oa/src")
-                            / frame_path.removeprefix("../")
-                        )
-                    else:
-                        screenshot_path = str(capture_path / frame_path)
+                    screenshot_path = _resolve_frame_path(capture_path, frame_path)
 
             # Calculate timestamp within episode
             step_timestamp = episode["start_time"] + (i * episode["duration"] / max(len(episode_steps), 1))
@@ -202,9 +251,12 @@ def load_real_capture_data(
 
 
 def load_nightshift_data() -> BenchmarkRun:
-    """Load the nightshift recording (convenience function).
+    """Load the recording named by ``$OPENADAPT_CAPTURE_RECORDING``.
+
+    Deprecated: this used to point at one specific local recording. It is now a
+    thin alias for ``load_real_capture_data()``. Call that instead.
 
     Returns:
-        BenchmarkRun with nightshift recording data
+        BenchmarkRun with data from the configured recording
     """
-    return load_real_capture_data(DEFAULT_CAPTURE_PATH)
+    return load_real_capture_data()

@@ -4,13 +4,19 @@
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-RESULTS_DIR="/Users/abrichr/oa/src/openadapt-ml/benchmark_results"
+REPO_ROOT="$( cd "$SCRIPT_DIR/../.." && pwd )"
+
+# Benchmark results live in the openadapt-ml checkout, which sits beside this
+# one. Set $OPENADAPT_ML_DIR if yours is somewhere else.
+ML_DIR="${OPENADAPT_ML_DIR:-$(dirname "$REPO_ROOT")/openadapt-ml}"
+RESULTS_DIR="${BENCHMARK_RESULTS_DIR:-$ML_DIR/benchmark_results}"
 
 # Check if benchmark_results exists
 if [ ! -d "$RESULTS_DIR" ]; then
     echo "Error: benchmark_results directory not found at $RESULTS_DIR"
-    echo "Run a benchmark first:"
-    echo "  cd /Users/abrichr/oa/src/openadapt-ml"
+    echo "Set \$OPENADAPT_ML_DIR if your openadapt-ml checkout is elsewhere,"
+    echo "or run a benchmark first:"
+    echo "  cd \"$ML_DIR\""
     echo "  uv run python -m openadapt_ml.benchmarks.cli test-collection --tasks 5"
     exit 1
 fi
