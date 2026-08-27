@@ -26,13 +26,9 @@ CODE_SUFFIXES = {".py", ".sh", ".html", ".js", ".css", ".json", ".yml", ".yaml",
 # Absolute home-directory prefixes that must never appear in tracked code.
 FORBIDDEN_PREFIXES = ("/Users/", "/home/")
 
-# Known offenders fixed in PR #13 (fix/screenshot-workflow-honesty), which was
-# open when this guard landed. Delete these two entries once #13 merges; the
-# test then covers the whole tree with no exceptions.
-ALLOWLIST = {
-    "scripts/generate_for_web.sh",
-    "scripts/generate_readme_screenshots.py",
-}
+# Empty on purpose. There is no tracked file that needs an exception, and adding
+# one should take a comment saying why.
+ALLOWLIST: set[str] = set()
 
 # This file necessarily spells out the prefixes it bans, so it always matches
 # itself. Skipping it by path keeps the check honest for every other file.
