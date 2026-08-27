@@ -78,19 +78,53 @@ jobs:
         id: check-captures
         working-directory: openadapt-capture
         run: |
-          if [ -d "turn-off-nightshift" ] && [ -f "turn-off-nightshift/capture.db" ]; then
-            echo "nightshift_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "nightshift_exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Warning: turn-off-nightshift capture not found"
-          fi
+          # Captures live under examples/captures/. The repository root is not a
+          # candidate: .gitignore excludes `demo_*/` and `turn-off-nightshift/`
+          # there as "large data files", so a capture placed at the root cannot
+          # be committed and this job would never see it.
+          #
+          # The current recorder writes recording.db (SQLAlchemy). The older
+          # bespoke capture.db format was replaced on 2026-07-17 by
+          # openadapt-capture PR #28, and CaptureSession.load() reads only
+          # recording.db, so a legacy capture is reported here as unusable
+          # rather than silently missing.
+          for name in turn-off-nightshift demo_new; do
+            if [ "$name" = "turn-off-nightshift" ]; then key=nightshift_exists; else key=demo_exists; fi
+            if [ -f "examples/captures/$name/recording.db" ]; then
+              echo "$key=true" >> $GITHUB_OUTPUT
+            else
+              echo "$key=false" >> $GITHUB_OUTPUT
+              if [ -f "examples/captures/$name/capture.db" ] || [ -f "$name/capture.db" ]; then
+                echo "::warning title=Legacy capture format::$name has capture.db, but the recorder now writes recording.db. Re-record it with the current openadapt-capture."
+              else
+                echo "::warning title=Capture missing::examples/captures/$name/recording.db is absent."
+              fi
+            fi
+          done
 
-          if [ -d "demo_new" ] && [ -f "demo_new/capture.db" ]; then
-            echo "demo_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "demo_exists=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Warning: demo_new capture not found"
-          fi
+      - name: Fail if there is nothing to screenshot
+        if: steps.check-captures.outputs.nightshift_exists != 'true' && steps.check-captures.outputs.demo_exists != 'true'
+        run: |
+          {
+            echo "### No usable capture, so no screenshot was generated"
+            echo
+            echo "This job needs at least one capture at"
+            echo "\`openadapt-capture/examples/captures/<name>/recording.db\`."
+            echo
+            echo "Record one with the current tooling, which writes recording.db:"
+            echo
+            echo '```'
+            echo "uv run capture record turn-off-nightshift"
+            echo "uv run capture record demo_new"
+            echo '```'
+            echo
+            echo "Then commit the capture directory (recording.db, screenshots/,"
+            echo "episodes.json) under examples/captures/ in openadapt-capture."
+            echo "Leave audio.flac, video.mp4 and the transcripts out: both"
+            echo "repositories are public and the workflow does not read them."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::error title=No usable capture::Nothing to screenshot. See the run summary."
+          exit 1
 
       - name: Generate screenshots
         if: steps.check-captures.outputs.nightshift_exists == 'true' || steps.check-captures.outputs.demo_exists == 'true'
@@ -98,7 +132,7 @@ jobs:
         run: |
           source ../.venv/bin/activate
           python scripts/generate_readme_screenshots.py \
-            --capture-dir ../openadapt-capture \
+            --capture-dir ../openadapt-capture/examples/captures \
             --output-dir docs/images \
             --max-events 50
         continue-on-error: false
