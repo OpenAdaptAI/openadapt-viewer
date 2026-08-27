@@ -15,14 +15,14 @@ If you generate new JSON files and screenshots don't load, check if paths are ab
 grep "file://" your_episodes.json
 
 # If found, convert to relative paths:
-sed -i '' 's|file:///Users/abrichr/oa/src/openadapt-capture/|../openadapt-capture/|g' your_episodes.json
+sed -i '' 's|file:///path/to/openadapt-capture/|../openadapt-capture/|g' your_episodes.json
 ```
 
 ## Test in 30 Seconds
 
 ```bash
 # 1. Open viewer
-open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+open /path/to/openadapt-viewer/segmentation_viewer.html
 
 # 2. Load test_episodes.json through the UI
 
@@ -35,15 +35,15 @@ open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
 
 | Format | Works? | Example |
 |--------|--------|---------|
-| Absolute file:// | ❌ NO | `file:///Users/abrichr/oa/src/openadapt-capture/...` |
+| Absolute file:// | ❌ NO | `file:///path/to/openadapt-capture/...` |
 | Relative | ✅ YES | `../openadapt-capture/turn-off-nightshift/screenshots/...` |
-| Absolute /path | ❌ NO | `/Users/abrichr/oa/src/openadapt-capture/...` |
+| Absolute /path | ❌ NO | `/path/to/openadapt-capture/...` |
 
 ## What Was Changed
 
 ### test_episodes.json
 ```diff
-- "thumbnail": "file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
+- "thumbnail": "file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
 + "thumbnail": "../openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
 ```
 
@@ -56,7 +56,7 @@ open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
 
 ```bash
 # Open test page
-open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
+open /path/to/openadapt-viewer/verify_screenshots.html
 
 # Should show: "5 / 5 tests passed" ✓
 ```
@@ -71,7 +71,7 @@ open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
 ## Directory Structure
 
 ```
-/Users/abrichr/oa/src/
+/path/to/
 ├── openadapt-viewer/
 │   ├── segmentation_viewer.html  ← Viewer
 │   └── test_episodes.json        ← Data (FIXED)

@@ -251,12 +251,12 @@ Ready-to-copy templates for:
 ## Files Created/Updated
 
 ### Created
-1. `/Users/abrichr/oa/src/openadapt-viewer/VIEWER_PATTERNS.md` (675 lines)
-2. `/Users/abrichr/oa/src/openadapt-viewer/MIGRATION_GUIDE.md` (733 lines)
+1. `/path/to/openadapt-viewer/VIEWER_PATTERNS.md` (675 lines)
+2. `/path/to/openadapt-viewer/MIGRATION_GUIDE.md` (733 lines)
 
 ### Updated
-3. `/Users/abrichr/oa/src/openadapt-viewer/ARCHITECTURE.md` (added migration section)
-4. `/Users/abrichr/oa/src/openadapt-viewer/README.md` (updated components, viewers, docs)
+3. `/path/to/openadapt-viewer/ARCHITECTURE.md` (added migration section)
+4. `/path/to/openadapt-viewer/README.md` (updated components, viewers, docs)
 
 ## Next Steps
 

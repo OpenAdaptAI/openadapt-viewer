@@ -10,7 +10,7 @@ The sample data generator in `src/openadapt_viewer/viewers/benchmark/data.py` wa
 Modified the `create_sample_data()` function in `data.py` to use **data URI encoded SVG placeholder images** instead of file paths. This allows the demo/test viewer to display screenshot placeholders without requiring actual image files.
 
 ### What Changed
-**File**: `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/data.py`
+**File**: `/path/to/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/data.py`
 
 **Before** (line 92):
 ```python
@@ -64,8 +64,8 @@ For production use with actual benchmarks, ensure that:
    - **Data URIs** (for embedded images)
 
 ## Files Modified
-- `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/data.py`
-- `/Users/abrichr/oa/src/openadapt-viewer/test_benchmark_refactored.html` (regenerated)
+- `/path/to/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/data.py`
+- `/path/to/openadapt-viewer/test_benchmark_refactored.html` (regenerated)
 
 ## Related Issues
 - Alpine.js binding was correct (`selectedTask.steps[currentStep].screenshot_path`)

@@ -6,7 +6,7 @@ The segmentation_viewer.html was not showing screenshots even though the impleme
 ## Root Cause
 The test_episodes.json file contained absolute `file://` URLs like:
 ```
-file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png
+file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png
 ```
 
 When opening HTML files directly with the `file://` protocol, modern browsers (Safari, Chrome, Firefox) enforce Same-Origin Policy restrictions that prevent loading resources from different `file://` paths. This is a security feature to prevent local file system access attacks.
@@ -18,8 +18,8 @@ Changed all screenshot paths in test_episodes.json from absolute `file://` URLs 
 ```
 
 This works because:
-1. The viewer HTML is at: `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
-2. The screenshots are at: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/`
+1. The viewer HTML is at: `/path/to/openadapt-viewer/segmentation_viewer.html`
+2. The screenshots are at: `/path/to/openadapt-capture/turn-off-nightshift/screenshots/`
 3. Relative path from viewer: `../openadapt-capture/turn-off-nightshift/screenshots/`
 
 ## Changes Made
@@ -58,7 +58,7 @@ To verify the fix works, open segmentation_viewer.html and check:
 
 1. Open the viewer:
    ```bash
-   open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+   open /path/to/openadapt-viewer/segmentation_viewer.html
    ```
 
 2. Load test_episodes.json:
@@ -105,9 +105,9 @@ For production use, consider:
 
 ## Related Files
 
-- `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` - Main viewer
-- `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json` - Test data (FIXED)
-- `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/` - Screenshot directory
+- `/path/to/openadapt-viewer/segmentation_viewer.html` - Main viewer
+- `/path/to/openadapt-viewer/test_episodes.json` - Test data (FIXED)
+- `/path/to/openadapt-capture/turn-off-nightshift/screenshots/` - Screenshot directory
 
 ## Agent Context
 

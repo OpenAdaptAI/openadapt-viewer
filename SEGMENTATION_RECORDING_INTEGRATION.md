@@ -97,7 +97,7 @@ When clicking "View Full Recording", the following parameters are passed:
 
 ### Segmentation Viewer Changes
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+**File:** `/path/to/openadapt-viewer/segmentation_viewer.html`
 
 #### 1. Added Recording Links Section (HTML)
 
@@ -141,7 +141,7 @@ if (episode.recording_ids && episode.recording_ids.length > 0) {
     episode.recording_ids.forEach(recordingId => {
         // Construct absolute path to capture viewer
         // Works with file:// protocol when opening HTML directly
-        const capturePath = `file:///Users/abrichr/oa/src/openadapt-capture/${recordingId}/viewer.html`;
+        const capturePath = `file:///path/to/openadapt-capture/${recordingId}/viewer.html`;
 
         const params = new URLSearchParams();
         if (episode.start_time !== undefined) {
@@ -173,7 +173,7 @@ if (episode.recording_ids && episode.recording_ids.length > 0) {
 
 ### Capture Viewer Changes
 
-**File:** `/Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html`
+**File:** `/path/to/openadapt-viewer/capture_viewer.html`
 
 #### 1. Added URL Parameter Handling (Alpine.js init)
 
@@ -285,7 +285,7 @@ style="background: linear-gradient(135deg, rgba(255, 200, 0, 0.2), rgba(255, 165
 For the integration to work, the directory structure must be:
 
 ```
-/Users/abrichr/oa/src/
+/path/to/
 ├── openadapt-viewer/
 │   ├── segmentation_viewer.html     # Episode list viewer
 │   └── test_episodes.json            # Example episode data
@@ -300,7 +300,7 @@ For the integration to work, the directory structure must be:
 **Path assumptions:**
 - Segmentation viewer is at: `openadapt-viewer/segmentation_viewer.html`
 - Capture viewers are at: `openadapt-capture/{recording_id}/viewer.html`
-- Absolute path to capture: `file:///Users/abrichr/oa/src/openadapt-capture/{recording_id}/viewer.html`
+- Absolute path to capture: `file:///path/to/openadapt-capture/{recording_id}/viewer.html`
   (Uses absolute file:// URL to work when opening HTML files directly in browser)
 
 ## Usage Instructions
@@ -343,7 +343,7 @@ For the integration to work, the directory structure must be:
 
 1. Open segmentation viewer:
    ```bash
-   open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+   open /path/to/openadapt-viewer/segmentation_viewer.html
    ```
 
 2. Load test episodes:
@@ -502,10 +502,10 @@ Ensure episode JSON includes:
 5. Using relative path instead of absolute file:// URL
 
 **Solution:**
-1. Verify directory exists: `/Users/abrichr/oa/src/openadapt-capture/{recording_id}/`
-2. Check viewer file: `/Users/abrichr/oa/src/openadapt-capture/{recording_id}/viewer.html`
+1. Verify directory exists: `/path/to/openadapt-capture/{recording_id}/`
+2. Check viewer file: `/path/to/openadapt-capture/{recording_id}/viewer.html`
 3. Ensure `recording_id` in episode JSON matches directory name exactly (no "sample-" prefix unless directory has it)
-4. Verify the segmentation viewer uses absolute file:// paths: `file:///Users/abrichr/oa/src/openadapt-capture/${recordingId}/viewer.html`
+4. Verify the segmentation viewer uses absolute file:// paths: `file:///path/to/openadapt-capture/${recordingId}/viewer.html`
 5. Check test data files (e.g., `sample_segmentation_results.json`) have correct recording IDs
 
 ### Issue: No Timeline Highlight Appears
@@ -543,9 +543,9 @@ Ensure episode JSON includes:
 A complete demo is available using the test data:
 
 **File locations:**
-- Segmentation viewer: `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
-- Test episodes: `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json`
-- Recording viewer: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/viewer.html`
+- Segmentation viewer: `/path/to/openadapt-viewer/segmentation_viewer.html`
+- Test episodes: `/path/to/openadapt-viewer/test_episodes.json`
+- Recording viewer: `/path/to/openadapt-capture/turn-off-nightshift/viewer.html`
 
 **Demo flow:**
 1. Open segmentation viewer
@@ -735,7 +735,7 @@ Screenshots are displayed inline below each step:
 Use absolute `file://` URLs for cross-directory access:
 
 ```json
-"thumbnail": "file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
+"thumbnail": "file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png"
 ```
 
 **Important**: Use three slashes after `file:` for absolute paths.
@@ -798,8 +798,8 @@ The `file://` protocol has security restrictions:
 
 ## Testing Screenshot Integration
 
-1. Open `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
-2. Load `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json`
+1. Open `/path/to/openadapt-viewer/segmentation_viewer.html`
+2. Load `/path/to/openadapt-viewer/test_episodes.json`
 3. Verify:
    - Episode cards show thumbnails
    - Click episode to see key frames gallery (3 images)
@@ -808,9 +808,9 @@ The `file://` protocol has security restrictions:
 
 ## Files Updated
 
-- `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html` - Viewer UI
-- `/Users/abrichr/oa/src/openadapt-viewer/test_episodes.json` - Example data with screenshots
-- `/Users/abrichr/oa/src/openadapt-viewer/SEGMENTATION_RECORDING_INTEGRATION.md` - Documentation
+- `/path/to/openadapt-viewer/segmentation_viewer.html` - Viewer UI
+- `/path/to/openadapt-viewer/test_episodes.json` - Example data with screenshots
+- `/path/to/openadapt-viewer/SEGMENTATION_RECORDING_INTEGRATION.md` - Documentation
 
 ## Future Enhancements
 

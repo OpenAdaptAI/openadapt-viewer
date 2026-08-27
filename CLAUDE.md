@@ -3,7 +3,7 @@
 ## Project Status & Priorities
 
 **IMPORTANT**: Before starting work, always check the project-wide status document:
-- **Location**: `/Users/abrichr/oa/src/STATUS.md`
+- **Location**: `/path/to/STATUS.md`
 - **Purpose**: Tracks P0 priorities, active background tasks, blockers, and strategic decisions
 - **Action**: Read this file at the start of every session to understand current priorities
 
@@ -40,7 +40,7 @@ Used by:
 
 ```bash
 # Install
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 uv sync
 
 # Run tests (IMPORTANT: Run before making changes!)
@@ -586,7 +586,7 @@ const results = searchItems(episodes, "nightshift", {
 
 Run the interactive test page:
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/test_search.html
+open /path/to/openadapt-viewer/test_search.html
 ```
 
 Test cases include:
@@ -650,7 +650,7 @@ uv run openadapt-viewer catalog list
 uv run openadapt-viewer catalog stats
 
 # Generate segmentation viewer with catalog integration (NEW)
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python scripts/generate_segmentation_viewer.py --output viewer.html --open
 ```
 
@@ -691,7 +691,7 @@ seg_results = catalog.get_segmentation_results("turn-off-nightshift")
    python scripts/generate_segmentation_viewer.py --output viewer.html
 
 2. Catalog scans segmentation_output directories:
-   - /Users/abrichr/oa/src/openadapt-ml/segmentation_output/
+   - /path/to/openadapt-ml/segmentation_output/
    - ~/.openadapt/segmentation_output/
    - ./segmentation_output/
 

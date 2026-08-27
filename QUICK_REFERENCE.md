@@ -16,7 +16,7 @@
 ## 🚀 Open the Viewer
 
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 ## 📈 Current Status

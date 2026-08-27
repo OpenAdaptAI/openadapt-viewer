@@ -90,10 +90,10 @@ Changes to component appearance only need to be made once:
 ## File Structure
 
 ### Modified Files:
-- `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/generator.py`
+- `/path/to/openadapt-viewer/src/openadapt_viewer/viewers/benchmark/generator.py`
 
 ### Test Output:
-- `/Users/abrichr/oa/src/openadapt-viewer/test_benchmark_refactored.html` (44KB)
+- `/path/to/openadapt-viewer/test_benchmark_refactored.html` (44KB)
 
 ## Testing
 

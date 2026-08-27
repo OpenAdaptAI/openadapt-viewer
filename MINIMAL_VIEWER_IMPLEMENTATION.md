@@ -2,7 +2,7 @@
 
 **Created:** January 17, 2026
 **Status:** MVP Complete
-**Location:** `/Users/abrichr/oa/src/openadapt-viewer/viewers/benchmark/`
+**Location:** `/path/to/openadapt-viewer/viewers/benchmark/`
 
 ## What Was Built
 
@@ -104,7 +104,7 @@ Created `test_minimal_viewer.py` that verifies:
 
 **Test command:**
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python test_minimal_viewer.py
 ```
 
@@ -112,14 +112,14 @@ python test_minimal_viewer.py
 
 ### 1. HTTP Serving (Dynamic)
 ```bash
-cd /Users/abrichr/oa/src/openadapt-ml
+cd /path/to/openadapt-ml
 uv run python -m openadapt_ml.cloud.local serve --port 8765
 open http://localhost:8765/minimal_benchmark.html
 ```
 
 ### 2. Standalone Generation (Static)
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python viewers/benchmark/generator.py \
   --results-dir ../openadapt-ml/benchmark_results \
   --run-name waa_eval_20251217_test_real \

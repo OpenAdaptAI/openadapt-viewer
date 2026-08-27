@@ -115,7 +115,7 @@ from playwright.sync_api import Page, expect
 @pytest.fixture
 def episode_viewer_page(page: Page) -> Page:
     """Load capture viewer with test episode data"""
-    page.goto('file:///Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html?episodes=test_episodes.json')
+    page.goto('file:///path/to/openadapt-viewer/capture_viewer.html?episodes=test_episodes.json')
     page.wait_for_selector('.oa-episode-timeline')
     return page
 
@@ -336,7 +336,7 @@ def test_episode_timeline_mobile(episode_viewer_page: Page, screenshots_dir):
 def test_episode_timeline_many_episodes(page: Page, screenshots_dir):
     """Test timeline with many episodes (10+)"""
     # Load fixture with 10 episodes
-    page.goto('file:///Users/abrichr/oa/src/openadapt-viewer/test_many_episodes.html')
+    page.goto('file:///path/to/openadapt-viewer/test_many_episodes.html')
     page.wait_for_selector('.oa-episode-timeline')
 
     timeline = page.locator('.oa-episode-timeline')
@@ -355,7 +355,7 @@ def test_timeline_render_performance(episode_viewer_page: Page):
     """Test that timeline renders quickly with typical episode count"""
     start = time.time()
 
-    episode_viewer_page.goto('file:///Users/abrichr/oa/src/openadapt-viewer/capture_viewer.html?episodes=test_episodes.json')
+    episode_viewer_page.goto('file:///path/to/openadapt-viewer/capture_viewer.html?episodes=test_episodes.json')
     episode_viewer_page.wait_for_selector('.oa-episode-timeline')
 
     end = time.time()
@@ -391,7 +391,7 @@ def test_many_episodes_performance(page: Page):
     """Test performance with 20 episodes"""
     start = time.time()
 
-    page.goto('file:///Users/abrichr/oa/src/openadapt-viewer/test_many_episodes.html')
+    page.goto('file:///path/to/openadapt-viewer/test_many_episodes.html')
     page.wait_for_selector('.oa-episode-timeline')
 
     # Interact with timeline

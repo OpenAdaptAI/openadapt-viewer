@@ -34,7 +34,7 @@ The segmentation viewer now automatically discovers and loads episode files with
 
 ```bash
 # Generate viewer with embedded catalog
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python scripts/generate_segmentation_viewer.py --output viewer.html --open
 
 # Open the generated viewer in your browser
@@ -281,7 +281,7 @@ openadapt-viewer/
 window.SEGMENTATION_CATALOG = {
   "files": [
     {
-      "file_path": "/Users/abrichr/oa/src/openadapt-ml/segmentation_output/test_recording_episodes.json",
+      "file_path": "/path/to/openadapt-ml/segmentation_output/test_recording_episodes.json",
       "recording_name": "Test Recording",
       "recording_id": "test_recording",
       "created_at": 1768668047.3864803,
@@ -290,7 +290,7 @@ window.SEGMENTATION_CATALOG = {
       "file_type": "episodes"
     },
     {
-      "file_path": "/Users/abrichr/oa/src/openadapt-ml/segmentation_output/episode_library.json",
+      "file_path": "/path/to/openadapt-ml/segmentation_output/episode_library.json",
       "recording_name": "Library (0 recordings)",
       "recording_id": "episode_library",
       "created_at": 1768664913.3536773,

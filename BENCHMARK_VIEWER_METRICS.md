@@ -366,7 +366,7 @@ Using a simple scoring system:
 ### Current (openadapt-ml)
 
 ```
-/Users/abrichr/oa/src/openadapt-ml/
+/path/to/openadapt-ml/
 ├── openadapt_ml/training/benchmark_viewer.py (172KB)
 ├── training_output/current/benchmark.html (568KB)
 └── training_output/current/benchmark_live.json (180B, stale)
@@ -375,7 +375,7 @@ Using a simple scoring system:
 ### Modern (openadapt-evals)
 
 ```
-/Users/abrichr/oa/src/openadapt-evals/
+/path/to/openadapt-evals/
 ├── openadapt_evals/benchmarks/viewer.py (43KB)
 └── benchmark_results/
     └── waa-mock_eval_20260117_101209/
@@ -390,7 +390,7 @@ Using a simple scoring system:
 ### Future (openadapt-viewer)
 
 ```
-/Users/abrichr/oa/src/openadapt-viewer/
+/path/to/openadapt-viewer/
 ├── src/
 │   ├── components/
 │   ├── pages/

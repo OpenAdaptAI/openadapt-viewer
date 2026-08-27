@@ -3,7 +3,7 @@
 ## Generate Viewer with Auto-Discovery
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python scripts/generate_segmentation_viewer.py --output viewer.html --open
 ```
 
@@ -31,7 +31,7 @@ This will:
 
 ## Locations Scanned
 
-- `/Users/abrichr/oa/src/openadapt-ml/segmentation_output/`
+- `/path/to/openadapt-ml/segmentation_output/`
 - `~/.openadapt/segmentation_output/`
 - `./segmentation_output/` (current directory)
 

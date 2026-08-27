@@ -11,7 +11,7 @@ Created a complete interactive visualization system to help users understand syn
 ### 1. Interactive HTML Viewer ✓
 
 **File:** `synthetic_demo_viewer.html`
-**Location:** `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+**Location:** `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
 **Size:** 29KB standalone HTML file
 
 **Features Implemented:**
@@ -36,7 +36,7 @@ Created a complete interactive visualization system to help users understand syn
 
 **Open with:**
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 ---
@@ -57,7 +57,7 @@ open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
 
 #### B. Complete Explanation
 **File:** `SYNTHETIC_DEMOS_EXPLAINED.md`
-**Location:** `/Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
+**Location:** `/path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md`
 **Purpose:** Deep dive into what synthetic demos are and why they matter
 
 **Contents:**
@@ -214,15 +214,15 @@ open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
 
 | File | Location | Size | Purpose |
 |------|----------|------|---------|
-| `synthetic_demo_viewer.html` | `/Users/abrichr/oa/src/openadapt-viewer/` | 29KB | Interactive viewer |
-| `SYNTHETIC_DEMO_INDEX.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 15KB | Master index |
-| `SYNTHETIC_DEMOS_EXPLAINED.md` | `/Users/abrichr/oa/src/openadapt-evals/` | 28KB | Complete guide |
-| `SYNTHETIC_DEMO_SUMMARY.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 25KB | Executive summary |
-| `DEMO_EXAMPLES_SHOWCASE.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 18KB | 5 example demos |
-| `DEMO_FLOW_DIAGRAM.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 12KB | Visual diagrams |
-| `QUICK_REFERENCE.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 3KB | One-page reference |
-| `VIEWER_WALKTHROUGH.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | 14KB | Visual walkthrough |
-| `DELIVERABLES.md` | `/Users/abrichr/oa/src/openadapt-viewer/` | This file | Summary |
+| `synthetic_demo_viewer.html` | `/path/to/openadapt-viewer/` | 29KB | Interactive viewer |
+| `SYNTHETIC_DEMO_INDEX.md` | `/path/to/openadapt-viewer/` | 15KB | Master index |
+| `SYNTHETIC_DEMOS_EXPLAINED.md` | `/path/to/openadapt-evals/` | 28KB | Complete guide |
+| `SYNTHETIC_DEMO_SUMMARY.md` | `/path/to/openadapt-viewer/` | 25KB | Executive summary |
+| `DEMO_EXAMPLES_SHOWCASE.md` | `/path/to/openadapt-viewer/` | 18KB | 5 example demos |
+| `DEMO_FLOW_DIAGRAM.md` | `/path/to/openadapt-viewer/` | 12KB | Visual diagrams |
+| `QUICK_REFERENCE.md` | `/path/to/openadapt-viewer/` | 3KB | One-page reference |
+| `VIEWER_WALKTHROUGH.md` | `/path/to/openadapt-viewer/` | 14KB | Visual walkthrough |
+| `DELIVERABLES.md` | `/path/to/openadapt-viewer/` | This file | Summary |
 
 **Total:** 9 files, ~144KB of documentation + 1 interactive viewer
 
@@ -230,11 +230,11 @@ open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
 
 | File | Location | Purpose |
 |------|----------|---------|
-| `demos.json` | `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Demo index |
-| `notepad_1.txt` | `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
-| `paint_1.txt` | `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
-| `clock_1.txt` | `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
-| `README.md` | `/Users/abrichr/oa/src/openadapt-evals/demo_library/synthetic_demos/` | Library docs |
+| `demos.json` | `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Demo index |
+| `notepad_1.txt` | `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
+| `paint_1.txt` | `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
+| `clock_1.txt` | `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Example demo |
+| `README.md` | `/path/to/openadapt-evals/demo_library/synthetic_demos/` | Library docs |
 
 ---
 
@@ -245,7 +245,7 @@ open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
 **Start here (5 minutes):**
 ```bash
 # 1. Open the interactive viewer
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 
 # 2. Browse 2-3 demos
 # - Select domain: Notepad
@@ -254,19 +254,19 @@ open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
 # - See how it's used in prompts
 
 # 3. Read the quick reference
-open /Users/abrichr/oa/src/openadapt-viewer/QUICK_REFERENCE.md
+open /path/to/openadapt-viewer/QUICK_REFERENCE.md
 ```
 
 **Deep dive (30 minutes):**
 ```bash
 # 4. Read the complete explanation
-open /Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md
+open /path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md
 
 # 5. Check example showcase
-open /Users/abrichr/oa/src/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md
+open /path/to/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md
 
 # 6. View flow diagrams
-open /Users/abrichr/oa/src/openadapt-viewer/DEMO_FLOW_DIAGRAM.md
+open /path/to/openadapt-viewer/DEMO_FLOW_DIAGRAM.md
 ```
 
 ### For Developers
@@ -274,16 +274,16 @@ open /Users/abrichr/oa/src/openadapt-viewer/DEMO_FLOW_DIAGRAM.md
 **Implementation path:**
 ```bash
 # 1. Read the index
-open /Users/abrichr/oa/src/openadapt-viewer/SYNTHETIC_DEMO_INDEX.md
+open /path/to/openadapt-viewer/SYNTHETIC_DEMO_INDEX.md
 
 # 2. Study examples
-open /Users/abrichr/oa/src/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md
+open /path/to/openadapt-viewer/DEMO_EXAMPLES_SHOWCASE.md
 
 # 3. Check code examples in quick reference
-open /Users/abrichr/oa/src/openadapt-viewer/QUICK_REFERENCE.md
+open /path/to/openadapt-viewer/QUICK_REFERENCE.md
 
 # 4. Review full documentation
-open /Users/abrichr/oa/src/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md
+open /path/to/openadapt-evals/SYNTHETIC_DEMOS_EXPLAINED.md
 ```
 
 ---
@@ -563,17 +563,17 @@ Created a complete, professional, interactive visualization system that:
 
 **Open the viewer now:**
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html
+open /path/to/openadapt-viewer/synthetic_demo_viewer.html
 ```
 
 **Read the quick reference:**
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/QUICK_REFERENCE.md
+open /path/to/openadapt-viewer/QUICK_REFERENCE.md
 ```
 
 **Explore the index:**
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/SYNTHETIC_DEMO_INDEX.md
+open /path/to/openadapt-viewer/SYNTHETIC_DEMO_INDEX.md
 ```
 
 🎉 **Enjoy!**

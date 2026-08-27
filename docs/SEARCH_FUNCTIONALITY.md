@@ -212,7 +212,7 @@ const fuzzyResults = searchItems(episodes, "nitshift", {
 
 ### Segmentation Viewer
 
-**Location:** `/Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html`
+**Location:** `/path/to/openadapt-viewer/segmentation_viewer.html`
 
 **Features:**
 - Searches across episode name, description, and steps
@@ -228,7 +228,7 @@ const fuzzyResults = searchItems(episodes, "nitshift", {
 
 ### Synthetic Demo Viewer
 
-**Location:** `/Users/abrichr/oa/src/openadapt-viewer/synthetic_demo_viewer.html`
+**Location:** `/path/to/openadapt-viewer/synthetic_demo_viewer.html`
 
 **Features:**
 - Searches demo task names and domains
@@ -258,7 +258,7 @@ The following test cases validate the search algorithm:
 | `"note pad"` | `"Open notepad"` | ✓ Yes | Space-separated matches compound word |
 | `"dark night"` | `"Enable dark mode"` | ✗ No | Only 'dark' matches, 'night' doesn't |
 
-**Interactive Testing:** Open `/Users/abrichr/oa/src/openadapt-viewer/test_search.html` in a browser to test the algorithm interactively.
+**Interactive Testing:** Open `/path/to/openadapt-viewer/test_search.html` in a browser to test the algorithm interactively.
 
 ## Advanced Features (Module Only)
 
@@ -405,8 +405,8 @@ Possible improvements for future versions:
 
 ## Reference
 
-- **Implementation:** `/Users/abrichr/oa/src/openadapt-viewer/src/openadapt_viewer/search.js`
-- **Test File:** `/Users/abrichr/oa/src/openadapt-viewer/test_search.html`
+- **Implementation:** `/path/to/openadapt-viewer/src/openadapt_viewer/search.js`
+- **Test File:** `/path/to/openadapt-viewer/test_search.html`
 - **Inspiration:** [karpathy/llm-council PR #139](https://github.com/karpathy/llm-council/pull/139)
 
 ## Contributing

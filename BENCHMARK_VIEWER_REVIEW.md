@@ -485,7 +485,7 @@ While planning rewrite, these quick fixes improve current state:
 ```bash
 # In openadapt-evals Azure runner, write status updates:
 echo '{"status": "running", "current_task": {"task_id": "notepad_1", ...}}' > \
-    /Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json
+    /path/to/openadapt-ml/training_output/current/benchmark_live.json
 ```
 
 **Fix Complexity**: Easy (5 minutes)
@@ -564,11 +564,11 @@ openadapt-viewer/ (new package)
 
 | File | Path | Size |
 |------|------|------|
-| Old viewer generator | `/Users/abrichr/oa/src/openadapt-ml/openadapt_ml/training/benchmark_viewer.py` | 172KB |
-| Generated viewer | `/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark.html` | 568KB |
-| New viewer generator | `/Users/abrichr/oa/src/openadapt-evals/openadapt_evals/benchmarks/viewer.py` | 43KB |
-| Live state (old) | `/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json` | 180B |
-| Benchmark results | `/Users/abrichr/oa/src/openadapt-ml/benchmark_results/` | 48+ runs |
+| Old viewer generator | `/path/to/openadapt-ml/openadapt_ml/training/benchmark_viewer.py` | 172KB |
+| Generated viewer | `/path/to/openadapt-ml/training_output/current/benchmark.html` | 568KB |
+| New viewer generator | `/path/to/openadapt-evals/openadapt_evals/benchmarks/viewer.py` | 43KB |
+| Live state (old) | `/path/to/openadapt-ml/training_output/current/benchmark_live.json` | 180B |
+| Benchmark results | `/path/to/openadapt-ml/benchmark_results/` | 48+ runs |
 
 ---
 

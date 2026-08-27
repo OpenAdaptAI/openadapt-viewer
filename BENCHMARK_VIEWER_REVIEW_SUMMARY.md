@@ -2,9 +2,9 @@
 
 **Review Date**: January 17, 2026
 **Reviewed Files**:
-- `/Users/abrichr/oa/src/openadapt-ml/openadapt_ml/training/benchmark_viewer.py` (172KB, 4,774 lines)
-- `/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark.html` (568KB, 3,065 lines)
-- `/Users/abrichr/oa/src/openadapt-evals/openadapt_evals/benchmarks/viewer.py` (43KB, 1,283 lines)
+- `/path/to/openadapt-ml/openadapt_ml/training/benchmark_viewer.py` (172KB, 4,774 lines)
+- `/path/to/openadapt-ml/training_output/current/benchmark.html` (568KB, 3,065 lines)
+- `/path/to/openadapt-evals/openadapt_evals/benchmarks/viewer.py` (43KB, 1,283 lines)
 
 ---
 
@@ -221,7 +221,7 @@ These aren't quick fixes - they require substantial refactoring approaching a re
            self.state_path.write_text(json.dumps(state))
 
            # ADDED: Also write to openadapt-ml location
-           ml_path = Path("/Users/abrichr/oa/src/openadapt-ml/training_output/current/benchmark_live.json")
+           ml_path = Path("/path/to/openadapt-ml/training_output/current/benchmark_live.json")
            ml_path.write_text(json.dumps(state))
    ```
 
@@ -303,23 +303,23 @@ For questions or feedback on this review:
 
 ```
 Review documents:
-/Users/abrichr/oa/src/openadapt-viewer/
+/path/to/openadapt-viewer/
 ├── BENCHMARK_VIEWER_REVIEW.md (main analysis)
 ├── BENCHMARK_VIEWER_METRICS.md (quantitative data)
 ├── BENCHMARK_VIEWER_ISSUES.md (user-facing issues)
 └── BENCHMARK_VIEWER_REVIEW_SUMMARY.md (this file)
 
 Current viewer:
-/Users/abrichr/oa/src/openadapt-ml/
+/path/to/openadapt-ml/
 ├── openadapt_ml/training/benchmark_viewer.py (generator)
 └── training_output/current/benchmark.html (generated)
 
 Modern viewer:
-/Users/abrichr/oa/src/openadapt-evals/
+/path/to/openadapt-evals/
 └── openadapt_evals/benchmarks/viewer.py (cleaner approach)
 
 Benchmark data:
-/Users/abrichr/oa/src/openadapt-ml/benchmark_results/
+/path/to/openadapt-ml/benchmark_results/
 └── waa-mock_eval_*/  (48+ runs)
 ```
 

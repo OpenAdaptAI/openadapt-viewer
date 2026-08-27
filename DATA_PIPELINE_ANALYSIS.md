@@ -148,10 +148,10 @@ ExecutionStep(
 
 **Evidence**:
 ```bash
-$ grep -n "Click System Settings" /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json
+$ grep -n "Click System Settings" /path/to/openadapt-capture/turn-off-nightshift/episodes.json
 18:        "Click System Settings icon in dock",
 
-$ grep -n "llm_model" /Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json
+$ grep -n "llm_model" /path/to/openadapt-capture/turn-off-nightshift/episodes.json
 99:  "llm_model": "gpt-4o",
 ```
 

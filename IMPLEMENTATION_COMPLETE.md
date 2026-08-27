@@ -15,7 +15,7 @@ The screenshot loading issue in segmentation_viewer.html has been identified and
 
 2. ✅ Verified screenshots exist at specified paths
    - **Result**: All PNG files exist and are valid (1920x1080 RGB)
-   - **Location**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/`
+   - **Location**: `/path/to/openadapt-capture/turn-off-nightshift/screenshots/`
 
 3. ✅ Checked HTML/JS correctly loads and displays screenshots
    - **Result**: Code is correct, no bugs found
@@ -26,7 +26,7 @@ The screenshot loading issue in segmentation_viewer.html has been identified and
    - **Solution**: Use relative paths instead of absolute `file://` URLs
 
 5. ✅ Fixed test_episodes.json paths
-   - **Before**: `file:///Users/abrichr/oa/src/.../screenshot.png`
+   - **Before**: `file:///path/to/.../screenshot.png`
    - **After**: `../openadapt-capture/.../screenshot.png`
 
 6. ⏳ Testing required by user
@@ -42,12 +42,12 @@ The screenshot loading issue in segmentation_viewer.html has been identified and
 ### Problem
 Modern browsers (Safari, Chrome, Firefox) enforce Same-Origin Policy on `file://` protocol. When an HTML file at:
 ```
-file:///Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+file:///path/to/openadapt-viewer/segmentation_viewer.html
 ```
 
 tries to load an image from:
 ```
-file:///Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png
+file:///path/to/openadapt-capture/turn-off-nightshift/screenshots/capture_31807990_step_0.png
 ```
 
 The browser blocks it because they're in different directories (different "origins" in `file://` context).
@@ -88,13 +88,13 @@ This works because relative path resolution stays within the same origin context
 
 ### Automated Test (30 seconds)
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/verify_screenshots.html
+open /path/to/openadapt-viewer/verify_screenshots.html
 ```
 **Expected**: "5 / 5 tests passed" with all images displayed
 
 ### Manual Test (2 minutes)
 ```bash
-open /Users/abrichr/oa/src/openadapt-viewer/segmentation_viewer.html
+open /path/to/openadapt-viewer/segmentation_viewer.html
 ```
 
 1. Click "Choose File" → Select `test_episodes.json` → Click "Load File"
@@ -158,7 +158,7 @@ from pathlib import Path
 def make_relative_screenshot_path(
     recording_id: str,
     step_index: int,
-    viewer_base: str = "/Users/abrichr/oa/src/openadapt-viewer"
+    viewer_base: str = "/path/to/openadapt-viewer"
 ) -> str:
     """
     Generate relative path for screenshot that works with file:// protocol.
@@ -222,7 +222,7 @@ Created comprehensive documentation:
 - **TEST_RESULTS.md** - Root cause analysis (technical)
 - **IMPLEMENTATION_COMPLETE.md** - This completion report
 
-All documentation is in `/Users/abrichr/oa/src/openadapt-viewer/`
+All documentation is in `/path/to/openadapt-viewer/`
 
 ## Confidence Level
 

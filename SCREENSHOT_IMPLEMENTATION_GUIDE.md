@@ -15,7 +15,7 @@ This guide provides step-by-step instructions for implementing the enhanced scre
 - ✅ `scripts/generate_comprehensive_screenshots.py` - Enhanced screenshot generation script
 
 ### 2. Data Preparation
-- ✅ `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift/episodes.json` - Episode data for segmentation viewer
+- ✅ `/path/to/openadapt-capture/turn-off-nightshift/episodes.json` - Episode data for segmentation viewer
 
 ## Implementation Steps
 
@@ -24,7 +24,7 @@ This guide provides step-by-step instructions for implementing the enhanced scre
 **Goal**: Install dependencies and verify tools work
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 # Install playwright for screenshots
 uv pip install ".[screenshots]"
@@ -583,7 +583,7 @@ Add 1-2 hours buffer for troubleshooting.
 
 1. **Install Playwright** (if not already done)
    ```bash
-   cd /Users/abrichr/oa/src/openadapt-viewer
+   cd /path/to/openadapt-viewer
    uv pip install ".[screenshots]"
    uv run playwright install chromium
    ```

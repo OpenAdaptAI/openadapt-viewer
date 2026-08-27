@@ -124,7 +124,7 @@ uv run pytest tests/test_screenshot_generation.py -v -m "not playwright"
 ## Captures Used
 
 ### turn-off-nightshift
-- **Source**: `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift`
+- **Source**: `/path/to/openadapt-capture/turn-off-nightshift`
 - **Screenshots**: 22 frames
 - **Description**: Demonstrates turning off Night Shift in macOS System Settings
 - **Use case**: Shows complex UI navigation workflow
@@ -135,7 +135,7 @@ uv run pytest tests/test_screenshot_generation.py -v -m "not playwright"
 - `turn-off-nightshift_events.png`: Event list sidebar
 
 ### demo_new
-- **Source**: `/Users/abrichr/oa/src/openadapt-capture/demo_new`
+- **Source**: `/path/to/openadapt-capture/demo_new`
 - **Screenshots**: 14 frames
 - **Description**: Demo workflow example
 - **Use case**: Shorter capture for quick examples

@@ -161,7 +161,7 @@ Serves screenshot PNG files.
 
 ```bash
 # From openadapt-ml directory
-cd /Users/abrichr/oa/src/openadapt-ml
+cd /path/to/openadapt-ml
 
 # Serve with API endpoints
 uv run python -m openadapt_ml.cloud.local serve --port 8765
@@ -174,11 +174,11 @@ open http://localhost:8765/minimal_benchmark.html
 
 ```bash
 # From openadapt-viewer directory
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 # Generate viewer with embedded data
 python viewers/benchmark/generator.py \
-  --results-dir /Users/abrichr/oa/src/openadapt-ml/benchmark_results \
+  --results-dir /path/to/openadapt-ml/benchmark_results \
   --run-name waa_eval_20251217_test_real \
   --output minimal_benchmark.html
 
@@ -192,8 +192,8 @@ Copy viewer to a served directory:
 
 ```bash
 # Copy to openadapt-ml training_output for serving
-cp /Users/abrichr/oa/src/openadapt-viewer/viewers/benchmark/minimal_viewer.html \
-   /Users/abrichr/oa/src/openadapt-ml/training_output/current/minimal_benchmark.html
+cp /path/to/openadapt-viewer/viewers/benchmark/minimal_viewer.html \
+   /path/to/openadapt-ml/training_output/current/minimal_benchmark.html
 
 # Open in browser
 open http://localhost:8765/minimal_benchmark.html
@@ -314,7 +314,7 @@ Test with real benchmark data:
 
 ```bash
 # Run a small benchmark
-cd /Users/abrichr/oa/src/openadapt-ml
+cd /path/to/openadapt-ml
 uv run python -m openadapt_ml.benchmarks.cli test-collection --tasks 3
 
 # Verify data structure

@@ -8,10 +8,10 @@ A simple, focused benchmark viewer built for iterative development.
 
 ```bash
 # From openadapt-ml directory
-cd /Users/abrichr/oa/src/openadapt-ml
+cd /path/to/openadapt-ml
 
 # Copy viewer to served directory
-cp /Users/abrichr/oa/src/openadapt-viewer/viewers/benchmark/minimal_viewer.html \
+cp /path/to/openadapt-viewer/viewers/benchmark/minimal_viewer.html \
    training_output/current/minimal_benchmark.html
 
 # Start server
@@ -27,10 +27,10 @@ The viewer will automatically load data from `/api/benchmark/runs`.
 
 ```bash
 # Generate standalone HTML file
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 
 python viewers/benchmark/generator.py \
-  --results-dir /Users/abrichr/oa/src/openadapt-ml/benchmark_results \
+  --results-dir /path/to/openadapt-ml/benchmark_results \
   --run-name waa_eval_20251217_test_real \
   --output /tmp/benchmark_viewer.html
 
@@ -153,7 +153,7 @@ Serves screenshot PNG files.
 
 ```bash
 # Run tests
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python test_minimal_viewer.py
 ```
 

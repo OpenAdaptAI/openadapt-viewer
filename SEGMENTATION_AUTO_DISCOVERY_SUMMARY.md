@@ -80,7 +80,7 @@ User-friendly quick start guide with:
 
 ### 5. Test Episode File
 
-Created `/Users/abrichr/oa/src/openadapt-ml/segmentation_output/test_recording_episodes.json` with 3 episodes for testing.
+Created `/path/to/openadapt-ml/segmentation_output/test_recording_episodes.json` with 3 episodes for testing.
 
 ## Files Modified
 
@@ -248,7 +248,7 @@ window.SEGMENTATION_CATALOG = {
 ### Basic Generation
 
 ```bash
-cd /Users/abrichr/oa/src/openadapt-viewer
+cd /path/to/openadapt-viewer
 python scripts/generate_segmentation_viewer.py --output viewer.html --open
 ```
 
