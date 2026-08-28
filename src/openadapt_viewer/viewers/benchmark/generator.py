@@ -8,6 +8,7 @@ from pathlib import Path
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
+from openadapt_viewer.recording_db import LegacyCaptureError
 from openadapt_viewer.viewers.benchmark.data import create_sample_data, load_benchmark_data
 from openadapt_viewer.viewers.benchmark.real_data_loader import load_real_capture_data
 
@@ -31,6 +32,10 @@ def generate_benchmark_html(
     Returns:
         Path to the generated HTML file
 
+    Raises:
+        LegacyCaptureError: If data_path holds a pre-2026-07-17 ``capture.db``.
+            The message names the conversion command.
+
     POLICY: ALWAYS defaults to real data, from $OPENADAPT_CAPTURE_RECORDING.
     Set use_real_data=False ONLY for unit tests with sample data.
     """
@@ -41,6 +46,14 @@ def generate_benchmark_html(
         # Try to load as capture directory first, fall back to benchmark data
         try:
             run = load_real_capture_data(data_path)
+        except LegacyCaptureError:
+            # Re-raised ahead of the fallback because it is a subclass of
+            # FileNotFoundError and the fallback would otherwise swallow it.
+            # This directory is a recording, not a benchmark result directory,
+            # and load_benchmark_data reads it as an empty one: the user got
+            # "Generated: ..." and a viewer holding zero tasks, while the
+            # conversion command sat unread in this exception.
+            raise
         except (FileNotFoundError, ValueError, KeyError):
             # Fall back to benchmark data format
             run = load_benchmark_data(data_path)
