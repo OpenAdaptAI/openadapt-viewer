@@ -55,7 +55,14 @@ class LegacyCaptureError(FileNotFoundError):
 
     A subclass of ``FileNotFoundError`` because that is what the absence of a
     readable ``recording.db`` is, and because callers that only want to report
-    "this directory is not loadable" need no new except clause.
+    "this directory is not loadable" need no new except clause. The CLI's
+    top-level handler and the scanner's per-directory handler both rely on
+    that.
+
+    The cost of the inheritance is that a caller which catches
+    ``FileNotFoundError`` to mean "try a different format" swallows this too,
+    and the message it carries is the only place the conversion command
+    appears. Such a caller must re-raise this class ahead of the broad clause.
     """
 
 

@@ -1,10 +1,17 @@
 """Tests for HTML generation functionality."""
 
+import json
 from pathlib import Path
+
+import pytest
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
+from openadapt_viewer.recording_db import LegacyCaptureError
 from openadapt_viewer.viewers.benchmark import create_sample_data, generate_benchmark_html
+from openadapt_viewer.viewers.capture import generate_capture_html
+
+from .capture_examples import write_legacy_capture
 
 
 class TestGenerateBenchmarkHtml:
@@ -452,3 +459,75 @@ class TestHtmlValidation:
         # or other methods - what matters is the dangerous code isn't executable
         assert "<script>alert('xss')</script>" not in html_content or "&lt;script&gt;" in html_content
         assert "<script>evil()" not in html_content or "&lt;script&gt;" in html_content
+
+
+class TestLegacyCaptureDirectoryIsReported:
+    """A legacy capture directory must report the conversion command.
+
+    ``recording_db`` refuses the pre-2026-07-17 ``capture.db`` and raises
+    ``LegacyCaptureError`` naming the migration script. The benchmark generator
+    caught that error as part of a format-sniffing fallback and wrote a viewer
+    holding zero tasks, so the user read ``Generated: ...`` and opened an empty
+    page. The command they needed was in the exception nobody saw.
+    """
+
+    def test_a_legacy_directory_raises_rather_than_generating(self, tmp_path):
+        directory = write_legacy_capture(tmp_path / "old-recording")
+        (directory / "episodes.json").write_text(json.dumps({"episodes": []}))
+        output_path = tmp_path / "benchmark.html"
+
+        with pytest.raises(LegacyCaptureError, match="migrate_legacy_capture.py"):
+            generate_benchmark_html(data_path=directory, output_path=output_path)
+
+        assert not output_path.exists()
+
+    def test_a_directory_of_neither_format_still_falls_back(self, benchmark_data_dir, tmp_path):
+        """The fallback itself stays: benchmark result directories use it."""
+        output_path = tmp_path / "benchmark.html"
+
+        generate_benchmark_html(data_path=benchmark_data_dir, output_path=output_path)
+
+        assert "Test Benchmark" in output_path.read_text()
+
+
+class TestGeneratedPagesAreSelfContained:
+    """A generated page must not link to paths inside a source checkout.
+
+    ``episode_timeline.css`` and ``episode_timeline.js`` were referenced as
+    ``src/openadapt_viewer/...``, which resolves against the directory the
+    output HTML lands in. Both files ship inside the installed package, so for
+    anyone who installed openadapt-viewer the two requests were always 404 and
+    the episode timeline rendered unstyled and inert.
+    """
+
+    def test_the_capture_page_references_no_repository_path(self, tmp_path):
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(
+            steps=[{"timestamp": 0.0, "duration": 1.0, "action": {"type": "click"}}],
+            episodes=[{"episode_id": "e1", "name": "Episode", "start": 0.0, "end": 1.0}],
+            output_path=output_path,
+        )
+
+        assert "src/openadapt_viewer/" not in output_path.read_text()
+
+    def test_the_capture_page_carries_the_timeline_css_and_js(self, tmp_path):
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(
+            steps=[{"timestamp": 0.0, "duration": 1.0, "action": {"type": "click"}}],
+            output_path=output_path,
+        )
+
+        html = output_path.read_text()
+        assert ".oa-episode-timeline" in html
+        assert "class EpisodeTimeline" in html
+
+    def test_the_benchmark_page_references_no_repository_path(
+        self, sample_benchmark_run, tmp_path
+    ):
+        output_path = tmp_path / "benchmark.html"
+
+        generate_benchmark_html(run_data=sample_benchmark_run, output_path=output_path)
+
+        assert "src/openadapt_viewer/" not in output_path.read_text()

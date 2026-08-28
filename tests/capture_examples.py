@@ -9,11 +9,17 @@ unnoticed for six weeks.
 
 Two readers depend on this now -- the catalog scanner and the benchmark
 loader -- so the lookup lives here rather than in either test module.
+
+The legacy format has no committed example, because openadapt-capture stopped
+writing it. ``write_legacy_capture`` below builds one, which is sound for the
+opposite reason: the only thing read from a legacy directory is that it holds a
+``capture.db`` this viewer refuses.
 """
 
 from __future__ import annotations
 
 import os
+import sqlite3
 from pathlib import Path
 
 import pytest
@@ -69,4 +75,34 @@ def require_examples() -> Path:
     ]
     if missing:
         pytest.fail(f"{directory} is missing recording.db for: {', '.join(missing)}")
+    return directory
+
+
+def write_legacy_capture(directory: Path) -> Path:
+    """Write a pre-#28 capture directory, in the format this viewer refuses.
+
+    The shape is the one openadapt-capture's ``migrate_legacy_capture.py``
+    reads: one ``capture`` row and a generic ``events`` table.
+
+    Args:
+        directory: Where to write it. Created if it does not exist.
+
+    Returns:
+        The directory, now holding a ``capture.db`` and no ``recording.db``.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(directory / "capture.db") as conn:
+        conn.execute(
+            "CREATE TABLE capture (id INTEGER PRIMARY KEY, started_at REAL, "
+            "ended_at REAL, platform TEXT, screen_width INTEGER, "
+            "screen_height INTEGER, pixel_ratio REAL, task_description TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO capture VALUES (1, 1000.0, 1012.0, 'darwin', 1920, 1080, 2.0, 'old')"
+        )
+        conn.execute(
+            "CREATE TABLE events (id INTEGER PRIMARY KEY, timestamp REAL, "
+            "type TEXT, data TEXT, parent_id INTEGER)"
+        )
+        conn.execute("INSERT INTO events VALUES (1, 1000.5, 'mouse.move', '{}', NULL)")
     return directory

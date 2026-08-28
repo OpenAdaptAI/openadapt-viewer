@@ -7,6 +7,7 @@ OpenAdapt capture recordings with interactive playback controls.
 from __future__ import annotations
 
 import json
+from importlib import resources
 from pathlib import Path
 from typing import Any
 
@@ -89,12 +90,15 @@ def _generate_viewer_html(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Capture Viewer - {capture_id}</title>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="src/openadapt_viewer/styles/episode_timeline.css">
-    <script src="src/openadapt_viewer/components/episode_timeline.js"></script>
 
     <style>
         {_get_core_css()}
+        {_get_episode_timeline_css()}
     </style>
+
+    <script>
+        {_get_episode_timeline_js()}
+    </script>
 </head>
 <body style="background: var(--oa-bg-primary); color: var(--oa-text-primary); font-family: var(--oa-font-sans); min-height: 100vh; margin: 0;">
 
@@ -399,6 +403,50 @@ def _generate_viewer_html(
     </footer>
 </body>
 </html>"""
+
+
+def _read_package_asset(package: str, name: str) -> str:
+    """Return the text of a file that ships inside the installed package.
+
+    The generated page is one file the user can move anywhere, so its stylesheet
+    and its script are inlined rather than linked. A ``<link>`` or ``<script
+    src>`` resolves against the directory the output HTML lands in, which is
+    not a source checkout for anyone who installed this package.
+
+    ``importlib.resources`` is used rather than a path built from ``__file__``
+    so the lookup answers for an installed distribution as well as this tree.
+
+    Args:
+        package: Dotted name of the package holding the file.
+        name: The file's name within that package.
+
+    Returns:
+        The file's text, or an empty string when it cannot be read. An
+        unreadable asset degrades one component of the page rather than
+        failing the whole generation, and says so on stdout.
+    """
+    try:
+        return resources.files(package).joinpath(name).read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError, ModuleNotFoundError) as e:
+        # Silence here would render a page whose episode timeline is unstyled
+        # and inert, with nothing anywhere saying why.
+        print(f"Warning: Could not read {package}/{name}, omitting it: {e}")
+        return ""
+
+
+def _get_episode_timeline_css() -> str:
+    """Return the episode timeline's stylesheet, for inlining in a <style>."""
+    return _read_package_asset("openadapt_viewer.styles", "episode_timeline.css")
+
+
+def _get_episode_timeline_js() -> str:
+    """Return the episode timeline's script, for inlining in a <script>.
+
+    It defines the ``EpisodeTimeline`` class the page constructs during Alpine's
+    ``init``, so it must run before that: the caller places it in ``<head>``
+    without ``defer``.
+    """
+    return _read_package_asset("openadapt_viewer.components", "episode_timeline.js")
 
 
 def _get_core_css() -> str:

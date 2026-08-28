@@ -31,36 +31,18 @@ from openadapt_viewer.catalog import RecordingCatalog
 from openadapt_viewer.cli import main
 from openadapt_viewer.scanner import RecordingScanner
 
-from .capture_examples import EXAMPLES_ENV, REAL_RECORDINGS, examples_dir, require_examples
+from .capture_examples import (
+    EXAMPLES_ENV,
+    REAL_RECORDINGS,
+    examples_dir,
+    require_examples,
+    write_legacy_capture,
+)
 
 
 @pytest.fixture
 def scanner(tmp_path):
     return RecordingScanner(RecordingCatalog(db_path=str(tmp_path / "catalog.db")))
-
-
-def _legacy_capture(directory: Path) -> Path:
-    """Write a pre-#28 capture directory, in the format this viewer refuses.
-
-    The shape is the one openadapt-capture's ``migrate_legacy_capture.py``
-    reads: one ``capture`` row and a generic ``events`` table.
-    """
-    directory.mkdir(parents=True, exist_ok=True)
-    with sqlite3.connect(directory / "capture.db") as conn:
-        conn.execute(
-            "CREATE TABLE capture (id INTEGER PRIMARY KEY, started_at REAL, "
-            "ended_at REAL, platform TEXT, screen_width INTEGER, "
-            "screen_height INTEGER, pixel_ratio REAL, task_description TEXT)"
-        )
-        conn.execute(
-            "INSERT INTO capture VALUES (1, 1000.0, 1012.0, 'darwin', 1920, 1080, 2.0, 'old')"
-        )
-        conn.execute(
-            "CREATE TABLE events (id INTEGER PRIMARY KEY, timestamp REAL, "
-            "type TEXT, data TEXT, parent_id INTEGER)"
-        )
-        conn.execute("INSERT INTO events VALUES (1, 1000.5, 'mouse.move', '{}', NULL)")
-    return directory
 
 
 class TestCommittedRecordingsAreFound:
@@ -174,7 +156,7 @@ class TestLegacyCapturesAreReportedNotIndexed:
     def test_scan_skips_a_legacy_directory_and_names_the_migration(
         self, scanner, tmp_path, capsys
     ):
-        _legacy_capture(tmp_path / "old-recording")
+        write_legacy_capture(tmp_path / "old-recording")
 
         found = scanner.scan_recording_directory(str(tmp_path))
 
@@ -185,7 +167,7 @@ class TestLegacyCapturesAreReportedNotIndexed:
         assert "migrate_legacy_capture.py" in out
 
     def test_extract_refuses_a_legacy_directory(self, scanner, tmp_path):
-        directory = _legacy_capture(tmp_path / "old-recording")
+        directory = write_legacy_capture(tmp_path / "old-recording")
 
         with pytest.raises(FileNotFoundError, match="migrate_legacy_capture.py"):
             scanner._extract_recording_info(directory, "old-recording")
@@ -194,7 +176,7 @@ class TestLegacyCapturesAreReportedNotIndexed:
         self, scanner, tmp_path, capsys
     ):
         examples = require_examples()
-        directory = _legacy_capture(tmp_path / "demo_new")
+        directory = write_legacy_capture(tmp_path / "demo_new")
         (directory / "recording.db").write_bytes(
             (examples / "demo_new" / "recording.db").read_bytes()
         )
@@ -252,7 +234,7 @@ class TestCatalogRegisterCommand:
         assert "Events: 14" in out
 
     def test_register_rejects_a_legacy_directory(self, tmp_path, monkeypatch, capsys):
-        directory = _legacy_capture(tmp_path / "captures" / "old-recording")
+        directory = write_legacy_capture(tmp_path / "captures" / "old-recording")
         _isolate_catalog_home(monkeypatch, tmp_path / "home")
         monkeypatch.setattr(
             sys, "argv", ["openadapt-viewer", "catalog", "register", str(directory)]
