@@ -1,382 +1,177 @@
 # openadapt-viewer
 
-[![Release](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/release.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/release.yml)
-[![PyPI version](https://img.shields.io/pypi/v/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
+[![Test](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/test.yml)
+[![PyPI](https://img.shields.io/pypi/v/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
+[![Python](https://img.shields.io/pypi/pyversions/openadapt-viewer)](https://pypi.org/project/openadapt-viewer/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Reusable component library for OpenAdapt visualization. Build standalone HTML viewers for training dashboards, benchmark results, capture playback, and demo retrieval.
+An eval finished overnight and left you a directory of JSON, a SQLite file, and
+a folder of screenshots. This turns that into one HTML file you can open,
+scroll, and mail to a colleague: metric cards, a filterable task list, click
+markers drawn over the screenshots, and playback controls for stepping through
+a recording frame by frame.
 
-## Features
+It's for people building on OpenAdapt who want to look at a run without
+standing up a server. It renders once and writes a file, so if you want a
+dashboard that refreshes while a job is still going, look elsewhere.
 
-- **Component-based**: Reusable building blocks (screenshot, playback, metrics, filters)
-- **Composable**: Combine components to build custom viewers
-- **Standalone HTML**: Generated files work offline, no server required
-- **Event transcript**: Real-time audio transcription synchronized with playback
-- **Consistent styling**: Shared CSS variables and dark mode support
-- **Alpine.js integration**: Lightweight interactivity out of the box
+[PyPI](https://pypi.org/project/openadapt-viewer/) ·
+[Component reference](docs/COMPONENTS.md) ·
+[openadapt-capture](https://github.com/OpenAdaptAI/openadapt-capture), which
+records what this plays back
 
-## Installation
+## Sixty seconds
 
 ```bash
 pip install openadapt-viewer
+openadapt-viewer demo --tasks 10 --output viewer.html
 ```
 
-Or with uv:
-```bash
-uv add openadapt-viewer
+```
+Generating demo viewer with 10 sample tasks...
+Generated: viewer.html
 ```
 
-## Quick Start
+Open `viewer.html` in a browser and you get this:
 
-### Using Components
+![The demo viewer: summary cards, per-domain results, filter dropdowns, the task list, and the detail panel for the selected task](docs/images/demo_viewer.png)
 
-```python
-from openadapt_viewer.components import (
-    screenshot_display,
-    playback_controls,
-    metrics_grid,
-    filter_bar,
-    badge,
-)
+Real output from 0.2.0 on macOS on 2026-08-28, with `task_003` clicked. The
+demo's pass and fail values come from an unseeded `random.random()`, so your
+success rate won't be 70.0% and your tasks won't be these tasks.
 
-# Screenshot with click overlays
-html = screenshot_display(
-    image_path="screenshot.png",
-    overlays=[
-        {"type": "click", "x": 0.5, "y": 0.3, "label": "H", "variant": "human"},
-        {"type": "click", "x": 0.6, "y": 0.4, "label": "AI", "variant": "predicted"},
-    ],
-)
+## Build a page out of parts
 
-# Metrics cards
-html = metrics_grid([
-    {"label": "Total Tasks", "value": 100},
-    {"label": "Passed", "value": 75, "color": "success"},
-    {"label": "Failed", "value": 25, "color": "error"},
-    {"label": "Success Rate", "value": "75%", "color": "accent"},
-])
+Each component is a function that returns HTML text. Call `badge("Pass",
+color="success")` and you get this back, nothing more:
+
+```html
+<span class="oa-badge oa-badge-success" style="padding: 4px 10px; font-size: 0.75rem;">
+    Pass
+</span>
 ```
 
-### Using PageBuilder
-
-Build complete pages from components:
+Paste that into a template you already own, or hand the pieces to
+`PageBuilder` and let it write the whole document:
 
 ```python
 from openadapt_viewer.builders import PageBuilder
-from openadapt_viewer.components import metrics_grid, screenshot_display
+from openadapt_viewer.components import badge, metrics_grid
 
-builder = PageBuilder(title="My Viewer", include_alpine=True)
-
-builder.add_header(
-    title="Benchmark Results",
-    subtitle="Model: gpt-5.1",
-    nav_tabs=[
-        {"href": "dashboard.html", "label": "Training"},
-        {"href": "viewer.html", "label": "Viewer", "active": True},
-    ],
-)
-
-builder.add_section(
+page = PageBuilder(title="Nightly eval", dark_mode=True)
+page.add_header(title="Nightly eval", subtitle="run 2026-08-28")
+page.add_section(
     metrics_grid([
-        {"label": "Tasks", "value": 100},
-        {"label": "Passed", "value": 75, "color": "success"},
+        {"label": "Tasks", "value": 42},
+        {"label": "Passed", "value": 39, "color": "success"},
+        {"label": "Failed", "value": 3, "color": "error"},
     ]),
     title="Summary",
 )
-
-# Render to file
-builder.render_to_file("output.html")
+page.add_section(badge("Pass", color="success"))
+print(page.render_to_file("eval.html"))
 ```
 
-### Ready-to-Use Viewers
+```
+eval.html
+```
 
-5 production viewers available:
+15 KB with the stylesheet inlined, dark mode on unless you turn it off. There
+are 22 components: screenshot overlays, action timelines, filter bars,
+side-by-side comparison views, failure-analysis panels, and the small stuff
+like badges and metric cards. [docs/COMPONENTS.md](docs/COMPONENTS.md) has
+every signature.
 
-1. **Benchmark Viewer** - Visualize benchmark evaluation results
-2. **Capture Viewer** - Playback recorded GUI interactions
-3. **Training Dashboard** - Monitor ML training progress (via openadapt-ml)
-4. **Retrieval Viewer** - Display demo search results (via openadapt-retrieval)
-5. **Segmentation Viewer** - View episode segmentation results
+## Play back a capture
 
 ```python
-from openadapt_viewer.viewers.benchmark import generate_benchmark_html
+from openadapt_viewer.viewers.capture.generator import generate_capture_html
 
-# From benchmark results directory
-generate_benchmark_html(
-    data_path="benchmark_results/run_001/",
-    output_path="viewer.html",
-)
+steps = [
+    {"timestamp": 0.0, "duration": 1.2, "action": {"type": "click", "x": 0.42, "y": 0.31}},
+    {"timestamp": 1.2, "duration": 2.4, "action": {"type": "type", "text": "Jane Doe"}},
+    {"timestamp": 3.6, "duration": 0.9, "action": {"type": "click", "x": 0.78, "y": 0.64}},
+]
+
+print(generate_capture_html(
+    capture_id="turn-off-nightshift",
+    goal="Turn off Night Shift in Display settings",
+    steps=steps,
+    output_path="capture_viewer.html",
+))
 ```
 
-All viewers use the canonical component-based pattern. See `VIEWER_PATTERNS.md` for details.
+```
+capture_viewer.html
+```
 
-## CLI Usage
+Give a step a `"screenshot"` key holding a path or a data URI and the player
+shows the frame with a marker on it. Click coordinates are fractions of the
+frame, not pixels, so `0.42` means 42% across.
+
+A whole recording written by openadapt-capture goes through the benchmark
+viewer instead. Point it at the directory, which needs `episodes.json` and
+`capture.db` inside it:
 
 ```bash
-# Generate demo benchmark viewer
-openadapt-viewer demo --tasks 10 --output viewer.html
-
-# Generate from benchmark results
-openadapt-viewer benchmark --data results/run_001/ --output viewer.html
+openadapt-viewer benchmark --data turn-off-nightshift --output viewer.html
 ```
 
-## Components
-
-All components return HTML strings that can be composed together. Use them with PageBuilder or embed inline.
-
-### Core Components
-
-| Component | Description | Example Use Case |
-|-----------|-------------|-----------------|
-| `screenshot_display` | Screenshot with click/highlight overlays | Capture frames, demo screenshots |
-| `playback_controls` | Play/pause/speed controls for step playback | Video-like playback |
-| `timeline` | Progress bar for step navigation | Scrub through recordings |
-| `action_display` | Format actions (click, type, scroll, etc.) | Display action details |
-| `metrics_card` | Single statistic card | Individual metric display |
-| `metrics_grid` | Grid of metric cards | Summary dashboards |
-| `filter_bar` | Filter dropdowns with optional search | Filter and search data |
-| `filter_dropdown` | Single dropdown filter | Domain/status filters |
-| `selectable_list` | List with selection support | Task lists, file lists |
-| `list_item` | Individual list item | Custom list entries |
-| `badge` | Status badges (pass/fail, etc.) | Status indicators |
-
-### Enhanced Components
-
-| Component | Description | Example Use Case |
-|-----------|-------------|-----------------|
-| `video_playback` | Video playback from screenshot sequences | Smooth capture playback |
-| `video_playback_with_actions` | Video + synchronized action overlay | Capture with action overlay |
-| `action_timeline` | Timeline with action markers | Action sequence view |
-| `action_timeline_vertical` | Vertical action timeline | Compact action view |
-| `comparison_view` | Side-by-side comparison | Before/after, A/B test |
-| `overlay_comparison` | Overlay comparison with slider | Image comparison |
-| `action_type_filter` | Filter by action type | Filter clicks/types/scrolls |
-| `action_type_pills` | Action type pill buttons | Quick action filtering |
-| `action_type_dropdown` | Action type dropdown | Compact action filter |
-| `failure_analysis_panel` | Failure analysis dashboard | Benchmark failure analysis |
-| `failure_summary_card` | Failure summary card | Individual failure details |
-
-**Total: 22 components** available for building viewers.
-
-See `VIEWER_PATTERNS.md` for complete usage examples.
-
-## Project Structure
-
 ```
-src/openadapt_viewer/
-├── components/           # Reusable UI building blocks
-│   ├── screenshot.py     # Screenshot with overlays
-│   ├── playback.py       # Playback controls
-│   ├── timeline.py       # Progress bar
-│   ├── action_display.py # Action formatting
-│   ├── metrics.py        # Stats cards
-│   ├── filters.py        # Filter dropdowns
-│   ├── list_view.py      # Selectable lists
-│   └── badge.py          # Status badges
-├── builders/             # High-level page builders
-│   └── page_builder.py   # PageBuilder class
-├── styles/               # Shared CSS
-│   └── core.css          # CSS variables and base styles
-├── core/                 # Core utilities
-│   ├── types.py          # Pydantic models
-│   └── html_builder.py   # Jinja2 utilities
-├── viewers/              # Full viewer implementations
-│   └── benchmark/        # Benchmark results viewer
-├── examples/             # Reference implementations
-│   ├── benchmark_example.py
-│   ├── training_example.py
-│   ├── capture_example.py
-│   └── retrieval_example.py
-└── templates/            # Jinja2 templates
+Generating benchmark viewer from: turn-off-nightshift
+Generated: viewer.html
 ```
 
-## Audio Transcript Feature
+There's also `openadapt-viewer catalog scan`, which walks a directory of
+recordings and indexes them into `~/.openadapt/catalog.db` so the segmentation
+viewer can find them. `catalog stats` prints the counts.
 
-The viewer includes a powerful **audio transcript** feature that displays real-time transcription of captured audio alongside the visual playback. This is particularly useful for:
+## What it doesn't do
 
-- **Debugging workflows**: See what was said at each step
-- **Documentation**: Auto-generate narrative descriptions of recorded sessions
-- **Analysis**: Correlate verbal instructions with UI actions
-- **Training**: Review narrated demonstrations with synchronized visuals
+The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it is not
+offline-safe. Block that request and the summary cards and the filter dropdowns
+still paint, because their markup sits in the file, but the task list comes up
+empty and clicking does nothing. `benchmark --standalone` embeds Plotly and
+leaves Alpine alone.
 
-### Key Capabilities
+Four more things to know before you file a bug:
 
-The transcript panel provides:
-
-- **Timestamped transcription**: Each transcript segment is stamped with its time in the recording (e.g., `0:00.00`, `0:05.60`)
-- **Synchronized playback**: Transcript automatically highlights and scrolls as the video plays
-- **Searchable text**: Find specific moments in long recordings by searching transcript content
-- **Copy functionality**: Export transcript text for documentation or analysis
-
-### How It Works
-
-When captures are recorded with audio (using `openadapt-capture`'s audio recording features), the viewer automatically:
-
-1. Displays the transcript in a dedicated panel in the sidebar
-2. Timestamps each transcript segment relative to the recording start time
-3. Syncs transcript highlighting with the current playback position
-4. Updates the displayed transcript as you navigate through events
-
-The transcript appears alongside the event list and event details, providing a complete picture of what happened during the recording.
-
-## Synthetic Demo Viewer
-
-**NEW:** Interactive browser-based viewer for synthetic WAA demonstration data.
-
-### Quick Start
-
-```bash
-# Open the synthetic demo viewer
-open synthetic_demo_viewer.html
-```
-
-### What It Shows
-
-- **82 synthetic demos** across 6 domains (notepad, paint, clock, browser, file_explorer, office)
-- **Filter by domain** and select specific tasks
-- **View demo content** with syntax-highlighted steps
-- **See how demos are used** in actual API prompts
-- **Impact comparison**: 33% → 100% accuracy improvement with demo-conditioned prompting
-- **Action reference**: All 8 action types (CLICK, TYPE, WAIT, etc.)
-
-### Purpose
-
-Synthetic demos are **AI-generated example trajectories** that show step-by-step how to complete Windows automation tasks. They are included in prompts when calling Claude/GPT APIs during benchmark evaluation - this is called **demo-conditioned prompting**.
-
-**Impact:** Improved first-action accuracy from 33% to 100%!
-
-### Documentation
-
-- **Quick Start**: `QUICK_REFERENCE.md` - One-page overview
-- **Complete Guide**: `SYNTHETIC_DEMOS_EXPLAINED.md` - Full explanation
-- **Examples**: `DEMO_EXAMPLES_SHOWCASE.md` - 5 diverse demo examples
-- **Master Index**: `SYNTHETIC_DEMO_INDEX.md` - Central navigation hub
-
-### Features
-
-- Beautiful dark theme matching OpenAdapt style
-- Domain filtering (All, Notepad, Paint, Clock, Browser, File Explorer, Office)
-- Task selector with estimated step counts
-- Dual-panel display: demo content + prompt usage
-- Side-by-side impact comparison (with vs without demos)
-- Complete action types reference
-- Fully self-contained (no external dependencies)
-- Works offline
-
-See `SYNTHETIC_DEMO_INDEX.md` for complete documentation.
-
----
-
-## Screenshots
-
-### Full Viewer Interface
-
-The viewer provides a complete interface for exploring captured GUI interactions with playback controls, timeline navigation, event details, and **real-time audio transcript**.
-
-![Turn off Night Shift - Full Viewer](docs/images/turn-off-nightshift_full.png)
-*Interactive viewer showing the "Turn off Night Shift" workflow with screenshot display (center), event list (right sidebar top), and **audio transcript** (right sidebar bottom)*
-
-### Playback Controls
-
-Step through captures with playback controls, timeline scrubbing, and keyboard shortcuts (Space to play/pause, arrow keys to navigate).
-
-![Playback Controls](docs/images/turn-off-nightshift_controls.png)
-*Timeline and playback controls with overlay toggle, plus event details and **synchronized transcript panel***
-
-### Event List, Details, and Transcript
-
-Browse all captured events with detailed information about each action. The **transcript panel** displays timestamped audio transcription that syncs with playback, showing exactly what was said at each moment in the recording.
-
-![Event List](docs/images/turn-off-nightshift_events.png)
-*Event list sidebar showing captured actions with timing and type information, plus **live audio transcript with timestamps***
-
-### Demo Workflow
-
-![Demo Workflow](docs/images/demo_new_full.png)
-*Example demo workflow viewer*
-
-## Examples
-
-Run the examples to see how different OpenAdapt packages can use the component library:
-
-```bash
-# Benchmark results (openadapt-evals)
-python -m openadapt_viewer.examples.benchmark_example
-
-# Training dashboard (openadapt-ml)
-python -m openadapt_viewer.examples.training_example
-
-# Capture playback (openadapt-capture)
-python -m openadapt_viewer.examples.capture_example
-
-# Retrieval results (openadapt-retrieval)
-python -m openadapt_viewer.examples.retrieval_example
-```
-
-### Generating Screenshots
-
-To regenerate the README screenshots:
-
-```bash
-# Install playwright (one-time setup)
-uv pip install "openadapt-viewer[screenshots]"
-uv run playwright install chromium
-
-# Install openadapt-capture (required)
-cd ../openadapt-capture
-uv pip install -e .
-cd ../openadapt-viewer
-
-# Generate screenshots
-uv run python scripts/generate_readme_screenshots.py
-
-# Or with custom options
-uv run python scripts/generate_readme_screenshots.py \
-  --capture-dir /path/to/openadapt-capture \
-  --output-dir docs/images \
-  --max-events 50
-```
-
-The script will:
-1. Load captures from `openadapt-capture` (turn-off-nightshift and demo_new)
-2. Generate interactive HTML viewers
-3. Take screenshots using Playwright
-4. Save screenshots to `docs/images/`
+- `openadapt-viewer benchmark` with no `--data` looks for
+  `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift`, an absolute
+  path written into `real_data_loader.py`. Anywhere except that laptop it
+  raises `FileNotFoundError`. Always pass `--data`.
+- The capture viewer writes `<link href="src/openadapt_viewer/styles/episode_timeline.css">`
+  into the page, resolved against wherever the HTML ends up. That file and its
+  companion `episode_timeline.js` ship inside the installed package, so unless
+  your output happens to land at the root of a source checkout, the episode
+  timeline renders unstyled and inert.
+- `screenshot_display` links images by path. It inlines them as base64 only
+  when you pass `embed_image=True`. Move the HTML away from the PNGs without
+  that flag and the images break.
+- `openadapt_viewer.__version__` still reads `0.1.0` in the 0.2.0 release. Read
+  the version from package metadata.
 
 ## Development
 
 ```bash
-# Clone and install
-git clone https://github.com/OpenAdaptAI/openadapt-viewer.git
-cd openadapt-viewer
+git clone https://github.com/OpenAdaptAI/openadapt-viewer && cd openadapt-viewer
 uv sync --all-extras
-
-# Run tests
-uv run pytest tests/ -v
-
-# Run linter
 uv run ruff check .
+uv run pytest tests/ -v
 ```
 
-## Integration
+Two test modules read recordings that openadapt-capture actually wrote, rather
+than fixtures written to match this repo's idea of the schema. Clone it
+alongside and point them at it:
 
-Used by other OpenAdapt packages:
+```bash
+export OPENADAPT_CAPTURE_DIR=/path/to/openadapt-capture
+export OPENADAPT_CAPTURE_EXAMPLES=$OPENADAPT_CAPTURE_DIR/examples/captures
+```
 
-- **openadapt-ml**: Training dashboards and model comparison
-- **openadapt-evals**: Benchmark result visualization
-- **openadapt-capture**: Capture recording playback
-- **openadapt-retrieval**: Demo search result display
-
-## Documentation
-
-- **[VIEWER_PATTERNS.md](VIEWER_PATTERNS.md)** - Canonical pattern for building viewers (MUST READ for new viewers)
-- **[MIGRATION_GUIDE.md](MIGRATION_GUIDE.md)** - Step-by-step guide for converting inline viewers to component-based
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design patterns
-- **[CATALOG_SYSTEM.md](CATALOG_SYSTEM.md)** - Automatic recording discovery and indexing
-- **[SEARCH_FUNCTIONALITY.md](SEARCH_FUNCTIONALITY.md)** - Token-based search implementation
-- **[EPISODE_TIMELINE_QUICKSTART.md](EPISODE_TIMELINE_QUICKSTART.md)** - Adding episode timelines to viewers
+CI runs Python 3.10 and 3.11 on Ubuntu and macOS. `ruff check .` is a blocking
+gate over the whole repository, so lint before you push.
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT. See [LICENSE](LICENSE).
