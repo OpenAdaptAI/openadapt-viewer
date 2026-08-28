@@ -15,7 +15,7 @@ count of rows returned.
 They run against the recordings openadapt-capture commits under
 ``examples/captures/``, not against a database written here to match this
 module's own assumptions. A test that builds its own input can only prove the
-reader agrees with the test author.
+reader agrees with the test author. ``tests/capture_examples.py`` locates them.
 """
 
 from __future__ import annotations
@@ -31,49 +31,7 @@ from openadapt_viewer.catalog import RecordingCatalog
 from openadapt_viewer.cli import main
 from openadapt_viewer.scanner import RecordingScanner
 
-REPO_ROOT = Path(__file__).parent.parent
-
-#: Set by CI to the checked-out openadapt-capture's examples/captures.
-EXAMPLES_ENV = "OPENADAPT_CAPTURE_EXAMPLES"
-
-#: The recordings openadapt-capture commits, with what its specs declare.
-REAL_RECORDINGS = ("demo_new", "turn-off-nightshift")
-
-
-def _examples_dir() -> Path | None:
-    """Return the directory holding the committed example recordings, or None.
-
-    Honours ``$OPENADAPT_CAPTURE_EXAMPLES`` first, then looks for an
-    openadapt-capture checkout beside this one. No absolute path is written
-    here: this repository is public and one developer's home directory is not
-    a location any other user has.
-    """
-    named = os.environ.get(EXAMPLES_ENV)
-    if named:
-        return Path(named).expanduser()
-
-    sibling = REPO_ROOT.parent / "openadapt-capture" / "examples" / "captures"
-    return sibling if sibling.is_dir() else None
-
-
-def _require_examples() -> Path:
-    """Return the examples directory, skipping or failing with a reason."""
-    directory = _examples_dir()
-    if directory is None:
-        pytest.skip(
-            "No openadapt-capture checkout found. Clone it beside this "
-            f"repository, or set ${EXAMPLES_ENV} to its examples/captures."
-        )
-    if not directory.is_dir():
-        # The variable was set on purpose, so an absent directory is an error
-        # in the caller's setup, not a reason to quietly pass.
-        pytest.fail(f"${EXAMPLES_ENV} names {directory}, which is not a directory")
-    missing = [
-        name for name in REAL_RECORDINGS if not (directory / name / "recording.db").is_file()
-    ]
-    if missing:
-        pytest.fail(f"{directory} is missing recording.db for: {', '.join(missing)}")
-    return directory
+from .capture_examples import EXAMPLES_ENV, REAL_RECORDINGS, examples_dir, require_examples
 
 
 @pytest.fixture
@@ -109,14 +67,14 @@ class TestCommittedRecordingsAreFound:
     """The defect, stated as the user sees it: scan finds nothing."""
 
     def test_scan_registers_every_committed_recording(self, scanner):
-        examples = _require_examples()
+        examples = require_examples()
 
         found = scanner.scan_recording_directory(str(examples))
 
         assert sorted(recording.id for recording in found) == sorted(REAL_RECORDINGS)
 
     def test_scanned_recordings_reach_the_catalog(self, scanner):
-        examples = _require_examples()
+        examples = require_examples()
 
         scanner.scan_recording_directory(str(examples))
 
@@ -124,7 +82,7 @@ class TestCommittedRecordingsAreFound:
         assert sorted(recording.id for recording in listed) == sorted(REAL_RECORDINGS)
 
     def test_recursive_scan_finds_a_nested_recording(self, scanner, tmp_path):
-        examples = _require_examples()
+        examples = require_examples()
         nested = tmp_path / "runs" / "monday" / "demo_new"
         nested.mkdir(parents=True)
         (nested / "recording.db").write_bytes(
@@ -147,7 +105,7 @@ class TestCommittedRecordingsAreRead:
     """
 
     def test_created_at_is_the_recording_timestamp(self, scanner, name):
-        directory = _require_examples() / name
+        directory = require_examples() / name
         expected = _scalar(directory, "SELECT timestamp FROM recording ORDER BY id LIMIT 1")
 
         recording = scanner._extract_recording_info(directory, name)
@@ -158,7 +116,7 @@ class TestCommittedRecordingsAreRead:
         assert recording.created_at != directory.stat().st_mtime
 
     def test_event_count_is_the_action_event_rows(self, scanner, name):
-        directory = _require_examples() / name
+        directory = require_examples() / name
         expected = _scalar(directory, "SELECT COUNT(*) FROM action_event")
 
         recording = scanner._extract_recording_info(directory, name)
@@ -167,7 +125,7 @@ class TestCommittedRecordingsAreRead:
         assert recording.event_count == expected
 
     def test_frame_count_is_the_screenshot_rows(self, scanner, name):
-        directory = _require_examples() / name
+        directory = require_examples() / name
         expected = _scalar(directory, "SELECT COUNT(*) FROM screenshot")
 
         recording = scanner._extract_recording_info(directory, name)
@@ -180,7 +138,7 @@ class TestCommittedRecordingsAreRead:
         assert recording.frame_count == expected
 
     def test_duration_spans_start_to_last_observation(self, scanner, name):
-        directory = _require_examples() / name
+        directory = require_examples() / name
         start = _scalar(directory, "SELECT timestamp FROM recording ORDER BY id LIMIT 1")
         last = max(
             _scalar(directory, "SELECT MAX(timestamp) FROM screenshot"),
@@ -194,7 +152,7 @@ class TestCommittedRecordingsAreRead:
         assert recording.duration_seconds > 0
 
     def test_task_description_and_display_metadata_are_read(self, scanner, name):
-        directory = _require_examples() / name
+        directory = require_examples() / name
         row = _row(directory, "SELECT * FROM recording ORDER BY id LIMIT 1")
 
         recording = scanner._extract_recording_info(directory, name)
@@ -235,7 +193,7 @@ class TestLegacyCapturesAreReportedNotIndexed:
     def test_a_converted_directory_is_indexed_without_a_legacy_warning(
         self, scanner, tmp_path, capsys
     ):
-        examples = _require_examples()
+        examples = require_examples()
         directory = _legacy_capture(tmp_path / "demo_new")
         (directory / "recording.db").write_bytes(
             (examples / "demo_new" / "recording.db").read_bytes()
@@ -258,7 +216,7 @@ class TestCorruptRecordingDatabase:
     """An unreadable database degrades to a named entry, it does not abort."""
 
     def test_scan_continues_past_a_corrupt_database(self, scanner, tmp_path, capsys):
-        examples = _require_examples()
+        examples = require_examples()
         broken = tmp_path / "broken"
         broken.mkdir()
         (broken / "recording.db").write_text("this is not a database")
@@ -278,7 +236,7 @@ class TestCatalogRegisterCommand:
     """`openadapt-viewer catalog register` is the manual path around scan."""
 
     def test_register_indexes_a_real_recording(self, tmp_path, monkeypatch, capsys):
-        directory = _require_examples() / "demo_new"
+        directory = require_examples() / "demo_new"
         _isolate_catalog_home(monkeypatch, tmp_path / "home")
         monkeypatch.setattr(
             sys, "argv", ["openadapt-viewer", "catalog", "register", str(directory)]
@@ -312,7 +270,7 @@ def test_committed_recordings_must_be_present_in_ci():
     if os.environ.get("GITHUB_ACTIONS") != "true":
         pytest.skip("Only enforced on CI, which checks openadapt-capture out")
 
-    assert _examples_dir() is not None, (
+    assert examples_dir() is not None, (
         f"CI must set ${EXAMPLES_ENV}. Without it every test in this module "
         "skips and the scanner is verified against nothing."
     )
