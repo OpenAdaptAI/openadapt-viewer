@@ -13,11 +13,24 @@ outside this repository, so the caller names one -- either by passing
 Note the two variables are different. ``$OPENADAPT_CAPTURE_DIR`` names the
 openadapt-capture checkout, which holds many recordings; the screenshot scripts
 use it. ``$OPENADAPT_CAPTURE_RECORDING`` names one recording directory inside it.
+
+A loadable recording directory holds two files.
+
+* ``recording.db``, written by openadapt-capture. It is read through
+  :mod:`openadapt_viewer.recording_db`, which is the one reader in this package
+  that knows the schema, and which refuses the pre-2026-07-17 ``capture.db``
+  with the command that converts it.
+* ``episodes.json``, written by openadapt-ml's segmentation pipeline. It
+  supplies every task and step below; ``recording.db`` supplies only the
+  recording-level frame the episodes are placed in.
+
+Key frame paths in ``episodes.json`` name PNG files. openadapt-capture stores
+frames as ``png_data`` blobs in the ``screenshot`` table, so those paths resolve
+only for a directory that also carries the images as files.
 """
 
 import json
 import os
-import sqlite3
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
@@ -27,6 +40,7 @@ from openadapt_viewer.core.types import (
     ExecutionStep,
     TaskExecution,
 )
+from openadapt_viewer.recording_db import RECORDING_DB_NAME, read_recording_metadata
 
 #: Environment variable naming one recording directory to load by default.
 CAPTURE_RECORDING_ENV = "OPENADAPT_CAPTURE_RECORDING"
@@ -87,7 +101,10 @@ def load_real_capture_data(
 
     Raises:
         FileNotFoundError: If no capture directory was named, or if the named
-            directory or its required files don't exist.
+            directory or its required files don't exist. A directory holding
+            the pre-#28 capture.db raises
+            :class:`openadapt_viewer.recording_db.LegacyCaptureError`, whose
+            message names the conversion command.
     """
     if capture_path is None:
         capture_path = default_capture_path()
@@ -96,7 +113,7 @@ def load_real_capture_data(
         raise FileNotFoundError(
             "No capture directory given. Pass capture_path, or set "
             f"${CAPTURE_RECORDING_ENV} to a directory holding a recording "
-            "(episodes.json plus capture.db)."
+            f"(episodes.json plus {RECORDING_DB_NAME})."
         )
 
     capture_path = Path(capture_path)
@@ -104,7 +121,12 @@ def load_real_capture_data(
     if not capture_path.exists():
         raise FileNotFoundError(f"Capture directory not found: {capture_path}")
 
-    # Load episodes.json
+    # The database is read first because it decides whether this directory is a
+    # recording this viewer can read at all. A legacy capture reports the
+    # conversion command rather than an absent episodes.json, which would send
+    # the user to look for the wrong missing file.
+    capture_meta = read_recording_metadata(capture_path)
+
     episodes_path = capture_path / "episodes.json"
     if not episodes_path.exists():
         raise FileNotFoundError(f"Episodes file not found: {episodes_path}")
@@ -112,26 +134,10 @@ def load_real_capture_data(
     with open(episodes_path) as f:
         episodes_data = json.load(f)
 
-    # Load capture.db metadata
-    db_path = capture_path / "capture.db"
-    if not db_path.exists():
-        raise FileNotFoundError(f"Capture database not found: {db_path}")
-
-    # Connect to database
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    # Get capture metadata
-    cursor.execute("SELECT * FROM capture LIMIT 1")
-    capture_meta = cursor.fetchone()
-
-    if capture_meta is None:
-        raise ValueError(f"No capture metadata found in {db_path}")
-
-    # Calculate timing
-    started_at = capture_meta["started_at"]
-    ended_at = capture_meta["ended_at"] or started_at
+    started_at = capture_meta.started_at
+    # There is no end column. A recording ends at its last observation, and one
+    # that recorded nothing ends where it started.
+    ended_at = capture_meta.ended_at if capture_meta.ended_at is not None else started_at
     duration = ended_at - started_at
 
     # Get recording name
@@ -219,8 +225,6 @@ def load_real_capture_data(
         )
         executions.append(execution)
 
-    conn.close()
-
     # Create benchmark run
     if run_id is None:
         run_id = f"real_capture_{recording_id}"
@@ -239,8 +243,15 @@ def load_real_capture_data(
             "recording_name": recording_name,
             "capture_path": str(capture_path),
             "duration": duration,
-            "platform": capture_meta["platform"],
-            "screen_size": f"{capture_meta['screen_width']}x{capture_meta['screen_height']}",
+            "platform": capture_meta.platform,
+            "screen_size": f"{capture_meta.screen_width}x{capture_meta.screen_height}",
+            # Counted from the database, not from the episodes. They are what a
+            # reader checks the loaded run against: a recording that holds 20
+            # frames and 20 events has to report 20 and 20 whatever the
+            # segmentation says about it.
+            "frame_count": capture_meta.frame_count,
+            "event_count": capture_meta.event_count,
+            "task_description": capture_meta.task_description,
             "episode_count": len(episodes),
             "llm_model": episodes_data.get("llm_model", "unknown"),
             "processing_timestamp": episodes_data.get("processing_timestamp", "unknown"),

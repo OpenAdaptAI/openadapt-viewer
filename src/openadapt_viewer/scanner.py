@@ -6,26 +6,11 @@ This module scans directories to find:
 - Segmentation results from openadapt-ml (JSON files with episodes)
 - Episode data for indexing
 
-The recorder writes one SQLAlchemy database per capture, at
-``<recording>/recording.db``. Its tables are ``recording``, ``action_event``,
-``screenshot``, ``window_event``, ``browser_event``, ``audio_info``,
-``performance_stat`` and ``memory_stat``. The columns this module reads are
-listed beside each query below.
-
-Two notes on what this module deliberately does not do.
-
-It reads the database with ``sqlite3`` rather than through
-``openadapt_capture.CaptureSession.load``. Indexing needs two row counts and a
-handful of scalars, and installing ``openadapt-capture`` to get them would
-pull mss, sounddevice, soundfile, matplotlib, sqlalchemy, alembic, numpy and
-the platform accessibility stack into an HTML generator. It is therefore not
-a dependency of this package. Anything that needs decoded frames or replayable
-actions should import ``CaptureSession`` rather than extend this module.
-
-It does not read the pre-2026-07-17 ``capture.db``. That format held a single
-``capture`` row and a generic ``events`` table; openadapt-capture PR #28
-replaced it, and current code cannot load it at all. A legacy directory is
-reported with the command that converts it rather than skipped in silence.
+Every read of a recording database goes through
+:mod:`openadapt_viewer.recording_db`, which owns the file layout, the column
+names and the refusal to read the pre-2026-07-17 ``capture.db``. This module
+decides what to do with what that reader returns: index it, or name the
+directory in a warning and move on.
 """
 
 import json
@@ -34,22 +19,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .catalog import Recording, RecordingCatalog, SegmentationResult
-
-#: Filename the current recorder writes, one per capture directory.
-RECORDING_DB_NAME = "recording.db"
-
-#: Filename the pre-2026-07-17 recorder wrote. Detected, never read.
-LEGACY_DB_NAME = "capture.db"
-
-#: Printed when a directory holds only a legacy capture.
-LEGACY_HINT = (
-    "holds the legacy {legacy} format, which the current viewer cannot read. "
-    "Convert it with openadapt-capture: "
-    "python scripts/migrate_legacy_capture.py <src> <dest>"
+from .recording_db import (
+    LEGACY_DB_NAME,
+    LEGACY_HINT,
+    RECORDING_DB_NAME,
+    is_legacy_capture,
+    read_recording_metadata,
 )
-
-#: Event tables whose timestamps bound the recording's duration.
-_TIMESTAMPED_TABLES = ("screenshot", "action_event", "window_event", "browser_event")
 
 
 class RecordingScanner:
@@ -93,7 +69,7 @@ class RecordingScanner:
         prefix = "**/" if recursive else "*/"
 
         for legacy_db in base_path.glob(f"{prefix}{LEGACY_DB_NAME}"):
-            if (legacy_db.parent / RECORDING_DB_NAME).exists():
+            if not is_legacy_capture(legacy_db.parent):
                 # Already converted in place; the current database wins.
                 continue
             print(f"Warning: {legacy_db.parent} " + LEGACY_HINT.format(legacy=LEGACY_DB_NAME))
@@ -148,17 +124,7 @@ class RecordingScanner:
                 capture.db is named as such, with the conversion command.
         """
         recording_dir = Path(recording_dir)
-        recording_db = recording_dir / RECORDING_DB_NAME
         screenshots_dir = recording_dir / "screenshots"
-
-        if not recording_db.is_file():
-            # Returning a hollow Recording here is what made a legacy directory
-            # look indexable: no date, no duration, no counts, no complaint.
-            if (recording_dir / LEGACY_DB_NAME).is_file():
-                raise FileNotFoundError(
-                    f"{recording_dir} " + LEGACY_HINT.format(legacy=LEGACY_DB_NAME)
-                )
-            raise FileNotFoundError(f"No {RECORDING_DB_NAME} in {recording_dir}")
 
         metadata = {}
         created_at = None
@@ -167,56 +133,32 @@ class RecordingScanner:
         event_count = None
         frame_count = None
 
+        # A FileNotFoundError from the reader is deliberately not caught. It
+        # means the directory holds no recording.db, and for a legacy capture
+        # its message carries the conversion command. Returning a hollow
+        # Recording instead is what made a legacy directory look indexable: no
+        # date, no duration, no counts, no complaint.
         try:
-            with sqlite3.connect(str(recording_db)) as conn:
-                conn.row_factory = sqlite3.Row
-
-                # One row per capture directory, matching CaptureSession.load's
-                # `session.query(Recording).first()`. Columns: timestamp (epoch
-                # seconds at record start), monitor_width, monitor_height,
-                # pixel_ratio, platform, task_description.
-                row = conn.execute(
-                    "SELECT * FROM recording ORDER BY id LIMIT 1"
-                ).fetchone()
-
-                if row is None:
-                    raise sqlite3.DatabaseError("recording table is empty")
-
-                created_at = row["timestamp"]
-                task_description = row["task_description"]
-                metadata.update({
-                    "platform": row["platform"],
-                    # Catalog vocabulary, not the recorder's: these keys are
-                    # what the catalog has always stored. The recorder calls
-                    # them monitor_width and monitor_height.
-                    "screen_width": row["monitor_width"],
-                    "screen_height": row["monitor_height"],
-                    "pixel_ratio": row["pixel_ratio"],
-                })
-
-                # An action_event row is one mouse or key event, which is what
-                # the legacy `events` table counted.
-                event_count = conn.execute(
-                    "SELECT COUNT(*) FROM action_event"
-                ).fetchone()[0]
-
-                # Frames are rows now, not files: the recorder stores each PNG
-                # as a blob in `screenshot` rather than under screenshots/.
-                frame_count = conn.execute(
-                    "SELECT COUNT(*) FROM screenshot"
-                ).fetchone()[0]
-
-                # There is no ended_at column. The recording ends at its last
-                # observation, so take the newest timestamp across the event
-                # tables that carry one.
-                if created_at is not None:
-                    duration_seconds = self._duration_from_events(conn, created_at)
-        except (sqlite3.Error, IndexError, TypeError) as e:
+            read = read_recording_metadata(recording_dir)
+        except (sqlite3.Error, IndexError, TypeError, ValueError) as e:
             # sqlite3.Error covers a corrupt database and a missing table;
-            # IndexError is sqlite3.Row's "no such column"; TypeError is a NULL
-            # in an arithmetic column. Each means "no event metadata", not
-            # "abort", so the directory is still indexed by name and mtime.
-            print(f"Warning: Could not read {recording_db}: {e}")
+            # IndexError is sqlite3.Row's "no such column"; TypeError and
+            # ValueError are a NULL or a non-numeric value in a column read as
+            # a number. Each means "no event metadata", not "abort", so the
+            # directory is still indexed by name and mtime.
+            print(f"Warning: Could not read {recording_dir / RECORDING_DB_NAME}: {e}")
+        else:
+            created_at = read.started_at
+            duration_seconds = read.duration_seconds
+            task_description = read.task_description
+            event_count = read.event_count
+            frame_count = read.frame_count
+            metadata.update({
+                "platform": read.platform,
+                "screen_width": read.screen_width,
+                "screen_height": read.screen_height,
+                "pixel_ratio": read.pixel_ratio,
+            })
 
         # Some capture directories still carry PNGs under screenshots/. Read
         # them only when the database could not answer, so a readable database
@@ -238,35 +180,6 @@ class RecordingScanner:
             task_description=task_description,
             metadata=metadata,
         )
-
-    @staticmethod
-    def _duration_from_events(conn: sqlite3.Connection, started_at: float) -> float | None:
-        """
-        Return seconds from the recording start to its newest observation.
-
-        Args:
-            conn: Open connection to a recording.db
-            started_at: The recording row's `timestamp`, in epoch seconds
-
-        Returns:
-            Duration in seconds, or None if the database holds no timestamped
-            event at or after the start.
-        """
-        latest = None
-
-        for table in _TIMESTAMPED_TABLES:
-            try:
-                value = conn.execute(f"SELECT MAX(timestamp) FROM {table}").fetchone()[0]
-            except sqlite3.Error:
-                # An optional table this build does not have. Other tables can
-                # still bound the duration.
-                continue
-            if value is not None and (latest is None or value > latest):
-                latest = value
-
-        if latest is None or latest < started_at:
-            return None
-        return float(latest) - float(started_at)
 
     def scan_segmentation_results(
         self,
