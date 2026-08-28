@@ -9,6 +9,7 @@ from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
 from openadapt_viewer.recording_db import LegacyCaptureError
 from openadapt_viewer.viewers.benchmark import create_sample_data, generate_benchmark_html
+from openadapt_viewer.viewers.capture import generate_capture_html
 
 from .capture_examples import write_legacy_capture
 
@@ -487,3 +488,46 @@ class TestLegacyCaptureDirectoryIsReported:
         generate_benchmark_html(data_path=benchmark_data_dir, output_path=output_path)
 
         assert "Test Benchmark" in output_path.read_text()
+
+
+class TestGeneratedPagesAreSelfContained:
+    """A generated page must not link to paths inside a source checkout.
+
+    ``episode_timeline.css`` and ``episode_timeline.js`` were referenced as
+    ``src/openadapt_viewer/...``, which resolves against the directory the
+    output HTML lands in. Both files ship inside the installed package, so for
+    anyone who installed openadapt-viewer the two requests were always 404 and
+    the episode timeline rendered unstyled and inert.
+    """
+
+    def test_the_capture_page_references_no_repository_path(self, tmp_path):
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(
+            steps=[{"timestamp": 0.0, "duration": 1.0, "action": {"type": "click"}}],
+            episodes=[{"episode_id": "e1", "name": "Episode", "start": 0.0, "end": 1.0}],
+            output_path=output_path,
+        )
+
+        assert "src/openadapt_viewer/" not in output_path.read_text()
+
+    def test_the_capture_page_carries_the_timeline_css_and_js(self, tmp_path):
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(
+            steps=[{"timestamp": 0.0, "duration": 1.0, "action": {"type": "click"}}],
+            output_path=output_path,
+        )
+
+        html = output_path.read_text()
+        assert ".oa-episode-timeline" in html
+        assert "class EpisodeTimeline" in html
+
+    def test_the_benchmark_page_references_no_repository_path(
+        self, sample_benchmark_run, tmp_path
+    ):
+        output_path = tmp_path / "benchmark.html"
+
+        generate_benchmark_html(run_data=sample_benchmark_run, output_path=output_path)
+
+        assert "src/openadapt_viewer/" not in output_path.read_text()
