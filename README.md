@@ -38,7 +38,7 @@ Open `viewer.html` in a browser and you get this:
 
 Real output, macOS, 2026-08-28, with `task_003` clicked. The demo's pass and
 fail values come from an unseeded `random.random()`, so your success rate
-won't be 90.0% and your tasks won't be these tasks. Rerun the picture with
+will probably differ and your tasks won't be these tasks. Rerun the picture with
 `python scripts/generate_demo_screenshot.py`.
 
 ## Build a page out of parts
@@ -77,7 +77,8 @@ print(page.render_to_file("eval.html"))
 eval.html
 ```
 
-15 KB with the stylesheet inlined, dark mode on unless you turn it off. There
+15 KB with the stylesheet inlined. The page renders dark and the sun button in
+the header switches it; the `dark_mode` argument is ignored. There
 are 22 components: screenshot overlays, action timelines, filter bars,
 side-by-side comparison views, failure-analysis panels, and the small stuff
 like badges and metric cards. [docs/COMPONENTS.md](docs/COMPONENTS.md) has
@@ -133,10 +134,14 @@ them; `catalog stats` prints the counts.
 The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it isn't
 offline-safe. Block that request and the summary cards and the filter dropdowns
 still paint, because their markup sits in the file, but the task list comes up
-empty and clicking does nothing. `benchmark --standalone` embeds Plotly and
-leaves Alpine alone.
+empty and clicking does nothing. `benchmark --standalone` does not help: the
+flag reaches the generator and the generator ignores it.
 
-Four more things to know before you file a bug:
+Five more things to know before you file a bug:
+
+- The benchmark viewer writes a real recording's screenshots into the page as
+  absolute local paths, so a viewer built from a recording loses its images the
+  moment you move or mail the file. Only `demo` inlines them.
 
 - The capture viewer writes `<link href="src/openadapt_viewer/styles/episode_timeline.css">`
   into the page, resolved against wherever the HTML ends up. That file and its
