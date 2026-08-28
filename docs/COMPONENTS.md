@@ -9,7 +9,6 @@ Interactive components emit Alpine.js directives. They need `PageBuilder(...,
 include_alpine=True)`, which is the default, and they need the browser to reach
 `cdn.jsdelivr.net` when the page opens.
 
-The signatures below were read from an installed `openadapt-viewer==0.2.0`.
 To regenerate this list after changing a signature:
 
 ```python
@@ -58,7 +57,7 @@ action_display(action_type: 'str | None' = None, action_details: 'dict[str, Any]
 Render a single metrics card.
 
 ```python
-metrics_card(label: 'str', value: 'str | int | float', change: 'float | None' = None, color: 'str' = 'default', icon: 'str | None' = None, class_name: 'str' = '') -> 'str'
+metrics_card(label: 'str', value: 'str | float', change: 'float | None' = None, color: 'str' = 'default', icon: 'str | None' = None, class_name: 'str' = '') -> 'str'
 ```
 
 ### `metrics_grid`

@@ -12,8 +12,8 @@ markers drawn over the screenshots, and playback controls for stepping through
 a recording frame by frame.
 
 It's for people building on OpenAdapt who want to look at a run without
-standing up a server. It renders once and writes a file, so if you want a
-dashboard that refreshes while a job is still going, look elsewhere.
+standing up a server. It renders once and writes a file. If you want a
+dashboard that refreshes while a job is still running, look elsewhere.
 
 [PyPI](https://pypi.org/project/openadapt-viewer/) ·
 [Component reference](docs/COMPONENTS.md) ·
@@ -36,9 +36,10 @@ Open `viewer.html` in a browser and you get this:
 
 ![The demo viewer: summary cards, per-domain results, filter dropdowns, the task list, and the detail panel for the selected task](docs/images/demo_viewer.png)
 
-Real output from 0.2.0 on macOS on 2026-08-28, with `task_003` clicked. The
-demo's pass and fail values come from an unseeded `random.random()`, so your
-success rate won't be 70.0% and your tasks won't be these tasks.
+Real output, macOS, 2026-08-28, with `task_003` clicked. The demo's pass and
+fail values come from an unseeded `random.random()`, so your success rate
+won't be 90.0% and your tasks won't be these tasks. Rerun the picture with
+`python scripts/generate_demo_screenshot.py`.
 
 ## Build a page out of parts
 
@@ -110,8 +111,8 @@ shows the frame with a marker on it. Click coordinates are fractions of the
 frame, not pixels, so `0.42` means 42% across.
 
 A whole recording written by openadapt-capture goes through the benchmark
-viewer instead. Point it at the directory, which needs `episodes.json` and
-`capture.db` inside it:
+viewer instead. Point it at the directory, which needs `episodes.json` and a
+`recording.db` inside it:
 
 ```bash
 openadapt-viewer benchmark --data turn-off-nightshift --output viewer.html
@@ -122,13 +123,14 @@ Generating benchmark viewer from: turn-off-nightshift
 Generated: viewer.html
 ```
 
-There's also `openadapt-viewer catalog scan`, which walks a directory of
-recordings and indexes them into `~/.openadapt/catalog.db` so the segmentation
-viewer can find them. `catalog stats` prints the counts.
+Set `$OPENADAPT_CAPTURE_RECORDING` to that directory and you can drop `--data`.
+There's also `openadapt-viewer catalog scan --capture-dir DIR`, which indexes
+recordings into `~/.openadapt/catalog.db` so the segmentation viewer can find
+them; `catalog stats` prints the counts.
 
 ## What it doesn't do
 
-The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it is not
+The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it isn't
 offline-safe. Block that request and the summary cards and the filter dropdowns
 still paint, because their markup sits in the file, but the task list comes up
 empty and clicking does nothing. `benchmark --standalone` embeds Plotly and
@@ -136,10 +138,6 @@ leaves Alpine alone.
 
 Four more things to know before you file a bug:
 
-- `openadapt-viewer benchmark` with no `--data` looks for
-  `/Users/abrichr/oa/src/openadapt-capture/turn-off-nightshift`, an absolute
-  path written into `real_data_loader.py`. Anywhere except that laptop it
-  raises `FileNotFoundError`. Always pass `--data`.
 - The capture viewer writes `<link href="src/openadapt_viewer/styles/episode_timeline.css">`
   into the page, resolved against wherever the HTML ends up. That file and its
   companion `episode_timeline.js` ship inside the installed package, so unless
@@ -148,8 +146,13 @@ Four more things to know before you file a bug:
 - `screenshot_display` links images by path. It inlines them as base64 only
   when you pass `embed_image=True`. Move the HTML away from the PNGs without
   that flag and the images break.
-- `openadapt_viewer.__version__` still reads `0.1.0` in the 0.2.0 release. Read
-  the version from package metadata.
+- Give `benchmark --data` a directory holding a pre-2026-07-17 `capture.db`
+  and it neither reads it nor says so. `LegacyCaptureError` subclasses
+  `FileNotFoundError`, the generator's fallback catches it, and you get a
+  viewer with zero tasks and a success message. The migration script named in
+  that error never reaches you.
+- `openadapt_viewer.__version__` reads `0.1.0`, which is not the packaged
+  version. Read the version from package metadata instead.
 
 ## Development
 
