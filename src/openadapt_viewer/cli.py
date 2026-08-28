@@ -538,14 +538,21 @@ def run_catalog_command(args):
             if args.name:
                 recording.name = args.name
 
-            catalog.register_recording(**recording.model_dump())
+            # Recording names the field `id`; register_recording takes it as
+            # `recording_id`. Splatting the model straight in raised TypeError,
+            # which this except clause does not catch, so `catalog register`
+            # ended in a traceback for every directory that got this far.
+            fields = recording.model_dump()
+            fields["recording_id"] = fields.pop("id")
+            catalog.register_recording(**fields)
             print(f"Successfully registered: {recording.name}")
             print(f"  ID: {recording.id}")
             print(f"  Frames: {recording.frame_count}")
             print(f"  Events: {recording.event_count}")
         except (OSError, sqlite3.Error, ValueError) as e:
-            # OSError: unreadable recording directory. sqlite3.Error: unreadable
-            # capture.db or a failed catalog write. ValueError: a row that does
+            # OSError: an unreadable recording directory, or one holding no
+            # recording.db. sqlite3.Error: a corrupt recording.db or a failed
+            # catalog write. ValueError: a row that does
             # not validate as a Recording. Anything else is a bug in this
             # package and should surface as a traceback rather than as a
             # one-line "Error registering recording".

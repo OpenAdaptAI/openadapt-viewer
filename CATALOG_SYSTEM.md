@@ -22,11 +22,10 @@ The **Recording Catalog System** provides automatic discovery and indexing of al
 │                                                             │
 │  openadapt-capture/                                         │
 │  ├── turn-off-nightshift/                                   │
-│  │   ├── capture.db          ←────┐                        │
-│  │   ├── screenshots/              │                        │
+│  │   ├── recording.db        ←────┐                        │
 │  │   └── video.mp4                 │                        │
 │  └── demo_new/                      │                        │
-│      └── capture.db                 │  Scanner discovers    │
+│      └── recording.db               │  Scanner discovers    │
 │                                     │  recordings           │
 │  openadapt-ml/                      │                        │
 │  └── segmentation_output/           │                        │
@@ -558,7 +557,7 @@ openadapt-viewer catalog stats
 # Re-scan directories
 openadapt-viewer catalog scan
 
-# Check recording structure (must have capture.db)
+# Check recording structure (must have recording.db)
 ls -la /path/to/recording/
 ```
 

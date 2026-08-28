@@ -17,8 +17,33 @@ jobs:
         python-version: ['3.10', '3.11']
 
     steps:
+      # Both repositories go in named subdirectories rather than the workspace
+      # root. `ruff check .` below lints the whole working directory, so a
+      # second checkout beside this one would put openadapt-capture's source
+      # through this repository's lint configuration.
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: openadapt-viewer
+
+      # The scanner reads what the recorder writes, so its tests read
+      # recordings the recorder actually wrote. openadapt-capture commits two
+      # under examples/captures, regenerated and byte-compared by its own CI.
+      # Reading those is the point: a recording.db written here to match this
+      # repository's idea of the schema would prove only that the reader agrees
+      # with the test author. That is how the format drifted unnoticed for six
+      # weeks -- the scanner still globbed the pre-2026-07-17 capture.db and
+      # every test that exercised it built its own capture.db to match.
+      #
+      # Only examples/captures is fetched. The rest of that repository is not
+      # read here and pulling it would slow every matrix leg.
+      - name: Checkout openadapt-capture example recordings
+        uses: actions/checkout@v4
+        with:
+          repository: OpenAdaptAI/openadapt-capture
+          path: openadapt-capture
+          sparse-checkout: examples/captures
+          sparse-checkout-cone-mode: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -29,6 +54,7 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
+        working-directory: openadapt-viewer
         run: uv sync --all-extras
 
       # This step used to read:
@@ -44,6 +70,7 @@ jobs:
       # the ruff version is bounded to >=0.16,<0.17 in pyproject.toml so a new
       # ruff release cannot turn this red without a person raising the ceiling.
       - name: Run ruff linter (check)
+        working-directory: openadapt-viewer
         run: uv run ruff check .
 
       # The companion `ruff format --check src/openadapt_viewer/` step was
@@ -57,4 +84,11 @@ jobs:
       # adds the step back.
 
       - name: Run pytest
+        working-directory: openadapt-viewer
+        env:
+          # tests/test_scanner_recording_db.py reads the two recordings here and
+          # fails, rather than skips, if they are absent under GITHUB_ACTIONS.
+          OPENADAPT_CAPTURE_EXAMPLES: ${{ github.workspace }}/openadapt-capture/examples/captures
+          # tests/test_screenshot_generation.py takes the checkout root.
+          OPENADAPT_CAPTURE_DIR: ${{ github.workspace }}/openadapt-capture
         run: uv run pytest tests/ -v
