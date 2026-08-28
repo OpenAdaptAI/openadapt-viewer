@@ -64,6 +64,9 @@ from openadapt_viewer.catalog import (
 )
 from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
 
+# Styles - CSS variables and theming
+from openadapt_viewer.styles import get_css_variables, get_core_css
+
 __all__ = [
     # Core
     "HTMLBuilder",
@@ -96,4 +99,7 @@ __all__ = [
     "get_catalog",
     "RecordingScanner",
     "scan_and_update_catalog",
+    # Styles
+    "get_css_variables",
+    "get_core_css",
 ]

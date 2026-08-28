@@ -149,6 +149,46 @@ Examples:
         dest="screenshots_command", help="Screenshot generation commands"
     )
 
+    # screenshots readme (NEW - unified screenshot generation for all viewer types)
+    readme_screenshots_parser = screenshots_subparsers.add_parser(
+        "readme", help="Generate screenshots for README embedding (all viewer types)"
+    )
+    readme_screenshots_parser.add_argument(
+        "--output-dir",
+        "-o",
+        type=Path,
+        help="Output directory for screenshots (default: ./screenshots)",
+    )
+    readme_screenshots_parser.add_argument(
+        "--viewer-type",
+        "-t",
+        choices=["benchmark", "training", "capture", "segmentation"],
+        help="Generate screenshots for specific viewer type only",
+    )
+    readme_screenshots_parser.add_argument(
+        "--viewport",
+        "-v",
+        choices=["desktop", "tablet", "mobile"],
+        help="Generate screenshots for specific viewport only",
+    )
+    readme_screenshots_parser.add_argument(
+        "--auto-detect",
+        action="store_true",
+        help="Auto-detect HTML files in standard locations",
+    )
+    readme_screenshots_parser.add_argument(
+        "--html-file",
+        type=Path,
+        action="append",
+        dest="html_files",
+        help="Specific HTML file to screenshot (can specify multiple times)",
+    )
+    readme_screenshots_parser.add_argument(
+        "--save-index",
+        action="store_true",
+        help="Save index/catalog JSON alongside screenshots",
+    )
+
     # screenshots segmentation
     seg_screenshots_parser = screenshots_subparsers.add_parser(
         "segmentation", help="Generate segmentation viewer screenshots"
@@ -395,7 +435,123 @@ def run_screenshots_command(args):
         print("Use 'openadapt-viewer screenshots --help' to see available commands")
         sys.exit(1)
 
-    if args.screenshots_command == "segmentation":
+    if args.screenshots_command == "readme":
+        # Run the README screenshot generation script directly
+        from openadapt_viewer.scripts.generate_readme_screenshots import (
+            ScreenshotGenerator,
+            sync_playwright,
+        )
+
+        if sync_playwright is None:
+            print("Error: Playwright not installed", file=sys.stderr)
+            print(
+                "Install with: uv add playwright && uv run playwright install chromium"
+            )
+            sys.exit(1)
+
+        # Initialize generator
+        output_dir = args.output_dir or Path.cwd() / "screenshots"
+        generator = ScreenshotGenerator(
+            output_dir=output_dir,
+            viewer_type=args.viewer_type,
+            viewport=args.viewport,
+        )
+
+        # Determine HTML files to process
+        html_files = {
+            "benchmark": [],
+            "training": [],
+            "capture": [],
+            "segmentation": [],
+        }
+
+        if args.auto_detect:
+            print("Auto-detecting HTML files...")
+            base_dirs = [
+                Path.cwd(),
+                Path.cwd().parent / "openadapt-evals",
+                Path.cwd().parent / "openadapt-ml",
+            ]
+            detected = generator.auto_detect_html_files(base_dirs)
+            for viewer_type, files in detected.items():
+                if files:
+                    print(f"  Found {len(files)} {viewer_type} viewer(s)")
+                    html_files[viewer_type].extend(files)
+
+        if args.html_files:
+            print(f"Using {len(args.html_files)} specified HTML file(s)...")
+            for html_file in args.html_files:
+                if not html_file.exists():
+                    print(f"Warning: File not found: {html_file}")
+                    continue
+
+                # Try to infer viewer type from filename
+                name_lower = html_file.name.lower()
+                if "benchmark" in name_lower:
+                    html_files["benchmark"].append(html_file)
+                elif "training" in name_lower or "dashboard" in name_lower:
+                    html_files["training"].append(html_file)
+                elif "capture" in name_lower:
+                    html_files["capture"].append(html_file)
+                elif "segmentation" in name_lower:
+                    html_files["segmentation"].append(html_file)
+                else:
+                    print(
+                        f"Warning: Could not determine viewer type for {html_file.name}"
+                    )
+
+        # Check if we have any files to process
+        total_files = sum(len(files) for files in html_files.values())
+        if total_files == 0:
+            print("\nError: No HTML files found to process", file=sys.stderr)
+            print("Use --auto-detect or --html-file to specify files")
+            sys.exit(1)
+
+        # Generate screenshots
+        try:
+            print(f"\nOutput directory: {output_dir}\n")
+            results = generator.generate_all_screenshots(html_files)
+
+            # Save index if requested
+            if args.save_index:
+                import json as json_module
+
+                index = generator.generate_index()
+                index_path = output_dir / "index.json"
+                with open(index_path, "w") as f:
+                    json_module.dump(index, f, indent=2)
+                print(f"\nSaved index: {index_path}")
+
+            # Print summary
+            print("\n" + "=" * 70)
+            print("SUMMARY")
+            print("=" * 70)
+            print(f"\nTotal screenshots generated: {len(generator.screenshots_generated)}")
+
+            for viewer_type, screenshots in results.items():
+                if screenshots:
+                    print(f"\n{viewer_type.title()} viewer: {len(screenshots)} screenshots")
+
+            print(f"\nOutput directory: {output_dir}")
+            print("\nREADME embedding example:")
+            print("```markdown")
+            print("## Benchmark Viewer")
+            print("")
+            print(f"![Benchmark Viewer](screenshots/benchmark_desktop_overview.png)")
+            print("")
+            print("[View Interactive Demo](benchmark_viewer.html)")
+            print("```")
+
+            print("\n✓ Screenshot generation completed successfully!")
+
+        except Exception as e:
+            print(f"\nError: {e}", file=sys.stderr)
+            import traceback
+
+            traceback.print_exc()
+            sys.exit(1)
+
+    elif args.screenshots_command == "segmentation":
         # Build command to run the screenshot generation script
         script_path = Path(__file__).parent.parent.parent / "scripts" / "generate_segmentation_screenshots.py"
 

@@ -119,6 +119,15 @@ openadapt-viewer demo --tasks 10 --output viewer.html
 
 # Generate from benchmark results
 openadapt-viewer benchmark --data results/run_001/ --output viewer.html
+
+# Generate screenshots for README embedding
+openadapt-viewer screenshots readme --auto-detect --save-index
+
+# Generate screenshots for specific viewer type
+openadapt-viewer screenshots readme --viewer-type benchmark --viewport desktop
+
+# Generate screenshots from specific HTML file
+openadapt-viewer screenshots readme --html-file viewer.html --output-dir screenshots/
 ```
 
 ## Components
@@ -189,6 +198,211 @@ src/openadapt_viewer/
 │   ├── capture_example.py
 │   └── retrieval_example.py
 └── templates/            # Jinja2 templates
+```
+
+## Automated Screenshot & Animation Generation
+
+The viewer includes comprehensive screenshot and animation generation systems for creating visual demos that can be embedded in README files and documentation.
+
+### Static Screenshots
+
+Generate static PNG screenshots at multiple viewports for documentation.
+
+### Features
+
+- **Multi-Viewer Support**: Automatically generates screenshots for benchmark, training, capture, and segmentation viewers
+- **Multiple Viewports**: Desktop (1920x1080), tablet (1024x768), and mobile (375x667) viewports
+- **Auto-Detection**: Finds viewer HTML files in standard locations across openadapt projects
+- **Index Generation**: Creates a JSON catalog of all generated screenshots with metadata
+- **Flexible Filtering**: Generate screenshots for specific viewer types or viewports only
+
+### Installation
+
+Screenshot generation requires Playwright:
+
+```bash
+# Install Playwright
+uv add playwright
+
+# Install browser (one-time setup)
+uv run playwright install chromium
+```
+
+### Usage
+
+```bash
+# Auto-detect and generate screenshots for all viewer types
+uv run openadapt-viewer screenshots readme --auto-detect --save-index
+
+# Generate for specific viewer type only
+uv run openadapt-viewer screenshots readme --viewer-type benchmark --auto-detect
+
+# Generate for specific viewport only (faster)
+uv run openadapt-viewer screenshots readme --viewport desktop --auto-detect
+
+# Generate from specific HTML file
+uv run openadapt-viewer screenshots readme --html-file benchmark_viewer.html
+
+# Custom output directory
+uv run openadapt-viewer screenshots readme --auto-detect --output-dir docs/images/
+```
+
+### What Gets Generated
+
+For each viewer type, the system generates:
+
+1. **Overview screenshot**: Full viewer interface at initial state
+2. **Details screenshot**: Viewer with expanded details/interaction
+3. **Full page screenshot**: Complete page scroll capture
+
+Example output structure:
+
+```
+screenshots/
+├── benchmark_desktop_overview.png
+├── benchmark_desktop_details.png
+├── benchmark_desktop_full_page.png
+├── training_desktop_dashboard.png
+├── training_desktop_charts.png
+├── capture_desktop_player.png
+├── segmentation_desktop_episodes.png
+└── index.json  (metadata catalog)
+```
+
+### Using Screenshots in README
+
+After generation, embed screenshots in your README:
+
+```markdown
+## Benchmark Viewer
+
+![Benchmark Viewer](screenshots/benchmark_desktop_overview.png)
+
+Desktop view showing benchmark results with metrics grid and task list.
+
+[View Interactive Demo](benchmark_viewer.html)
+
+### Mobile View
+
+![Benchmark Mobile](screenshots/benchmark_mobile_overview.png)
+
+Responsive layout optimized for mobile devices.
+```
+
+### Index/Catalog Format
+
+The generated `index.json` provides metadata about all screenshots:
+
+```json
+{
+  "generated_at": "2026-01-18T10:43:19.038403",
+  "total_screenshots": 12,
+  "output_dir": "screenshots/readme",
+  "screenshots": {
+    "benchmark": {
+      "desktop": [
+        {
+          "filename": "benchmark_desktop_overview.png",
+          "path": "screenshots/readme/benchmark_desktop_overview.png",
+          "size_bytes": 98636,
+          "size_kb": 96.32
+        }
+      ]
+    }
+  }
+}
+```
+
+### Python API
+
+You can also use the screenshot generator programmatically:
+
+```python
+from pathlib import Path
+from openadapt_viewer.scripts.generate_readme_screenshots import ScreenshotGenerator
+
+# Initialize generator
+generator = ScreenshotGenerator(
+    output_dir=Path("screenshots"),
+    viewer_type="benchmark",  # or None for all types
+    viewport="desktop",       # or None for all viewports
+)
+
+# Auto-detect HTML files
+html_files = generator.auto_detect_html_files([
+    Path("."),
+    Path("../openadapt-evals"),
+    Path("../openadapt-ml"),
+])
+
+# Generate screenshots
+results = generator.generate_all_screenshots(html_files)
+
+# Generate index/catalog
+index = generator.generate_index()
+```
+
+### Animated Screenshots (GIF/MP4)
+
+**NEW**: Generate animated GIF/MP4 demos showing UIs in action.
+
+#### Quick Start
+
+```bash
+# Install dependencies
+uv add playwright pillow imageio
+uv run playwright install chromium
+brew install gifsicle  # macOS (for optimization)
+
+# Generate animation for segmentation viewer
+uv run python scripts/generate_animations.py \
+    --ui segmentation-viewer \
+    --html segmentation_viewer.html \
+    --output animations/
+
+# With MP4 (higher quality alternative)
+uv run python scripts/generate_animations.py \
+    --ui benchmark-viewer \
+    --html viewer.html \
+    --output animations/ \
+    --all-formats
+```
+
+#### Available UIs
+
+- `segmentation-viewer` - Episode list, selection, search, key frames
+- `benchmark-viewer` - Task list, details, execution replay, logs
+- `training-dashboard` - Training progress, loss curves, evaluations
+- `capture-viewer` - Playback controls, timeline, event details
+- `synthetic-demo-viewer` - Domain filter, task selection, demo content
+
+#### Features
+
+- **Automated UI Interaction**: Playwright-based scenarios with clicks, typing, scrolling
+- **Caption Overlays**: Automatic captions on each frame
+- **GIF Optimization**: Automatic file size optimization (< 2 MB target)
+- **Validation**: Built-in checks for quality and correctness
+- **Multiple Formats**: GIF (primary) and MP4 (alternative)
+
+#### Documentation
+
+- [ANIMATION_QUICK_START.md](ANIMATION_QUICK_START.md) - Quick start guide
+- [ANIMATION_INFRASTRUCTURE.md](ANIMATION_INFRASTRUCTURE.md) - Complete architecture
+- [/Users/abrichr/oa/src/ANIMATION_INFRASTRUCTURE_SUMMARY.md](/Users/abrichr/oa/src/ANIMATION_INFRASTRUCTURE_SUMMARY.md) - Implementation summary
+
+#### Example Output
+
+```markdown
+## Segmentation Viewer
+
+![Segmentation Viewer](animations/segmentation-viewer.gif)
+
+**Features shown**:
+- Episode list with thumbnails
+- Episode details and key frames
+- Real-time search filtering
+
+[View full-resolution version](animations/segmentation-viewer.mp4) (MP4, 5MB)
 ```
 
 ## Audio Transcript Feature

@@ -1,5 +1,24 @@
 # Claude Code Instructions for openadapt-viewer
 
+## Simplicity Guidelines
+
+**Philosophy**: "Less is more. 80/20 impact/complexity. Working code beats elegant design."
+
+**Before writing code, ask**:
+1. Can this be <100 lines? (ideally <50)
+2. Does this provide 80% of value?
+3. Is this the simplest approach?
+
+**Red flags to avoid**:
+- Classes when functions work
+- Abstractions before 3rd use
+- Design docs for non-existent code
+- Multiple implementations of same thing
+
+**See**: `/Users/abrichr/oa/src/openadapt-evals/SIMPLICITY_PRINCIPLES.md` for full guidelines.
+
+---
+
 ## Project Status & Priorities
 
 **IMPORTANT**: Before starting work, always check the project-wide status document:

@@ -20,7 +20,7 @@ All components return HTML strings that can be composed together.
 
 from openadapt_viewer.components.screenshot import screenshot_display
 from openadapt_viewer.components.playback import playback_controls
-from openadapt_viewer.components.timeline import timeline
+from openadapt_viewer.components.timeline import timeline, timeline_css
 from openadapt_viewer.components.action_display import action_display
 from openadapt_viewer.components.metrics import metrics_card, metrics_grid
 from openadapt_viewer.components.filters import filter_bar, filter_dropdown
@@ -47,11 +47,18 @@ from openadapt_viewer.components.failure_analysis import (
     failure_analysis_panel,
     failure_summary_card,
 )
+from openadapt_viewer.components.keyboard_shortcuts import (
+    keyboard_shortcuts_js,
+    keyboard_shortcuts_css,
+    keyboard_shortcuts_hint,
+    keyboard_shortcuts_init_script,
+)
 
 __all__ = [
     "screenshot_display",
     "playback_controls",
     "timeline",
+    "timeline_css",
     "action_display",
     "metrics_card",
     "metrics_grid",
@@ -72,4 +79,9 @@ __all__ = [
     "action_type_dropdown",
     "failure_analysis_panel",
     "failure_summary_card",
+    # Keyboard shortcuts
+    "keyboard_shortcuts_js",
+    "keyboard_shortcuts_css",
+    "keyboard_shortcuts_hint",
+    "keyboard_shortcuts_init_script",
 ]

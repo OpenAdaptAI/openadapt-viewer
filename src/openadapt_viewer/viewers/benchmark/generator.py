@@ -159,7 +159,9 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
         class_name="oa-task-viewer",
     )
 
-    # Add custom CSS for task viewer layout
+    # Add custom CSS for task viewer layout and episode timeline (Phase 1)
+    from openadapt_viewer.components import timeline_css
+
     page.add_css("""
         .oa-task-viewer {
             display: grid;
@@ -226,9 +228,9 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
         .oa-metadata-details summary:hover {
             color: var(--oa-accent);
         }
-    """)
+    """ + timeline_css())
 
-    # Add Alpine.js state management
+    # Add Alpine.js state management with episode segmentation (Phase 1)
     alpine_script = """
         document.addEventListener('alpine:init', () => {
             Alpine.data('viewer', () => ({
@@ -242,6 +244,7 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
                     domain: '',
                     status: '',
                 },
+                totalSteps: 0,
 
                 init() {
                     if (this.filteredTasks.length > 0) {
@@ -258,9 +261,37 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
                     });
                 },
 
+                // Phase 1: Compute episode segments for timeline visualization
+                get episodeSegments() {
+                    if (!this.selectedTask) return [];
+
+                    // For the benchmark viewer, each task represents an episode
+                    // Since we're viewing a single task at a time, we create segments
+                    // based on the episode metadata from the steps
+                    const episodes = {};
+                    let stepIndex = 0;
+
+                    // Group steps by episode
+                    this.selectedTask.steps.forEach((step, idx) => {
+                        const episodeName = step.action_details.episode || 'Unknown Episode';
+                        if (!episodes[episodeName]) {
+                            episodes[episodeName] = {
+                                task_id: episodeName,
+                                step_start: idx,
+                                step_end: idx,
+                            };
+                        } else {
+                            episodes[episodeName].step_end = idx;
+                        }
+                    });
+
+                    return Object.values(episodes);
+                },
+
                 selectTask(task) {
                     this.selectedTask = task;
                     this.currentStep = 0;
+                    this.totalSteps = task.steps.length;
                     this.stopPlayback();
                 },
 
@@ -300,6 +331,18 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
                         clearInterval(this.playbackInterval);
                         this.playbackInterval = null;
                     }
+                },
+
+                // Phase 1: Helper to get episode color
+                getEpisodeColor(index) {
+                    const colors = [
+                        'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',  // Blue
+                        'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',  // Purple
+                        'linear-gradient(135deg, #ec4899 0%, #db2777 100%)',  // Pink
+                        'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',  // Orange
+                        'linear-gradient(135deg, #10b981 0%, #059669 100%)',  // Green
+                    ];
+                    return colors[index % colors.length];
                 }
             }))
         });
@@ -412,16 +455,35 @@ def _generate_task_viewer_section(tasks_json: str) -> str:
                             </select>
                         </div>
 
-                        <!-- Timeline -->
+                        <!-- Timeline with Episode Segmentation (Phase 1) -->
                         <div class="oa-timeline" style="margin-bottom: 16px;">
+                            <!-- Episode labels above timeline -->
+                            <div class="oa-episode-labels" x-show="episodeSegments.length > 0">
+                                <template x-for="(episode, idx) in episodeSegments" :key="episode.task_id">
+                                    <div class="oa-episode-label"
+                                         :style="'left: ' + ((episode.step_start / totalSteps) * 100) + '%; width: ' + (((episode.step_end - episode.step_start + 1) / totalSteps) * 100) + '%'"
+                                         :title="episode.task_id">
+                                        <span x-text="episode.task_id"></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <!-- Timeline track with episode segments -->
                             <div class="oa-timeline-track" @click="(e) => {
                                 const rect = $el.getBoundingClientRect();
                                 const clickX = e.clientX - rect.left;
                                 const percent = clickX / rect.width;
                                 currentStep = Math.floor(percent * selectedTask.steps.length);
                                 if (currentStep >= selectedTask.steps.length) currentStep = selectedTask.steps.length - 1;
-                            }">
-                                <div class="oa-timeline-progress" :style="'width: ' + ((currentStep + 1) / selectedTask.steps.length * 100) + '%'"></div>
+                            }" style="position: relative;">
+                                <!-- Episode segments with colors -->
+                                <template x-for="(episode, idx) in episodeSegments" :key="episode.task_id">
+                                    <div class="oa-episode-segment"
+                                         :style="'left: ' + ((episode.step_start / totalSteps) * 100) + '%; width: ' + (((episode.step_end - episode.step_start + 1) / totalSteps) * 100) + '%; background: ' + getEpisodeColor(idx)"
+                                         :title="episode.task_id">
+                                    </div>
+                                </template>
+                                <!-- Progress bar (overlays segments) -->
+                                <div class="oa-timeline-progress" :style="'width: ' + ((currentStep + 1) / selectedTask.steps.length * 100) + '%; position: relative; z-index: 10;'"></div>
                             </div>
                         </div>
 
