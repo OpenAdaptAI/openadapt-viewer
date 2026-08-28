@@ -161,11 +161,11 @@ uv run playwright install chromium
 **Solution**: Verify capture paths
 ```bash
 # Check captures exist
-ls -la /path/to/openadapt-capture/turn-off-nightshift/
-ls -la /path/to/openadapt-capture/demo_new/
+ls -la /path/to/openadapt-capture/examples/captures/turn-off-nightshift/
+ls -la /path/to/openadapt-capture/examples/captures/demo_new/
 
-# Look for capture.db
-ls -la /path/to/openadapt-capture/turn-off-nightshift/capture.db
+# Look for recording.db
+ls -la /path/to/openadapt-capture/examples/captures/turn-off-nightshift/recording.db
 ```
 
 **Or use custom path**:

@@ -16,7 +16,7 @@ An automated recording catalog system that makes all captured data automatically
    - Singleton pattern via `get_catalog()`
 
 2. **Scanner** (`scanner.py`)
-   - Automatic discovery of recordings (directories with `capture.db`)
+   - Automatic discovery of recordings (directories with `recording.db`)
    - Indexing of segmentation results (`*_episodes.json` files)
    - Metadata extraction (frames, events, duration, timestamps)
    - Default path detection
@@ -72,9 +72,10 @@ openadapt-viewer/
 ### Key Algorithms
 
 **Recording Discovery**:
-1. Glob for `**/capture.db` files
-2. Extract metadata from capture.db SQLite tables
-3. Count screenshots in `screenshots/` directory
+1. Glob for `**/recording.db` files
+2. Read the `recording` row for the start timestamp, task description,
+   platform and display geometry
+3. Count `action_event` rows for events and `screenshot` rows for frames
 4. Register in catalog with `INSERT OR REPLACE`
 
 **Segmentation Indexing**:
@@ -136,7 +137,7 @@ Generated: /path/to/viewer.html
 
 ### Integration Points Verified
 
-✅ Scanner reads from openadapt-capture `capture.db` files
+✅ Scanner reads from openadapt-capture `recording.db` files
 ✅ Scanner parses openadapt-ml segmentation JSON files
 ✅ Catalog API exports data as JavaScript
 ✅ Viewer generator injects dropdown into base HTML

@@ -247,7 +247,7 @@ Install with: cd ../openadapt-capture && uv pip install -e .
 ### Capture Errors
 ```
 Error: Capture not found: /path/to/capture
-FileNotFoundError: [Errno 2] No such file or directory: '/path/to/capture/capture.db'
+FileNotFoundError: [Errno 2] No such file or directory: '/path/to/capture/recording.db'
 ```
 
 ### HTML Generation Errors

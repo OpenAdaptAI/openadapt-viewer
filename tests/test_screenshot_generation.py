@@ -94,15 +94,22 @@ def test_dependency_check():
     reason="openadapt-capture directory not found",
 )
 def test_captures_exist():
-    """Test that required capture directories exist."""
-    captures = [
-        CAPTURE_DIR / "turn-off-nightshift",
-        CAPTURE_DIR / "demo_new",
-    ]
+    """Test that required capture directories exist.
 
-    for capture_path in captures:
+    Both halves of this used to be stale. The captures live under
+    ``examples/captures/``, not at the checkout root, where .gitignore excludes
+    them. And the recorder writes ``recording.db``: the bespoke ``capture.db``
+    was replaced by openadapt-capture PR #28 on 2026-07-17, so asserting on it
+    described a file no current checkout has.
+    """
+    examples = CAPTURE_DIR / "examples" / "captures"
+
+    for name in ("turn-off-nightshift", "demo_new"):
+        capture_path = examples / name
         assert capture_path.exists(), f"Capture not found: {capture_path}"
-        assert (capture_path / "capture.db").exists(), f"No capture.db in {capture_path}"
+        assert (capture_path / "recording.db").exists(), (
+            f"No recording.db in {capture_path}"
+        )
 
 
 @pytest.mark.skipif(
