@@ -18,6 +18,7 @@ use it. ``$OPENADAPT_CAPTURE_RECORDING`` names one recording directory inside it
 import json
 import os
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path, PurePosixPath
 
@@ -30,6 +31,195 @@ from openadapt_viewer.core.types import (
 
 #: Environment variable naming one recording directory to load by default.
 CAPTURE_RECORDING_ENV = "OPENADAPT_CAPTURE_RECORDING"
+
+#: Database written by the current recorder, one row per recording.
+RECORDING_DB = "recording.db"
+
+#: Database written before openadapt-capture PR #28 (2026-07-17).
+LEGACY_CAPTURE_DB = "capture.db"
+
+#: Tables whose newest timestamp bounds a recording. The recording table has no
+#: end time of its own, so the last thing that happened during it is the end.
+_END_TIME_TABLES = ("action_event", "screenshot", "window_event")
+
+
+@dataclass(frozen=True)
+class CaptureMetadata:
+    """Recording-level facts the viewer needs, independent of database schema.
+
+    Both database formats are normalised into this, so the rest of the loader
+    does not care which one it read.
+    """
+
+    recording_id: str
+    started_at: float
+    ended_at: float
+    platform: str
+    screen_width: int
+    screen_height: int
+    task_description: str | None
+    source_format: str
+
+
+def _table_exists(conn: sqlite3.Connection, table: str) -> bool:
+    """Report whether a table is present in the database."""
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (table,)
+    ).fetchone()
+    return row is not None
+
+
+def _column_names(conn: sqlite3.Connection, table: str) -> set[str]:
+    """Return the column names of a table.
+
+    Columns are introspected rather than assumed. ``recording.pixel_ratio`` is
+    declared in the openadapt-capture model but absent from recordings written
+    before it was added, because that migration is additive.
+    """
+    return {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
+
+
+def _derive_end_time(conn: sqlite3.Connection, started_at: float) -> float:
+    """Return the timestamp of the last event in a recording.
+
+    The recording table stores a start time and no end time, so the end is the
+    newest timestamp across the event tables. Falls back to the start time for a
+    recording that captured no events.
+
+    Args:
+        conn: An open connection to a recording database.
+        started_at: The recording's start timestamp.
+
+    Returns:
+        The end timestamp, never earlier than ``started_at``.
+    """
+    latest = started_at
+    for table in _END_TIME_TABLES:
+        if not _table_exists(conn, table):
+            continue
+        if "timestamp" not in _column_names(conn, table):
+            continue
+        row = conn.execute(f"SELECT MAX(timestamp) FROM {table}").fetchone()
+        if row and row[0] is not None:
+            latest = max(latest, float(row[0]))
+    return latest
+
+
+def _read_recording_db(db_path: Path) -> CaptureMetadata:
+    """Read recording metadata from the current ``recording.db`` schema.
+
+    Args:
+        db_path: Path to a recording.db file.
+
+    Returns:
+        Normalised capture metadata.
+
+    Raises:
+        ValueError: If the file has no recording table or no recording row.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        if not _table_exists(conn, "recording"):
+            raise ValueError(
+                f"{db_path} has no 'recording' table. It may be an unrelated "
+                "SQLite file rather than an openadapt-capture recording."
+            )
+
+        row = conn.execute(
+            "SELECT * FROM recording ORDER BY id LIMIT 1"
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"No recording row found in {db_path}")
+
+        started_at = float(row["timestamp"])
+        return CaptureMetadata(
+            recording_id=str(row["id"]),
+            started_at=started_at,
+            ended_at=_derive_end_time(conn, started_at),
+            platform=row["platform"] or "unknown",
+            screen_width=int(row["monitor_width"] or 0),
+            screen_height=int(row["monitor_height"] or 0),
+            task_description=row["task_description"],
+            source_format=RECORDING_DB,
+        )
+    finally:
+        conn.close()
+
+
+def _read_legacy_capture_db(db_path: Path) -> CaptureMetadata:
+    """Read recording metadata from the pre-PR-#28 ``capture.db`` schema.
+
+    Args:
+        db_path: Path to a capture.db file.
+
+    Returns:
+        Normalised capture metadata.
+
+    Raises:
+        ValueError: If the file has no capture table or no capture row.
+    """
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    try:
+        if not _table_exists(conn, "capture"):
+            raise ValueError(
+                f"{db_path} has no 'capture' table. It may be an unrelated "
+                "SQLite file rather than an openadapt-capture recording."
+            )
+
+        row = conn.execute("SELECT * FROM capture LIMIT 1").fetchone()
+        if row is None:
+            raise ValueError(f"No capture metadata found in {db_path}")
+
+        started_at = float(row["started_at"])
+        ended_at = row["ended_at"]
+        columns = set(row.keys())
+        return CaptureMetadata(
+            recording_id=str(row["id"]),
+            started_at=started_at,
+            ended_at=float(ended_at) if ended_at is not None else started_at,
+            platform=row["platform"] or "unknown",
+            screen_width=int(row["screen_width"] or 0),
+            screen_height=int(row["screen_height"] or 0),
+            task_description=(
+                row["task_description"] if "task_description" in columns else None
+            ),
+            source_format=LEGACY_CAPTURE_DB,
+        )
+    finally:
+        conn.close()
+
+
+def read_capture_metadata(capture_path: Path) -> CaptureMetadata:
+    """Read recording metadata from whichever database format is present.
+
+    The current recorder writes ``recording.db``; recordings made before
+    openadapt-capture PR #28 (2026-07-17) have ``capture.db`` instead. Prefer the
+    current format when a directory somehow holds both.
+
+    Args:
+        capture_path: A recording directory.
+
+    Returns:
+        Normalised capture metadata.
+
+    Raises:
+        FileNotFoundError: If neither database is present.
+    """
+    recording_db = capture_path / RECORDING_DB
+    if recording_db.exists():
+        return _read_recording_db(recording_db)
+
+    legacy_db = capture_path / LEGACY_CAPTURE_DB
+    if legacy_db.exists():
+        return _read_legacy_capture_db(legacy_db)
+
+    raise FileNotFoundError(
+        f"No recording database in {capture_path}. Expected {RECORDING_DB} "
+        f"(current) or {LEGACY_CAPTURE_DB} (written before openadapt-capture "
+        "PR #28)."
+    )
 
 
 def default_capture_path() -> Path | None:
@@ -96,7 +286,7 @@ def load_real_capture_data(
         raise FileNotFoundError(
             "No capture directory given. Pass capture_path, or set "
             f"${CAPTURE_RECORDING_ENV} to a directory holding a recording "
-            "(episodes.json plus capture.db)."
+            f"(episodes.json plus {RECORDING_DB})."
         )
 
     capture_path = Path(capture_path)
@@ -112,26 +302,11 @@ def load_real_capture_data(
     with open(episodes_path) as f:
         episodes_data = json.load(f)
 
-    # Load capture.db metadata
-    db_path = capture_path / "capture.db"
-    if not db_path.exists():
-        raise FileNotFoundError(f"Capture database not found: {db_path}")
+    # Read recording metadata from whichever database format is present.
+    capture_meta = read_capture_metadata(capture_path)
 
-    # Connect to database
-    conn = sqlite3.connect(db_path)
-    conn.row_factory = sqlite3.Row
-    cursor = conn.cursor()
-
-    # Get capture metadata
-    cursor.execute("SELECT * FROM capture LIMIT 1")
-    capture_meta = cursor.fetchone()
-
-    if capture_meta is None:
-        raise ValueError(f"No capture metadata found in {db_path}")
-
-    # Calculate timing
-    started_at = capture_meta["started_at"]
-    ended_at = capture_meta["ended_at"] or started_at
+    started_at = capture_meta.started_at
+    ended_at = capture_meta.ended_at
     duration = ended_at - started_at
 
     # Get recording name
@@ -219,8 +394,6 @@ def load_real_capture_data(
         )
         executions.append(execution)
 
-    conn.close()
-
     # Create benchmark run
     if run_id is None:
         run_id = f"real_capture_{recording_id}"
@@ -239,8 +412,11 @@ def load_real_capture_data(
             "recording_name": recording_name,
             "capture_path": str(capture_path),
             "duration": duration,
-            "platform": capture_meta["platform"],
-            "screen_size": f"{capture_meta['screen_width']}x{capture_meta['screen_height']}",
+            "platform": capture_meta.platform,
+            "screen_size": (
+                f"{capture_meta.screen_width}x{capture_meta.screen_height}"
+            ),
+            "capture_format": capture_meta.source_format,
             "episode_count": len(episodes),
             "llm_model": episodes_data.get("llm_model", "unknown"),
             "processing_timestamp": episodes_data.get("processing_timestamp", "unknown"),
