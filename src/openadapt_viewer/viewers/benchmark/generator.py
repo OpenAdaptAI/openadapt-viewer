@@ -4,6 +4,8 @@ This module generates standalone HTML files for visualizing
 benchmark evaluation results with interactive features.
 """
 
+import base64
+import mimetypes
 from pathlib import Path
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
@@ -25,7 +27,7 @@ def generate_benchmark_html(
     Args:
         data_path: Path to benchmark results directory OR capture directory (optional if run_data provided)
         output_path: Where to write the HTML file
-        standalone: If True, embed Plotly.js for offline viewing
+        standalone: If True, embed Alpine.js and screenshots for offline viewing
         run_data: Pre-loaded BenchmarkRun data (optional, will load from data_path if not provided)
         use_real_data: If True (default), load real capture data from $OPENADAPT_CAPTURE_RECORDING
 
@@ -65,20 +67,46 @@ def generate_benchmark_html(
             # ONLY for unit tests: create sample data
             run = create_sample_data()
 
+    output_path = Path(output_path)
+    screenshot_base = Path(data_path) if data_path is not None else output_path.parent
+
     # Generate HTML using template
     builder = HTMLBuilder()
-    html = _generate_viewer_html(builder, run, standalone)
+    html = _generate_viewer_html(builder, run, standalone, screenshot_base)
 
     # Write to file
-    output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(html)
 
     return str(output_path)
 
 
-def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: bool) -> str:
+def _embed_screenshot(path: str, base_dir: Path) -> str:
+    """Turn a local screenshot into a data URI for a portable report."""
+    if path.startswith("data:image/"):
+        return path
+    if "://" in path:
+        raise ValueError(f"Standalone reports require a local screenshot: {path}")
+
+    image_path = Path(path).expanduser()
+    if not image_path.is_absolute():
+        image_path = base_dir / image_path
+    try:
+        image_bytes = image_path.read_bytes()
+    except OSError as exc:
+        raise FileNotFoundError(f"Cannot embed screenshot {path}: {exc}") from exc
+
+    mime_type, _ = mimetypes.guess_type(image_path.name)
+    if mime_type is None or not mime_type.startswith("image/"):
+        raise ValueError(f"Unsupported screenshot format: {path}")
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
+
+
+def _generate_viewer_html(
+    builder: HTMLBuilder, run: BenchmarkRun, standalone: bool, screenshot_base: Path
+) -> str:
     """Generate the complete HTML for the benchmark viewer.
 
     Uses PageBuilder and components instead of inline template.
@@ -96,6 +124,15 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
     domain_stats = run.get_domain_stats()
 
     # Convert run data to JSON-serializable format
+    embedded_screenshots: dict[str, str] = {}
+
+    def screenshot_src(path: str | None) -> str | None:
+        if not path or not standalone:
+            return path
+        if path not in embedded_screenshots:
+            embedded_screenshots[path] = _embed_screenshot(path, screenshot_base)
+        return embedded_screenshots[path]
+
     tasks_data = []
     for task in run.tasks:
         # Find corresponding execution
@@ -112,7 +149,7 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
                     "action_type": s.action_type,
                     "action_details": s.action_details,
                     "reasoning": s.reasoning,
-                    "screenshot_path": s.screenshot_path,
+                    "screenshot_path": screenshot_src(s.screenshot_path),
                 }
                 for s in (execution.steps if execution else [])
             ],
@@ -123,6 +160,7 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
     page = PageBuilder(
         title=f"Benchmark Viewer - {run.benchmark_name}",
         include_alpine=True,
+        inline_alpine=standalone,
     )
 
     # Add header

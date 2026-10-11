@@ -129,33 +129,25 @@ There's also `openadapt-viewer catalog scan --capture-dir DIR`, which indexes
 recordings into `~/.openadapt/catalog.db` so the segmentation viewer can find
 them; `catalog stats` prints the counts.
 
+To share a benchmark report as one HTML file that also works offline, add
+`--standalone`:
+
+```bash
+openadapt-viewer benchmark --data turn-off-nightshift --output viewer.html --standalone
+```
+
+This embeds Alpine.js and local screenshots before writing the file. All
+screenshots must still exist when you generate it; a missing screenshot is an
+error. Relative screenshot paths are resolved from `--data`, or from the output
+directory when passing a `BenchmarkRun` directly without `data_path`. Reports
+with many screenshots can be large. Without `--standalone`, benchmark reports
+continue to load Alpine.js from a CDN and link to their source screenshots.
+
 ## What it doesn't do
 
-The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it isn't
-offline-safe. Block that request and the summary cards and the filter dropdowns
-still paint, because their markup sits in the file, but the task list comes up
-empty and clicking does nothing. `benchmark --standalone` does not help: the
-flag reaches the generator and the generator ignores it.
-
-Five more things to know before you file a bug:
-
-- The benchmark viewer writes a real recording's screenshots into the page as
-  absolute local paths, so a viewer built from a recording loses its images the
-  moment you move or mail the file. Only `demo` inlines them.
-
-- The capture viewer writes `<link href="src/openadapt_viewer/styles/episode_timeline.css">`
-  into the page, resolved against wherever the HTML ends up. That file and its
-  companion `episode_timeline.js` ship inside the installed package, so unless
-  your output happens to land at the root of a source checkout, the episode
-  timeline renders unstyled and inert.
 - `screenshot_display` links images by path. It inlines them as base64 only
   when you pass `embed_image=True`. Move the HTML away from the PNGs without
   that flag and the images break.
-- Give `benchmark --data` a directory holding a pre-2026-07-17 `capture.db`
-  and it neither reads it nor says so. `LegacyCaptureError` subclasses
-  `FileNotFoundError`, the generator's fallback catches it, and you get a
-  viewer with zero tasks and a success message. The migration script named in
-  that error never reaches you.
 - `openadapt_viewer.__version__` reads `0.1.0`, which is not the packaged
   version. Read the version from package metadata instead.
 
