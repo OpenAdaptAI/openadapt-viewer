@@ -21,7 +21,7 @@ Quick Start:
     generate_benchmark_html(data_path="results/", output_path="viewer.html")
 """
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError, version
 
 # Core types and utilities
 # Builders - high-level page construction
@@ -62,6 +62,14 @@ from openadapt_viewer.scanner import RecordingScanner, scan_and_update_catalog
 # Viewer generators (re-exported for convenience)
 from openadapt_viewer.viewers.benchmark import generate_benchmark_html
 from openadapt_viewer.viewers.segmentation_generator import generate_segmentation_viewer
+
+# Read from the installed distribution so it always matches pyproject.toml. The
+# release workflow bumps pyproject.toml only, so a hardcoded string here went
+# stale: 0.2.0 shipped reporting "0.1.0".
+try:
+    __version__ = version("openadapt-viewer")
+except PackageNotFoundError:  # imported from a source tree that was never installed
+    __version__ = "0+unknown"
 
 __all__ = [
     # Core

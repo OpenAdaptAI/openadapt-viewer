@@ -4,6 +4,8 @@ This module generates standalone HTML files for visualizing
 benchmark evaluation results with interactive features.
 """
 
+import base64
+import mimetypes
 from pathlib import Path
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
@@ -25,7 +27,9 @@ def generate_benchmark_html(
     Args:
         data_path: Path to benchmark results directory OR capture directory (optional if run_data provided)
         output_path: Where to write the HTML file
-        standalone: If True, embed Plotly.js for offline viewing
+        standalone: If True, embed each screenshot in the page as a data URI,
+            so the file still shows its images after it is moved or mailed.
+            Relative screenshot paths resolve against ``data_path``.
         run_data: Pre-loaded BenchmarkRun data (optional, will load from data_path if not provided)
         use_real_data: If True (default), load real capture data from $OPENADAPT_CAPTURE_RECORDING
 
@@ -67,7 +71,8 @@ def generate_benchmark_html(
 
     # Generate HTML using template
     builder = HTMLBuilder()
-    html = _generate_viewer_html(builder, run, standalone)
+    image_base = Path(data_path) if data_path is not None else Path.cwd()
+    html = _generate_viewer_html(builder, run, standalone, image_base)
 
     # Write to file
     output_path = Path(output_path)
@@ -78,10 +83,50 @@ def generate_benchmark_html(
     return str(output_path)
 
 
-def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: bool) -> str:
+def _embed_screenshot(path: str | None, base_dir: Path) -> str | None:
+    """Return a screenshot as a base64 data URI, so the page carries the image.
+
+    Data URIs and http(s) URLs pass through unchanged, and so does a path that
+    names no readable file: the viewer then shows the same broken image it
+    would have shown without embedding.
+
+    A relative path is tried against ``base_dir`` first and then against the
+    working directory. Benchmark result directories record paths relative to
+    the run directory; a recording loaded through a relative ``--data`` path
+    records them relative to the working directory.
+
+    Args:
+        path: The screenshot path recorded for a step, or None.
+        base_dir: Directory that relative paths are resolved against first.
+
+    Returns:
+        A ``data:`` URI, or ``path`` unchanged.
+    """
+    if not path or path.startswith(("data:", "http://", "https://")):
+        return path
+    file_path = Path(path)
+    candidates = [file_path] if file_path.is_absolute() else [base_dir / file_path, file_path]
+    for candidate in candidates:
+        try:
+            data = candidate.read_bytes()
+        except OSError:
+            continue
+        mime = mimetypes.guess_type(candidate.name)[0] or "image/png"
+        return f"data:{mime};base64,{base64.b64encode(data).decode()}"
+    return path
+
+
+def _generate_viewer_html(
+    builder: HTMLBuilder,
+    run: BenchmarkRun,
+    standalone: bool,
+    image_base: Path | None = None,
+) -> str:
     """Generate the complete HTML for the benchmark viewer.
 
-    Uses PageBuilder and components instead of inline template.
+    Uses PageBuilder and components instead of inline template. With
+    ``standalone``, screenshots are embedded as data URIs, resolving relative
+    paths against ``image_base`` (the working directory when it is None).
     """
     import json
 
@@ -91,6 +136,11 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
         metrics_grid,
     )
     from openadapt_viewer.components.metrics import domain_stats_grid
+
+    image_base = image_base if image_base is not None else Path.cwd()
+
+    def screenshot_src(path: str | None) -> str | None:
+        return _embed_screenshot(path, image_base) if standalone else path
 
     # Prepare data for template
     domain_stats = run.get_domain_stats()
@@ -112,7 +162,7 @@ def _generate_viewer_html(builder: HTMLBuilder, run: BenchmarkRun, standalone: b
                     "action_type": s.action_type,
                     "action_details": s.action_details,
                     "reasoning": s.reasoning,
-                    "screenshot_path": s.screenshot_path,
+                    "screenshot_path": screenshot_src(s.screenshot_path),
                 }
                 for s in (execution.steps if execution else [])
             ],
