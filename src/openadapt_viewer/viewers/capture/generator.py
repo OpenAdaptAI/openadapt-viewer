@@ -7,6 +7,7 @@ OpenAdapt capture recordings with interactive playback controls.
 from __future__ import annotations
 
 import json
+from html import escape
 from importlib import resources
 from pathlib import Path
 from typing import Any
@@ -79,9 +80,15 @@ def _generate_viewer_html(
         {"label": "Duration", "value": f"{duration:.1f}s"},
     ])
 
-    # Serialize steps and episodes to JSON for Alpine.js
-    steps_json = json.dumps(steps)
-    episodes_json = json.dumps(episodes)
+    # Serialize steps and episodes to JSON for Alpine.js. Both land inside a
+    # double-quoted x-data="..." attribute, so they are HTML-escaped: the first
+    # raw '"' in the JSON used to close the attribute, which left Alpine with a
+    # syntax error and printed the rest of the component as page text. The
+    # browser decodes the entities before Alpine reads the attribute.
+    steps_json = escape(json.dumps(steps))
+    episodes_json = escape(json.dumps(episodes))
+    capture_id = escape(capture_id)
+    goal = escape(goal)
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -296,20 +303,28 @@ def _generate_viewer_html(
 
                 <!-- Screenshot Display -->
                 <div style="background: var(--oa-bg-secondary); border-radius: 12px; padding: 24px; margin-bottom: 16px;">
-                    <div style="aspect-ratio: 16/9; background: var(--oa-bg-tertiary); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; position: relative;">
+                    <div style="background: var(--oa-bg-tertiary); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; overflow: hidden;">
+                        <!-- The frame wrapper takes the image's own size, so the
+                             click fractions below are fractions of the screenshot
+                             rather than of a fixed 16:9 box around it. -->
                         <template x-if="currentStepData.screenshot">
-                            <img :src="currentStepData.screenshot" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+                            <div class="capture-frame" style="position: relative; line-height: 0; max-width: 100%;">
+                                <img :src="currentStepData.screenshot" alt="Screenshot" style="display: block; max-width: 100%; height: auto;">
+
+                                <!-- Click overlay. The dynamic :style is an object so
+                                     Alpine merges it into the static style; a string
+                                     replaced the static style, and the marker lost its
+                                     position, shape and colour. -->
+                                <template x-if="currentStepData.action?.type === 'click' && currentStepData.action?.x != null && currentStepData.action?.y != null">
+                                    <div class="capture-click-marker" style="position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; border: 3px solid #22c55e; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center; line-height: normal;"
+                                         :style="{{ left: (currentStepData.action.x * 100) + '%', top: (currentStepData.action.y * 100) + '%' }}">
+                                        <span style="font-size: 10px; font-weight: bold; color: white;">H</span>
+                                    </div>
+                                </template>
+                            </div>
                         </template>
                         <template x-if="!currentStepData.screenshot">
-                            <div style="color: var(--oa-text-muted);">No screenshot for step <span x-text="currentStep + 1"></span></div>
-                        </template>
-
-                        <!-- Click overlay -->
-                        <template x-if="currentStepData.action?.type === 'click' && currentStepData.action?.x">
-                            <div style="position: absolute; transform: translate(-50%, -50%); width: 24px; height: 24px; border-radius: 50%; border: 3px solid #22c55e; background: rgba(34, 197, 94, 0.2); display: flex; align-items: center; justify-content: center;"
-                                 :style="'left: ' + (currentStepData.action.x * 100) + '%; top: ' + (currentStepData.action.y * 100) + '%'">
-                                <span style="font-size: 10px; font-weight: bold; color: white;">H</span>
-                            </div>
+                            <div style="width: 100%; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: var(--oa-text-muted);">No screenshot for step <span x-text="currentStep + 1" style="margin-left: 0.3em;"></span></div>
                         </template>
                     </div>
 
@@ -391,7 +406,7 @@ def _generate_viewer_html(
                         </template>
 
                         <span style="color: var(--oa-text-muted);">Timestamp:</span>
-                        <span x-text="currentStepData.timestamp ? currentStepData.timestamp.toFixed(2) + 's' : 'N/A'"></span>
+                        <span x-text="typeof currentStepData.timestamp === 'number' ? currentStepData.timestamp.toFixed(2) + 's' : 'N/A'"></span>
                     </div>
                 </div>
             </div>
