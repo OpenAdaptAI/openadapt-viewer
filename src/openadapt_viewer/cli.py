@@ -2,11 +2,12 @@
 
 Usage:
     openadapt-viewer benchmark --data DIR [--output FILE] [--standalone]
-    openadapt-viewer capture [--capture-id ID] [--goal GOAL] [--output FILE]
+    openadapt-viewer capture [--capture-id ID] [--goal GOAL] [--output FILE]   (sample steps)
     openadapt-viewer demo [--output FILE]
     openadapt-viewer catalog scan [--capture-dir DIR] [--segmentation-dir DIR]
     openadapt-viewer catalog list [--json]
     openadapt-viewer catalog stats
+    openadapt-viewer --version
 """
 
 import argparse
@@ -16,6 +17,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
+from openadapt_viewer import __version__
 from openadapt_viewer.viewers.benchmark import generate_benchmark_html
 
 
@@ -29,12 +31,16 @@ Examples:
     # Generate benchmark viewer from results directory
     openadapt-viewer benchmark --data benchmark_results/run_001/
 
-    # Generate with embedded resources (standalone)
+    # Embed the screenshots so the file can be moved or mailed
     openadapt-viewer benchmark --data results/ --standalone
 
     # Generate demo viewer with sample data
     openadapt-viewer demo --output demo.html --open
         """,
+    )
+
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
@@ -63,7 +69,7 @@ Examples:
         "--standalone",
         "-s",
         action="store_true",
-        help="Embed all resources for offline viewing",
+        help="Embed screenshots in the page so the file can be moved or mailed",
     )
     benchmark_parser.add_argument(
         "--open",
@@ -95,7 +101,11 @@ Examples:
 
     # Capture command
     capture_parser = subparsers.add_parser(
-        "capture", help="Generate capture viewer with playback controls"
+        "capture",
+        help=(
+            "Generate a capture player filled with five sample steps. To play "
+            "your own steps, call generate_capture_html from Python"
+        ),
     )
     capture_parser.add_argument(
         "--capture-id",
@@ -147,7 +157,8 @@ Examples:
 
     # Screenshots command
     screenshots_parser = subparsers.add_parser(
-        "screenshots", help="Generate screenshots of viewers for documentation"
+        "screenshots",
+        help="Generate screenshots of viewers for documentation (source checkout only)",
     )
     screenshots_subparsers = screenshots_parser.add_subparsers(
         dest="screenshots_command", help="Screenshot generation commands"

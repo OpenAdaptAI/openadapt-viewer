@@ -1,6 +1,7 @@
 """Tests for HTML generation functionality."""
 
 import json
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -531,3 +532,103 @@ class TestGeneratedPagesAreSelfContained:
         generate_benchmark_html(run_data=sample_benchmark_run, output_path=output_path)
 
         assert "src/openadapt_viewer/" not in output_path.read_text()
+
+
+# Quotes, an ampersand and angle brackets: everything that can end or corrupt an
+# HTML attribute value.
+CAPTURE_STEPS = [
+    {"timestamp": 0.0, "duration": 1.2, "action": {"type": "click", "x": 0.42, "y": 0.31}},
+    {"timestamp": 1.2, "duration": 2.4, "action": {"type": "type", "text": 'He said "hi" & <left>'}},
+]
+
+
+class _XDataCollector(HTMLParser):
+    """Collect every x-data attribute, decoded the way a browser decodes it."""
+
+    def __init__(self):
+        super().__init__()
+        self.x_data: list[str] = []
+
+    def handle_starttag(self, tag, attrs):
+        for name, value in attrs:
+            if name == "x-data" and value is not None:
+                self.x_data.append(value)
+
+
+class TestCapturePageCarriesItsSteps:
+    """The capture page's steps must survive the trip into an HTML attribute.
+
+    The steps JSON was written raw into ``x-data="..."``. Its first ``"``
+    closed the attribute, so Alpine got a syntax error and the browser printed
+    the rest of the component as page text. Every capture page with at least
+    one step was affected.
+    """
+
+    def _x_data(self, tmp_path, **kwargs):
+        output_path = tmp_path / "capture.html"
+        generate_capture_html(steps=CAPTURE_STEPS, output_path=output_path, **kwargs)
+        parser = _XDataCollector()
+        parser.feed(output_path.read_text())
+        return parser.x_data
+
+    def test_the_decoded_attribute_holds_the_whole_steps_json(self, tmp_path):
+        x_data = self._x_data(tmp_path)
+
+        player = [value for value in x_data if "steps:" in value]
+        assert len(player) == 1
+        assert f"steps: {json.dumps(CAPTURE_STEPS)}," in player[0]
+
+    def test_the_decoded_attribute_holds_the_whole_episodes_json(self, tmp_path):
+        episodes = [{"episode_id": "e1", "name": 'Say "hi"', "start": 0.0, "end": 1.0}]
+
+        x_data = self._x_data(tmp_path, episodes=episodes)
+
+        assert any(f"episodes: {json.dumps(episodes)}," in value for value in x_data)
+
+    def test_goal_text_is_escaped(self, tmp_path):
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(goal="<b>bold</b>", output_path=output_path)
+
+        html = output_path.read_text()
+        assert "<b>bold</b>" not in html
+        assert "&lt;b&gt;bold&lt;/b&gt;" in html
+
+    def test_click_marker_style_binding_is_an_object(self, tmp_path):
+        """Alpine replaces a static style with a string :style; an object merges.
+
+        With the string form the marker lost ``position: absolute`` and its
+        circle, and rendered as a bare "H" beside the screenshot.
+        """
+        output_path = tmp_path / "capture.html"
+
+        generate_capture_html(steps=CAPTURE_STEPS, output_path=output_path)
+
+        html = output_path.read_text()
+        marker = html[html.index('class="capture-click-marker"'):]
+        marker = marker[: marker.index(">")]
+        assert ":style=\"{ left:" in marker
+        assert "position: absolute" in marker
+
+
+class TestTaskViewerLayout:
+    """The task list and the detail panel sit side by side on a wide screen.
+
+    The two-column grid was set on the <section>, whose only child is the
+    Alpine root, so the detail panel stacked under the list and the right two
+    thirds of the page stayed empty.
+    """
+
+    def test_the_grid_is_on_the_element_that_holds_both_panels(
+        self, sample_benchmark_run, tmp_path
+    ):
+        output_path = tmp_path / "benchmark.html"
+
+        generate_benchmark_html(run_data=sample_benchmark_run, output_path=output_path)
+
+        html = output_path.read_text()
+        assert '<div x-data="viewer" class="oa-task-viewer-grid">' in html
+        grid_css = html[html.index(".oa-task-viewer-grid {"):]
+        grid_css = grid_css[: grid_css.index("}")]
+        assert "display: grid" in grid_css
+        assert "minmax(0, 2fr)" in grid_css

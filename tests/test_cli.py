@@ -1,5 +1,8 @@
 """Tests for CLI functionality and demo command."""
 
+import base64
+import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -8,6 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from openadapt_viewer.cli import main, run_benchmark_command, run_demo_command
+
+from .capture_examples import write_legacy_capture
 
 # Every subprocess.run below passes check=False on purpose: each test asserts on
 # result.returncode itself, so the call must return rather than raise.
@@ -260,3 +265,91 @@ class TestCLIOutputMessages:
         captured = capsys.readouterr()
         assert "Generating" in captured.out
         assert str(output_path) in captured.out or "benchmark" in captured.out.lower()
+
+
+class TestBenchmarkCommandReportsLegacyCaptures:
+    """``benchmark --data`` on a pre-2026-07-17 recording must say so and fail.
+
+    The generator's format fallback used to catch ``LegacyCaptureError`` (a
+    ``FileNotFoundError``), so the command printed ``Generated: ...`` and wrote
+    a viewer with zero tasks. The migration command never reached the user.
+    """
+
+    def test_exits_nonzero_and_names_the_migration_script(self, tmp_path, monkeypatch, capsys):
+        directory = write_legacy_capture(tmp_path / "old-recording")
+        (directory / "episodes.json").write_text(json.dumps({"episodes": []}))
+        output_path = tmp_path / "viewer.html"
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["openadapt-viewer", "benchmark", "--data", str(directory), "--output", str(output_path)],
+        )
+
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+
+        captured = capsys.readouterr()
+        assert exc_info.value.code == 1
+        assert "migrate_legacy_capture.py" in captured.err
+        assert "Generated:" not in captured.out
+        assert not output_path.exists()
+
+
+class TestBenchmarkStandalone:
+    """``--standalone`` embeds screenshots, so the page survives being moved.
+
+    The flag used to reach the generator and be ignored there, leaving every
+    screenshot as a path relative to the data directory.
+    """
+
+    PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"\x00" * 16
+
+    def _data_dir_with_screenshot(self, benchmark_data_dir):
+        screenshot = benchmark_data_dir / "tasks" / "task_001" / "screenshots" / "step_000.png"
+        screenshot.write_bytes(self.PNG_BYTES)
+        return benchmark_data_dir
+
+    def _run(self, data_dir, output_path, monkeypatch, *extra):
+        monkeypatch.setattr(
+            sys,
+            "argv",
+            ["openadapt-viewer", "benchmark", "--data", str(data_dir), "--output", str(output_path), *extra],
+        )
+        main()
+        return output_path.read_text()
+
+    def test_standalone_embeds_the_screenshot(self, benchmark_data_dir, tmp_path, monkeypatch):
+        data_dir = self._data_dir_with_screenshot(benchmark_data_dir)
+        expected = "data:image/png;base64," + base64.b64encode(self.PNG_BYTES).decode()
+
+        html = self._run(data_dir, tmp_path / "viewer.html", monkeypatch, "--standalone")
+
+        assert expected in html
+        assert "tasks/task_001/screenshots/step_000.png" not in html
+
+    def test_without_standalone_the_screenshot_is_linked(self, benchmark_data_dir, tmp_path, monkeypatch):
+        data_dir = self._data_dir_with_screenshot(benchmark_data_dir)
+
+        html = self._run(data_dir, tmp_path / "viewer.html", monkeypatch)
+
+        assert "tasks/task_001/screenshots/step_000.png" in html
+        assert "data:image/png;base64," not in html
+
+    def test_without_standalone_the_link_resolves_from_the_page(
+        self, benchmark_data_dir, tmp_path, monkeypatch
+    ):
+        """The README writes the page beside the run: ``--output my-run.html``.
+
+        Links used to be relative to the run directory, so a page written
+        anywhere else showed broken images. They are now relative to the page.
+        """
+        data_dir = self._data_dir_with_screenshot(benchmark_data_dir)
+        output_path = tmp_path.parent / f"{tmp_path.name}-pages" / "nested" / "viewer.html"
+
+        html = self._run(data_dir, output_path, monkeypatch)
+
+        links = re.findall(r'"screenshot_path": "([^"]+step_000\.png)"', html)
+        assert links, "the page holds no link to the screenshot"
+        assert (output_path.parent / links[0]).resolve() == (
+            data_dir / "tasks" / "task_001" / "screenshots" / "step_000.png"
+        ).resolve()

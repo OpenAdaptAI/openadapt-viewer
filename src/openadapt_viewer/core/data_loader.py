@@ -163,6 +163,11 @@ class DataLoader:
         exec_json = task_dir / "execution.json"
         if exec_json.exists():
             exec_data = cls.load_json(exec_json)
+            # The viewer pairs a task with its execution by task_id. An
+            # execution.json that omits it sits in its task's directory, so it
+            # belongs to that task; defaulting to "unknown" left the task with
+            # no steps and shown as failed.
+            exec_data.setdefault("task_id", task.task_id if task else task_dir.name)
             execution = cls._parse_execution(exec_data, task_dir)
 
         return task, execution

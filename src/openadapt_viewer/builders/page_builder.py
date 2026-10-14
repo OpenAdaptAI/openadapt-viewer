@@ -36,7 +36,8 @@ class PageBuilder:
 
         Args:
             title: Page title
-            dark_mode: Whether to use dark mode by default
+            dark_mode: Render the page dark (True) or light (False). The
+                header toggle added by ``add_header`` switches it at view time.
             include_alpine: Include Alpine.js for interactivity
             include_chartjs: Include Chart.js for charts
             include_plotly: Include Plotly.js for advanced charts
@@ -223,6 +224,10 @@ class PageBuilder:
         # Escape title for XSS prevention
         safe_title = html.escape(self.title)
 
+        # core.css is dark by default and `.oa-light` overrides it. The header
+        # toggle flips the same class, so it keeps working in either mode.
+        body_class = "" if self.dark_mode else ' class="oa-light"'
+
         return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,7 +240,7 @@ class PageBuilder:
         {self._custom_css}
     </style>
 </head>
-<body style="background: var(--oa-bg-primary); color: var(--oa-text-primary); font-family: var(--oa-font-sans); min-height: 100vh; margin: 0;">
+<body{body_class} style="background: var(--oa-bg-primary); color: var(--oa-text-primary); font-family: var(--oa-font-sans); min-height: 100vh; margin: 0;">
     {self._header_html}
     {self._nav_html}
     <main style="max-width: 1400px; margin: 0 auto; padding: 0 24px 24px;">
@@ -297,8 +302,11 @@ class PageBuilder:
         return '''
         <button onclick="document.body.classList.toggle('oa-light')"
                 style="padding: 8px; border-radius: 8px; background: var(--oa-bg-tertiary); border: none; cursor: pointer; color: var(--oa-text-primary);"
-                title="Toggle dark/light mode">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                title="Toggle dark/light mode" aria-label="Toggle dark/light mode">
+            <!-- An outline icon: with fill and no stroke, the rays had no area
+                 and the button showed a bare dot. -->
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
         </button>

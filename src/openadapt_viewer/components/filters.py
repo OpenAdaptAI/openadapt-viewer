@@ -58,9 +58,10 @@ def filter_dropdown(
         else:
             normalized_options.append(opt)
 
-    # Generate option elements
+    # Generate option elements. "Status" pluralizes to "Statuses", not "Statuss".
+    plural = f"{label}es" if label.endswith("s") else f"{label}s"
     options_html_parts = [
-        f'<option value="">All {label}s</option>'
+        f'<option value="">All {plural}</option>'
     ]
     for opt in normalized_options:
         value = opt.get("value", "")

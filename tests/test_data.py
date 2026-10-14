@@ -1,5 +1,6 @@
 """Tests for data models and data loading functionality."""
 
+import json
 from datetime import datetime
 
 from openadapt_viewer.core.data_loader import DataLoader
@@ -223,6 +224,33 @@ class TestDataLoader:
         assert len(run.executions) == 1
         assert run.tasks[0].task_id == "task_001"
         assert run.executions[0].success is True
+
+    def test_execution_without_task_id_belongs_to_its_task_directory(self, temp_dir):
+        """execution.json may omit task_id; its directory says which task it is.
+
+        It used to default to "unknown". The viewer pairs a task with its
+        execution by task_id, so it found none and showed the task as failed
+        with zero steps.
+        """
+        task_dir = temp_dir / "tasks" / "task_001"
+        task_dir.mkdir(parents=True)
+        (task_dir / "task.json").write_text(json.dumps({"task_id": "notepad", "instruction": "i"}))
+        (task_dir / "execution.json").write_text(
+            json.dumps({"success": True, "steps": [{"action_type": "click"}]})
+        )
+
+        run = DataLoader.load_benchmark_run(temp_dir)
+
+        assert run.executions[0].task_id == run.tasks[0].task_id == "notepad"
+
+    def test_execution_task_id_falls_back_to_the_directory_name(self, temp_dir):
+        task_dir = temp_dir / "tasks" / "task_007"
+        task_dir.mkdir(parents=True)
+        (task_dir / "execution.json").write_text(json.dumps({"success": False, "steps": []}))
+
+        run = DataLoader.load_benchmark_run(temp_dir)
+
+        assert run.executions[0].task_id == "task_007"
 
     def test_load_benchmark_run_missing_metadata(self, temp_dir):
         """Test loading from directory without metadata.json."""
