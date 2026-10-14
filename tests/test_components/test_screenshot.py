@@ -102,3 +102,82 @@ class TestScreenshotDisplay:
         assert "oa-overlay-box" in html
         assert "width: 30.0%" in html
         assert "height: 40.0%" in html
+
+    def test_box_overlay_is_inside_the_image_frame(self):
+        """Overlays share a frame with the image, so they are image-relative."""
+        overlays = [{"type": "box", "x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4}]
+        html = screenshot_display("test.png", overlays=overlays)
+        frame = html.index('class="oa-screenshot-frame"')
+        image = html.index('class="oa-screenshot-image"')
+        box = html.index("oa-overlay-box")
+        assert frame < image < box
+        assert html.index("</div>", box) < html.rindex("</div>")
+
+    def test_placeholder_keeps_overlays_in_container(self):
+        """With no image there is no frame, and overlays still render."""
+        overlays = [{"type": "click", "x": 0.5, "y": 0.5}]
+        html = screenshot_display(None, overlays=overlays)
+        assert "oa-screenshot-frame" not in html
+        assert "oa-overlay-click" in html
+
+    def test_fluid_when_height_is_none(self):
+        """width=None, height=None fills the parent and follows the image."""
+        html = screenshot_display("test.png", width=None, height=None)
+        assert "oa-screenshot-fluid" in html
+        assert "width: 100%;" in html
+        assert "height:" not in html.split(">", 1)[0]
+
+    def test_fixed_height_caps_the_image(self):
+        """A fixed container caps the image in pixels, not by percentage."""
+        html = screenshot_display("test.png", width=400, height=300)
+        assert "oa-screenshot-fluid" not in html
+        assert 'style="max-height: 300px;"' in html
+
+    def test_text_is_escaped(self):
+        """Caption, label, alt and path are text, not markup."""
+        html = screenshot_display(
+            'a"b.png',
+            overlays=[{"type": "box", "x": 0, "y": 0, "label": "<i>x</i>"}],
+            caption="<script>alert(1)</script>",
+            alt='say "hi"',
+        )
+        assert "<script>" not in html
+        assert "<i>" not in html
+        assert 'src="a&quot;b.png"' in html
+        assert 'alt="say &quot;hi&quot;"' in html
+        assert "&lt;script&gt;" in html
+
+    def test_overlay_color_is_applied(self):
+        """The documented ``color`` key sets the marker's border color."""
+        html = screenshot_display(
+            "test.png",
+            overlays=[{"type": "box", "x": 0, "y": 0, "color": "#b45309"}],
+        )
+        assert "border-color: #b45309;" in html
+
+
+class TestScreenshotOverlayStyles:
+    """The stylesheet rules that make overlays land where they say."""
+
+    @staticmethod
+    def _rule(selector: str) -> str:
+        from importlib import resources
+
+        css = resources.files("openadapt_viewer.styles").joinpath("core.css").read_text()
+        start = css.index(selector + " {")
+        return css[start : css.index("}", start)]
+
+    def test_box_is_not_centered_on_its_corner(self):
+        """A box is placed by its top-left corner, unlike a click marker."""
+        rule = self._rule(".oa-overlay-box")
+        assert "transform: none" in rule
+
+    def test_box_has_a_visible_border(self):
+        """A box overlay with no border rule rendered invisible."""
+        rule = self._rule(".oa-overlay-box")
+        assert "border: 2px solid" in rule
+
+    def test_frame_is_positioned(self):
+        """Overlays need a positioned ancestor the size of the image."""
+        rule = self._rule(".oa-screenshot-frame")
+        assert "position: relative" in rule
