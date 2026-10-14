@@ -609,3 +609,26 @@ class TestCapturePageCarriesItsSteps:
         marker = marker[: marker.index(">")]
         assert ":style=\"{ left:" in marker
         assert "position: absolute" in marker
+
+
+class TestTaskViewerLayout:
+    """The task list and the detail panel sit side by side on a wide screen.
+
+    The two-column grid was set on the <section>, whose only child is the
+    Alpine root, so the detail panel stacked under the list and the right two
+    thirds of the page stayed empty.
+    """
+
+    def test_the_grid_is_on_the_element_that_holds_both_panels(
+        self, sample_benchmark_run, tmp_path
+    ):
+        output_path = tmp_path / "benchmark.html"
+
+        generate_benchmark_html(run_data=sample_benchmark_run, output_path=output_path)
+
+        html = output_path.read_text()
+        assert '<div x-data="viewer" class="oa-task-viewer-grid">' in html
+        grid_css = html[html.index(".oa-task-viewer-grid {"):]
+        grid_css = grid_css[: grid_css.index("}")]
+        assert "display: grid" in grid_css
+        assert "minmax(0, 2fr)" in grid_css

@@ -6,7 +6,9 @@ benchmark evaluation results with interactive features.
 
 import base64
 import mimetypes
+import os
 from pathlib import Path
+from urllib.parse import quote
 
 from openadapt_viewer.core.html_builder import HTMLBuilder
 from openadapt_viewer.core.types import BenchmarkRun
@@ -29,7 +31,9 @@ def generate_benchmark_html(
         output_path: Where to write the HTML file
         standalone: If True, embed each screenshot in the page as a data URI,
             so the file still shows its images after it is moved or mailed.
-            Relative screenshot paths resolve against ``data_path``.
+            If False, link each screenshot by a path relative to the
+            directory of ``output_path``. In both cases relative screenshot
+            paths resolve against ``data_path``.
         run_data: Pre-loaded BenchmarkRun data (optional, will load from data_path if not provided)
         use_real_data: If True (default), load real capture data from $OPENADAPT_CAPTURE_RECORDING
 
@@ -72,10 +76,10 @@ def generate_benchmark_html(
     # Generate HTML using template
     builder = HTMLBuilder()
     image_base = Path(data_path) if data_path is not None else Path.cwd()
-    html = _generate_viewer_html(builder, run, standalone, image_base)
+    output_path = Path(output_path)
+    html = _generate_viewer_html(builder, run, standalone, image_base, output_path.parent)
 
     # Write to file
-    output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         f.write(html)
@@ -83,17 +87,31 @@ def generate_benchmark_html(
     return str(output_path)
 
 
-def _embed_screenshot(path: str | None, base_dir: Path) -> str | None:
-    """Return a screenshot as a base64 data URI, so the page carries the image.
+_PASSTHROUGH_PREFIXES = ("data:", "http://", "https://", "file:")
 
-    Data URIs and http(s) URLs pass through unchanged, and so does a path that
-    names no readable file: the viewer then shows the same broken image it
-    would have shown without embedding.
+
+def _find_screenshot(path: str, base_dir: Path) -> Path | None:
+    """Return the file a recorded screenshot path names, or None.
 
     A relative path is tried against ``base_dir`` first and then against the
     working directory. Benchmark result directories record paths relative to
     the run directory; a recording loaded through a relative ``--data`` path
     records them relative to the working directory.
+    """
+    file_path = Path(path)
+    candidates = [file_path] if file_path.is_absolute() else [base_dir / file_path, file_path]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _embed_screenshot(path: str | None, base_dir: Path) -> str | None:
+    """Return a screenshot as a base64 data URI, so the page carries the image.
+
+    Data URIs and URLs pass through unchanged, and so does a path that names no
+    readable file: the viewer then shows the same broken image it would have
+    shown without embedding.
 
     Args:
         path: The screenshot path recorded for a step, or None.
@@ -102,18 +120,48 @@ def _embed_screenshot(path: str | None, base_dir: Path) -> str | None:
     Returns:
         A ``data:`` URI, or ``path`` unchanged.
     """
-    if not path or path.startswith(("data:", "http://", "https://")):
+    if not path or path.startswith(_PASSTHROUGH_PREFIXES):
         return path
-    file_path = Path(path)
-    candidates = [file_path] if file_path.is_absolute() else [base_dir / file_path, file_path]
-    for candidate in candidates:
-        try:
-            data = candidate.read_bytes()
-        except OSError:
-            continue
-        mime = mimetypes.guess_type(candidate.name)[0] or "image/png"
-        return f"data:{mime};base64,{base64.b64encode(data).decode()}"
-    return path
+    found = _find_screenshot(path, base_dir)
+    if found is None:
+        return path
+    try:
+        data = found.read_bytes()
+    except OSError:
+        return path
+    mime = mimetypes.guess_type(found.name)[0] or "image/png"
+    return f"data:{mime};base64,{base64.b64encode(data).decode()}"
+
+
+def _link_screenshot(path: str | None, base_dir: Path, output_dir: Path) -> str | None:
+    """Return a screenshot path that resolves from the HTML file's directory.
+
+    The loaders record relative paths against the run directory (or the working
+    directory), but the browser resolves an ``<img src>`` against the HTML
+    file. Without this, a page written outside the run directory, such as
+    ``--data my-run --output my-run.html``, showed no screenshots.
+
+    Absolute paths, data URIs, URLs and paths that name no file pass through
+    unchanged.
+
+    Args:
+        path: The screenshot path recorded for a step, or None.
+        base_dir: Directory that relative paths are resolved against first.
+        output_dir: Directory the HTML file is written to.
+
+    Returns:
+        A URL-encoded path relative to ``output_dir``, or ``path`` unchanged.
+    """
+    if not path or path.startswith(_PASSTHROUGH_PREFIXES) or Path(path).is_absolute():
+        return path
+    found = _find_screenshot(path, base_dir)
+    if found is None:
+        return path
+    try:
+        relative = os.path.relpath(found.resolve(), output_dir.resolve())
+    except ValueError:  # Windows: the file and the page are on different drives
+        return found.resolve().as_uri()
+    return quote(Path(relative).as_posix())
 
 
 def _generate_viewer_html(
@@ -121,12 +169,14 @@ def _generate_viewer_html(
     run: BenchmarkRun,
     standalone: bool,
     image_base: Path | None = None,
+    output_dir: Path | None = None,
 ) -> str:
     """Generate the complete HTML for the benchmark viewer.
 
     Uses PageBuilder and components instead of inline template. With
-    ``standalone``, screenshots are embedded as data URIs, resolving relative
-    paths against ``image_base`` (the working directory when it is None).
+    ``standalone``, screenshots are embedded as data URIs; without it, they are
+    linked relative to ``output_dir``. Relative paths resolve against
+    ``image_base``. Both default to the working directory.
     """
     import json
 
@@ -138,9 +188,12 @@ def _generate_viewer_html(
     from openadapt_viewer.components.metrics import domain_stats_grid
 
     image_base = image_base if image_base is not None else Path.cwd()
+    output_dir = output_dir if output_dir is not None else Path.cwd()
 
     def screenshot_src(path: str | None) -> str | None:
-        return _embed_screenshot(path, image_base) if standalone else path
+        if standalone:
+            return _embed_screenshot(path, image_base)
+        return _link_screenshot(path, image_base, output_dir)
 
     # Prepare data for template
     domain_stats = run.get_domain_stats()
@@ -223,14 +276,18 @@ def _generate_viewer_html(
 
     # Add custom CSS for task viewer layout
     page.add_css("""
-        .oa-task-viewer {
+        /* The grid sits on the Alpine root that holds both the list and the
+           detail panel. On the <section> it had one child, so the detail
+           panel stacked under the list and the right two thirds stayed empty. */
+        .oa-task-viewer-grid {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
             gap: var(--oa-space-lg);
+            align-items: start;
         }
         @media (max-width: 1024px) {
-            .oa-task-viewer {
-                grid-template-columns: 1fr;
+            .oa-task-viewer-grid {
+                grid-template-columns: minmax(0, 1fr);
             }
         }
         .screenshot-container {
@@ -384,7 +441,7 @@ def _generate_task_viewer_section(tasks_json: str) -> str:
         HTML string for the task viewer section
     """
     return '''
-    <div x-data="viewer">
+    <div x-data="viewer" class="oa-task-viewer-grid">
         <!-- Task List -->
         <div class="oa-list">
             <div class="oa-list-header">

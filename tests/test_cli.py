@@ -2,6 +2,7 @@
 
 import base64
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -333,3 +334,22 @@ class TestBenchmarkStandalone:
 
         assert "tasks/task_001/screenshots/step_000.png" in html
         assert "data:image/png;base64," not in html
+
+    def test_without_standalone_the_link_resolves_from_the_page(
+        self, benchmark_data_dir, tmp_path, monkeypatch
+    ):
+        """The README writes the page beside the run: ``--output my-run.html``.
+
+        Links used to be relative to the run directory, so a page written
+        anywhere else showed broken images. They are now relative to the page.
+        """
+        data_dir = self._data_dir_with_screenshot(benchmark_data_dir)
+        output_path = tmp_path.parent / f"{tmp_path.name}-pages" / "nested" / "viewer.html"
+
+        html = self._run(data_dir, output_path, monkeypatch)
+
+        links = re.findall(r'"screenshot_path": "([^"]+step_000\.png)"', html)
+        assert links, "the page holds no link to the screenshot"
+        assert (output_path.parent / links[0]).resolve() == (
+            data_dir / "tasks" / "task_001" / "screenshots" / "step_000.png"
+        ).resolve()
