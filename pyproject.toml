@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "openadapt-viewer"
 version = "0.2.0"
-description = "Standalone HTML viewer generation for OpenAdapt ML dashboards and benchmarks"
+description = "Turn GUI agent runs and recordings into one HTML file you can open in a browser or share"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

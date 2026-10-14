@@ -3,28 +3,23 @@
 [![Test](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/actions/workflows/test.yml)
 [![PyPI](https://img.shields.io/pypi/v/openadapt-viewer.svg)](https://pypi.org/project/openadapt-viewer/)
 [![Python](https://img.shields.io/pypi/pyversions/openadapt-viewer)](https://pypi.org/project/openadapt-viewer/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/OpenAdaptAI/openadapt-viewer/blob/main/LICENSE)
 
-An eval finished overnight and left you a directory of JSON, a SQLite file, and
-a folder of screenshots. This turns that into one HTML file you can open,
-scroll, and mail to a colleague: metric cards, a filterable task list, click
-markers drawn over the screenshots, and playback controls for stepping through
-a recording frame by frame.
+openadapt-viewer turns the results of a GUI agent run into one HTML file. Open
+it in a browser to see pass and fail counts, filter the task list, and step
+through each task's screenshots with the action and the agent's reasoning
+beside them. There is no server to run. Keep the file with the run, or send it
+to a colleague.
 
-It's for people building on OpenAdapt who want to look at a run without
-standing up a server. It renders once and writes a file. If you want a
-dashboard that refreshes while a job is still running, look elsewhere.
+It is for developers who run agents against desktop or web tasks, or who build
+on [OpenAdapt](https://github.com/OpenAdaptAI/OpenAdapt), and want to see what
+happened in a run without writing a dashboard.
 
-[PyPI](https://pypi.org/project/openadapt-viewer/) ·
-[Component reference](docs/COMPONENTS.md) ·
-[openadapt-capture](https://github.com/OpenAdaptAI/openadapt-capture), which
-records what this plays back
-
-## Sixty seconds
+## Quick start
 
 ```bash
 pip install openadapt-viewer
-openadapt-viewer demo --tasks 10 --output viewer.html
+openadapt-viewer demo --output viewer.html
 ```
 
 ```
@@ -32,35 +27,72 @@ Generating demo viewer with 10 sample tasks...
 Generated: viewer.html
 ```
 
-Open `viewer.html` in a browser and you get this:
+Open `viewer.html` in a browser and select a task:
 
-![The demo viewer: summary cards, per-domain results, filter dropdowns, the task list, and the detail panel for the selected task](docs/images/demo_viewer.png)
+![The demo viewer: summary cards, results by domain, filters, the task list, and the detail panel for a failed task with playback controls](https://raw.githubusercontent.com/OpenAdaptAI/openadapt-viewer/main/docs/images/demo_viewer.png)
 
-Real output, macOS, 2026-08-28, with `task_003` clicked. The demo's pass and
-fail values come from an unseeded `random.random()`, so your success rate
-will probably differ and your tasks won't be these tasks. Rerun the picture with
-`python scripts/generate_demo_screenshot.py`.
+The demo generates 10 sample tasks with random results, so your numbers will
+differ.
+Add `--open` to open the page in your default browser.
 
-## Build a page out of parts
+## View your own run
 
-Each component is a function that returns HTML text. Call `badge("Pass",
-color="success")` and you get this back, nothing more:
+Write each run as a directory:
 
-```html
-<span class="oa-badge oa-badge-success" style="padding: 4px 10px; font-size: 0.75rem;">
-    Pass
-</span>
+```
+my-run/
+├── metadata.json          {"benchmark_name": "Notepad smoke test", "model_id": "my-agent-v2"}
+└── tasks/
+    └── task_001/
+        ├── task.json      {"task_id": "task_001", "instruction": "Open Notepad and type hello", "domain": "office"}
+        ├── execution.json {"success": true, "steps": [...]}
+        └── screenshots/
+            ├── step_000.png
+            └── step_001.png
 ```
 
-Paste that into a template you already own, or hand the pieces to
-`PageBuilder` and let it write the whole document:
+Each entry in `steps` is one action. The viewer shows `description` under the
+screenshot, and `reasoning` below it when present:
+
+```json
+{"action_type": "click", "action_details": {"description": "Click the Start button"}, "reasoning": "Notepad is not open yet"}
+```
+
+`step_000.png` is the screenshot for the first step, `step_001.png` for the
+second, and so on. A failed task can carry an `error` string in
+`execution.json`, which the viewer shows above its steps. Then build the page:
+
+```bash
+openadapt-viewer benchmark --data my-run --output my-run.html --standalone
+```
+
+```
+Generating benchmark viewer from: my-run
+Generated: my-run.html
+```
+
+`--standalone` embeds the screenshots in the HTML, so the file keeps its images
+after you move it or attach it to an email. Without it, the page links to the
+PNG files by path.
+
+To view a recording made with
+[openadapt-capture](https://github.com/OpenAdaptAI/openadapt-capture), pass the
+recording directory as `--data` instead. It needs the `recording.db` that
+openadapt-capture writes and an `episodes.json` from openadapt-ml's
+segmentation step, which splits the recording into tasks.
+
+## Build your own page
+
+Each component is a Python function that returns an HTML string, so you can
+use one inside a template you already have. `PageBuilder` puts components
+together into a complete page with the stylesheet inlined:
 
 ```python
 from openadapt_viewer.builders import PageBuilder
 from openadapt_viewer.components import badge, metrics_grid
 
-page = PageBuilder(title="Nightly eval", dark_mode=True)
-page.add_header(title="Nightly eval", subtitle="run 2026-08-28")
+page = PageBuilder(title="Nightly eval", dark_mode=False)
+page.add_header(title="Nightly eval", subtitle="run 2026-10-14")
 page.add_section(
     metrics_grid([
         {"label": "Tasks", "value": 42},
@@ -73,18 +105,17 @@ page.add_section(badge("Pass", color="success"))
 print(page.render_to_file("eval.html"))
 ```
 
-```
-eval.html
-```
+`dark_mode=False` opens the page in the light theme. The button in the header
+switches themes either way. The
+[component reference](https://github.com/OpenAdaptAI/openadapt-viewer/blob/main/docs/COMPONENTS.md)
+lists all 22 components with their signatures, including screenshot overlays,
+action timelines, filter bars, side-by-side comparisons, and failure-analysis
+panels.
 
-15 KB with the stylesheet inlined. The page renders dark and the sun button in
-the header switches it; the `dark_mode` argument is ignored. There
-are 22 components: screenshot overlays, action timelines, filter bars,
-side-by-side comparison views, failure-analysis panels, and the small stuff
-like badges and metric cards. [docs/COMPONENTS.md](docs/COMPONENTS.md) has
-every signature.
+## Play back recorded steps
 
-## Play back a capture
+`generate_capture_html` writes a player for a list of steps, with play, pause,
+and step controls:
 
 ```python
 from openadapt_viewer.viewers.capture.generator import generate_capture_html
@@ -103,61 +134,27 @@ print(generate_capture_html(
 ))
 ```
 
-```
-capture_viewer.html
-```
+Give a step a `"screenshot"` key, holding a path relative to the HTML file or a
+data URI, and the player shows that frame with a marker where the click landed.
+`x` and `y` are fractions of the frame, so `0.42` means 42% of the way across.
 
-Give a step a `"screenshot"` key holding a path or a data URI and the player
-shows the frame with a marker on it. Click coordinates are fractions of the
-frame, not pixels, so `0.42` means 42% across.
+## Limits
 
-A whole recording written by openadapt-capture goes through the benchmark
-viewer instead. Point it at the directory, which needs `episodes.json` and a
-`recording.db` inside it:
+- The page loads [Alpine.js](https://alpinejs.dev) from `cdn.jsdelivr.net`.
+  Offline, the summary cards still render, but the task list and the playback
+  controls do not work.
+- The `benchmark` command reads the run layout above or an openadapt-capture
+  recording. Results from other harnesses need converting to that layout first.
+- Recordings made before 2026-07-17 store a `capture.db`, which this version
+  does not read. The `benchmark` command stops with an error that names the
+  openadapt-capture script that converts it.
 
-```bash
-openadapt-viewer benchmark --data turn-off-nightshift --output viewer.html
-```
+## Other commands
 
-```
-Generating benchmark viewer from: turn-off-nightshift
-Generated: viewer.html
-```
-
-Set `$OPENADAPT_CAPTURE_RECORDING` to that directory and you can drop `--data`.
-There's also `openadapt-viewer catalog scan --capture-dir DIR`, which indexes
-recordings into `~/.openadapt/catalog.db` so the segmentation viewer can find
-them; `catalog stats` prints the counts.
-
-## What it doesn't do
-
-The generated page loads Alpine.js from `cdn.jsdelivr.net`, so it isn't
-offline-safe. Block that request and the summary cards and the filter dropdowns
-still paint, because their markup sits in the file, but the task list comes up
-empty and clicking does nothing. `benchmark --standalone` does not help: the
-flag reaches the generator and the generator ignores it.
-
-Five more things to know before you file a bug:
-
-- The benchmark viewer writes a real recording's screenshots into the page as
-  absolute local paths, so a viewer built from a recording loses its images the
-  moment you move or mail the file. Only `demo` inlines them.
-
-- The capture viewer writes `<link href="src/openadapt_viewer/styles/episode_timeline.css">`
-  into the page, resolved against wherever the HTML ends up. That file and its
-  companion `episode_timeline.js` ship inside the installed package, so unless
-  your output happens to land at the root of a source checkout, the episode
-  timeline renders unstyled and inert.
-- `screenshot_display` links images by path. It inlines them as base64 only
-  when you pass `embed_image=True`. Move the HTML away from the PNGs without
-  that flag and the images break.
-- Give `benchmark --data` a directory holding a pre-2026-07-17 `capture.db`
-  and it neither reads it nor says so. `LegacyCaptureError` subclasses
-  `FileNotFoundError`, the generator's fallback catches it, and you get a
-  viewer with zero tasks and a success message. The migration script named in
-  that error never reaches you.
-- `openadapt_viewer.__version__` reads `0.1.0`, which is not the packaged
-  version. Read the version from package metadata instead.
+`openadapt-viewer --help` lists every command.
+`openadapt-viewer catalog scan --capture-dir DIR` indexes recordings into
+`~/.openadapt/catalog.db` for the segmentation viewer, and
+`openadapt-viewer catalog stats` prints the counts.
 
 ## Development
 
@@ -168,9 +165,9 @@ uv run ruff check .
 uv run pytest tests/ -v
 ```
 
-Two test modules read recordings that openadapt-capture actually wrote, rather
-than fixtures written to match this repo's idea of the schema. Clone it
-alongside and point them at it:
+Two test modules read recordings that openadapt-capture wrote, rather than
+fixtures written to match this repository's idea of the schema. Clone
+openadapt-capture alongside and point the tests at it:
 
 ```bash
 export OPENADAPT_CAPTURE_DIR=/path/to/openadapt-capture
@@ -178,8 +175,9 @@ export OPENADAPT_CAPTURE_EXAMPLES=$OPENADAPT_CAPTURE_DIR/examples/captures
 ```
 
 CI runs Python 3.10 and 3.11 on Ubuntu and macOS. `ruff check .` is a blocking
-gate over the whole repository, so lint before you push.
+check over the whole repository. To regenerate the screenshot above, run
+`uv run python scripts/generate_demo_screenshot.py`.
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT. See [LICENSE](https://github.com/OpenAdaptAI/openadapt-viewer/blob/main/LICENSE).
