@@ -41,3 +41,20 @@ class TestDarkMode:
             builder.add_header(title="t")
 
             assert "document.body.classList.toggle('oa-light')" in builder.render()
+
+
+class TestThemeToggleIcon:
+    """The sun icon is drawn with strokes.
+
+    It was filled with no stroke, so its rays had no area and the button
+    showed a bare dot.
+    """
+
+    def test_the_icon_is_stroked(self):
+        builder = PageBuilder(title="t")
+        builder.add_header(title="t")
+
+        svg = re.search(r"<svg[^>]*>", builder.render(), re.DOTALL)
+        assert svg, "the header has no icon"
+        assert 'fill="none"' in svg.group(0)
+        assert 'stroke="currentColor"' in svg.group(0)
