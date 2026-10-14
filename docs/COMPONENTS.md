@@ -24,8 +24,13 @@ for name in c.__all__:
 
 Render a screenshot with optional overlays.
 
+Overlay coordinates are fractions of the image. A click marker is centered on
+`(x, y)`; a box's `(x, y)` is its top-left corner. Pass `width=None,
+height=None` for a screenshot that fills its parent and scales down on a
+phone-width page.
+
 ```python
-screenshot_display(image_path: 'str | Path | None' = None, width: 'int' = 800, height: 'int' = 450, overlays: 'list[Overlay] | None' = None, caption: 'str | None' = None, embed_image: 'bool' = False, placeholder_text: 'str' = 'No screenshot available', class_name: 'str' = '') -> 'str'
+screenshot_display(image_path: 'str | Path | None' = None, width: 'int | None' = 800, height: 'int | None' = 450, overlays: 'list[Overlay] | None' = None, caption: 'str | None' = None, embed_image: 'bool' = False, placeholder_text: 'str' = 'No screenshot available', class_name: 'str' = '', alt: 'str' = 'Screenshot') -> 'str'
 ```
 
 ### `playback_controls`

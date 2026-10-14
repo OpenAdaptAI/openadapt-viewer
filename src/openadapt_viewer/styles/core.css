@@ -90,6 +90,35 @@
     object-fit: contain;
 }
 
+/* The image and its overlays share this frame, which shrink-wraps the
+ * rendered image, so overlay percentages are fractions of the picture and
+ * not of the (possibly letterboxed) container. */
+.oa-screenshot-frame {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    line-height: 0;
+}
+
+.oa-screenshot-frame > .oa-screenshot-image {
+    display: block;
+    max-height: none;
+}
+
+/* height=None: the container hugs the image and scales with its parent. */
+.oa-screenshot-container.oa-screenshot-fluid {
+    display: block;
+}
+
+.oa-screenshot-fluid .oa-screenshot-frame {
+    display: block;
+}
+
+.oa-screenshot-fluid .oa-screenshot-frame > .oa-screenshot-image {
+    width: 100%;
+    height: auto;
+}
+
 .oa-screenshot-placeholder {
     color: var(--oa-text-muted);
     font-size: var(--oa-font-size-sm);
@@ -139,7 +168,41 @@
 .oa-overlay-label {
     font-size: 10px;
     font-weight: bold;
+    line-height: 1.4;
     color: white;
+}
+
+/* A box is placed by its top-left corner, so it must not inherit the
+ * centering transform that click markers use. */
+.oa-overlay-box {
+    transform: none;
+    box-sizing: border-box;
+    border: 2px solid var(--oa-accent);
+    border-radius: 4px;
+    background: transparent;
+}
+
+.oa-overlay-box.oa-overlay-human {
+    border-color: #22c55e;
+}
+
+.oa-overlay-box.oa-overlay-predicted {
+    border-color: #3b82f6;
+}
+
+.oa-overlay-box.oa-overlay-error {
+    border-color: var(--oa-error);
+}
+
+.oa-overlay-box .oa-overlay-label {
+    position: absolute;
+    left: -2px;
+    bottom: 100%;
+    padding: 1px 6px;
+    border-radius: 3px 3px 0 0;
+    background: var(--oa-accent);
+    color: var(--oa-bg-primary);
+    white-space: nowrap;
 }
 
 /* === Playback Controls === */
