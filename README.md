@@ -7,9 +7,9 @@
 
 openadapt-viewer turns the results of a GUI agent run into one HTML file. Open
 it in a browser to see pass and fail counts, filter the task list, and step
-through each task's screenshots with the action and the agent's reasoning
-beside them. There is no server to run. Keep the file with the run, or send it
-to a colleague.
+through each task's screenshots, with the action and the agent's reasoning
+under each one. There is no server to run. Keep the file with the run, or
+embed the screenshots in it and send it to a colleague.
 
 It is for developers who run agents against desktop or web tasks, or who build
 on [OpenAdapt](https://github.com/OpenAdaptAI/OpenAdapt), and want to see what
@@ -37,7 +37,7 @@ Add `--open` to open the page in your default browser.
 
 ## View your own run
 
-Write each run as a directory:
+`openadapt-viewer benchmark` reads a run from a directory laid out like this:
 
 ```
 my-run/
@@ -73,13 +73,14 @@ Generated: my-run.html
 
 `--standalone` embeds the screenshots in the HTML, so the file keeps its images
 after you move it or attach it to an email. Without it, the page links to the
-PNG files by path.
+PNG files and shows them as long as they and the page stay where they are.
 
 To view a recording made with
 [openadapt-capture](https://github.com/OpenAdaptAI/openadapt-capture), pass the
 recording directory as `--data` instead. It needs the `recording.db` that
-openadapt-capture writes and an `episodes.json` from openadapt-ml's
-segmentation step, which splits the recording into tasks.
+openadapt-capture writes and an `episodes.json` from the segmentation step in
+[openadapt-ml](https://github.com/OpenAdaptAI/openadapt-ml), which splits the
+recording into tasks.
 
 ## Build your own page
 
@@ -140,6 +141,11 @@ data URI, and the player shows that frame with a marker where the click landed.
 
 ## Limits
 
+- As of October 2026, PyPI has version 0.2.0. It ignores `--standalone`, marks
+  a task failed when its `execution.json` has no `task_id`, does not read
+  `recording.db`, and its capture player does not render. Until a newer
+  release is on PyPI, install from GitHub with
+  `pip install git+https://github.com/OpenAdaptAI/openadapt-viewer`.
 - The page loads [Alpine.js](https://alpinejs.dev) from `cdn.jsdelivr.net`.
   Offline, the summary cards still render, but the task list and the playback
   controls do not work.
@@ -153,8 +159,8 @@ data URI, and the player shows that frame with a marker where the click landed.
 
 `openadapt-viewer --help` lists every command.
 `openadapt-viewer catalog scan --capture-dir DIR` indexes recordings into
-`~/.openadapt/catalog.db` for the segmentation viewer, and
-`openadapt-viewer catalog stats` prints the counts.
+`~/.openadapt/catalog.db` so that `openadapt-viewer segmentation` can find
+them, and `openadapt-viewer catalog stats` prints the counts.
 
 ## Development
 
@@ -165,9 +171,10 @@ uv run ruff check .
 uv run pytest tests/ -v
 ```
 
-Two test modules read recordings that openadapt-capture wrote, rather than
-fixtures written to match this repository's idea of the schema. Clone
-openadapt-capture alongside and point the tests at it:
+Three test modules read recordings that openadapt-capture wrote, rather than
+fixtures written to match this repository's idea of the schema. They skip
+when no openadapt-capture checkout is found. Clone it alongside and point the
+tests at it:
 
 ```bash
 export OPENADAPT_CAPTURE_DIR=/path/to/openadapt-capture
