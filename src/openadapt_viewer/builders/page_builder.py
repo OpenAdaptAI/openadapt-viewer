@@ -36,7 +36,8 @@ class PageBuilder:
 
         Args:
             title: Page title
-            dark_mode: Whether to use dark mode by default
+            dark_mode: Render the page dark (True) or light (False). The
+                header toggle added by ``add_header`` switches it at view time.
             include_alpine: Include Alpine.js for interactivity
             include_chartjs: Include Chart.js for charts
             include_plotly: Include Plotly.js for advanced charts
@@ -223,6 +224,10 @@ class PageBuilder:
         # Escape title for XSS prevention
         safe_title = html.escape(self.title)
 
+        # core.css is dark by default and `.oa-light` overrides it. The header
+        # toggle flips the same class, so it keeps working in either mode.
+        body_class = "" if self.dark_mode else ' class="oa-light"'
+
         return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,7 +240,7 @@ class PageBuilder:
         {self._custom_css}
     </style>
 </head>
-<body style="background: var(--oa-bg-primary); color: var(--oa-text-primary); font-family: var(--oa-font-sans); min-height: 100vh; margin: 0;">
+<body{body_class} style="background: var(--oa-bg-primary); color: var(--oa-text-primary); font-family: var(--oa-font-sans); min-height: 100vh; margin: 0;">
     {self._header_html}
     {self._nav_html}
     <main style="max-width: 1400px; margin: 0 auto; padding: 0 24px 24px;">
