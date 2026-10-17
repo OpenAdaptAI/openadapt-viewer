@@ -29,8 +29,9 @@ def generate_benchmark_html(
     Args:
         data_path: Path to benchmark results directory OR capture directory (optional if run_data provided)
         output_path: Where to write the HTML file
-        standalone: If True, embed each screenshot in the page as a data URI,
-            so the file still shows its images after it is moved or mailed.
+        standalone: If True, embed each screenshot in the page as a data URI
+            and inline the bundled Alpine.js, so the file still works after it
+            is moved or mailed, and without network access.
             If False, link each screenshot by a path relative to the
             directory of ``output_path``. In both cases relative screenshot
             paths resolve against ``data_path``.
@@ -226,6 +227,7 @@ def _generate_viewer_html(
     page = PageBuilder(
         title=f"Benchmark Viewer - {run.benchmark_name}",
         include_alpine=True,
+        inline_alpine=standalone,
     )
 
     # Add header
