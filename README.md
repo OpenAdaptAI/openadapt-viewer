@@ -71,9 +71,10 @@ Generating benchmark viewer from: my-run
 Generated: my-run.html
 ```
 
-`--standalone` embeds the screenshots in the HTML, so the file keeps its images
-after you move it or attach it to an email. Without it, the page links to the
-PNG files and shows them as long as they and the page stay where they are.
+`--standalone` embeds the screenshots and a pinned copy of Alpine.js (3.17.4,
+MIT) in the HTML, so the file keeps its images and works offline after you move
+it or attach it to an email. Without it, the page links to the PNG files and
+loads Alpine.js from a CDN.
 
 To view a recording made with
 [openadapt-capture](https://github.com/OpenAdaptAI/openadapt-capture), pass the
@@ -146,9 +147,9 @@ data URI, and the player shows that frame with a marker where the click landed.
   `recording.db`, and its capture player does not render. Until a newer
   release is on PyPI, install from GitHub with
   `pip install git+https://github.com/OpenAdaptAI/openadapt-viewer`.
-- The page loads [Alpine.js](https://alpinejs.dev) from `cdn.jsdelivr.net`.
-  Offline, the summary cards still render, but the task list and the playback
-  controls do not work.
+- Without `--standalone`, the page loads [Alpine.js](https://alpinejs.dev)
+  from `cdn.jsdelivr.net`. Offline, the summary cards still render, but the
+  task list and the playback controls do not work.
 - The `benchmark` command reads the run layout above or an openadapt-capture
   recording. Results from other harnesses need converting to that layout first.
 - Recordings made before 2026-07-17 store a `capture.db`, which this version

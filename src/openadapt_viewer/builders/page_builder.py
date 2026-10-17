@@ -31,6 +31,7 @@ class PageBuilder:
         include_search_js: bool = False,
         include_filter_js: bool = False,
         include_utils_js: bool = False,
+        inline_alpine: bool = False,
     ):
         """Initialize the page builder.
 
@@ -44,6 +45,7 @@ class PageBuilder:
             include_search_js: Include search utilities (search.js)
             include_filter_js: Include filter utilities (filters.js)
             include_utils_js: Include common utilities (utils.js)
+            inline_alpine: Embed Alpine.js for pages that must work without a network
         """
         self.title = title
         self.dark_mode = dark_mode
@@ -53,6 +55,7 @@ class PageBuilder:
         self.include_search_js = include_search_js
         self.include_filter_js = include_filter_js
         self.include_utils_js = include_utils_js
+        self.inline_alpine = inline_alpine
 
         self._header_html = ""
         self._nav_html = ""
@@ -187,10 +190,20 @@ class PageBuilder:
         Returns:
             Complete HTML string
         """
-        # CDN scripts
+        # Third-party scripts
         scripts_html = ""
+        inline_alpine_html = ""
         if self.include_alpine:
-            scripts_html += '<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>\n'
+            if self.inline_alpine:
+                assets = Path(__file__).parent.parent / "assets"
+                license_text = (assets / "alpine-LICENSE.md").read_text(encoding="utf-8")
+                alpine_js = (assets / "alpine-3.17.4.min.js").read_text(encoding="utf-8")
+                # Page-specific Alpine.data handlers must register before Alpine starts.
+                inline_alpine_html = (
+                    f"<!-- Alpine.js 3.17.4\n{license_text}\n-->\n<script>\n{alpine_js}\n</script>"
+                )
+            else:
+                scripts_html += '<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>\n'
         if self.include_chartjs:
             scripts_html += '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>\n'
         if self.include_plotly:
@@ -252,6 +265,7 @@ class PageBuilder:
     {openadapt_js}
     {alpine_data_script}
     {custom_scripts}
+    {inline_alpine_html}
 </body>
 </html>'''
 
